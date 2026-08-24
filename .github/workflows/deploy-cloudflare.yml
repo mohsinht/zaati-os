@@ -23,7 +23,7 @@ jobs:
       ZAATI_WORKER_NAME: ${{ vars.ZAATI_WORKER_NAME }}
       ZAATI_INSTANCE_CONFIG_JSON: ${{ secrets.ZAATI_INSTANCE_CONFIG_JSON }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: actions/setup-node@v7
@@ -41,7 +41,7 @@ jobs:
           npm run access:verify -- "$ZAATI_HOSTNAME"
       - name: Checkout private snapshot repository
         if: ${{ vars.ZAATI_DATA_REPOSITORY != '' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ vars.ZAATI_DATA_REPOSITORY }}
           ref: ${{ vars.ZAATI_DATA_REF || 'main' }}
