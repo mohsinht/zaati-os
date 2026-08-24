@@ -9,5 +9,7 @@ Use only user-approved normalized totals, goals, budgets, and portfolio summarie
 
 Reconcile totals where possible. Keep currency explicit. Separate verified movement from market movement, transfers, contributions, spending, and unexplained residuals. Missing or stale sources must remain missing or stale, never zero.
 
+Store normalized current values in facts.measures and explicit targets in facts.goals. Use stable IDs and as_of times so future runs can compare like with like.
+
 Use metrics for the current position, a line chart only when at least two comparable dated values exist, progress only for explicit targets, and a notice for stale data or unreconciled movement. Present analysis as context, not financial advice, a guarantee, or an automated decision.
 ```

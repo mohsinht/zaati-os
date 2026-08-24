@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/work.schema.json",
   "snapshot_id": "work:focus:2026-08-24",
   "source_id": "work:focus",
   "domain": "work",
@@ -17,6 +17,31 @@
     "title": "Ship the smallest complete slice",
     "summary": "One item is ready to build, one awaits a decision, and one is blocked outside your control.",
     "attention": "medium",
+    "facts": {
+      "items": [
+        {
+          "id": "renderer",
+          "title": "Adaptive block renderer",
+          "status": "in-progress",
+          "priority": "high",
+          "next_action": "Complete the table component"
+        },
+        {
+          "id": "deployment",
+          "title": "Private deployment recipe",
+          "status": "ready",
+          "priority": "medium",
+          "next_action": "Verify the Access checklist"
+        },
+        {
+          "id": "connector",
+          "title": "Connector example",
+          "status": "blocked",
+          "priority": "medium",
+          "next_action": "Wait for source permission"
+        }
+      ]
+    },
     "presentation": {
       "layout": "dashboard",
       "blocks": [

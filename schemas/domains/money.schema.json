@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/domains/money.schema.json",
+  "title": "Zaati OS money facts",
+  "allOf": [
+    { "$ref": "https://zaati-os.dev/schemas/domains/domain-base.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "facts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["measures", "goals"],
+          "properties": {
+            "measures": {
+              "type": "array",
+              "maxItems": 40,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "label", "kind", "value", "as_of"],
+                "properties": {
+                  "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+                  "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+                  "kind": { "enum": ["money", "percent", "number", "duration"] },
+                  "value": { "type": "number" },
+                  "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+                  "unit": { "type": "string", "maxLength": 24 },
+                  "as_of": { "type": "string", "format": "date-time" }
+                }
+              }
+            },
+            "goals": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "label", "current", "target"],
+                "properties": {
+                  "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+                  "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+                  "current": { "type": "number", "minimum": 0 },
+                  "target": { "type": "number", "exclusiveMinimum": 0 },
+                  "unit": { "type": "string", "maxLength": 24 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

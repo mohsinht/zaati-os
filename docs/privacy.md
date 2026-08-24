@@ -27,7 +27,9 @@ Users separately trust their selected source providers, LLM provider or local mo
 | A broad Access rule lets anyone in              | Deny by default, exact emails or constrained identity groups, unauthenticated preflight      |
 | Credential committed accidentally               | Common secret-shape scan, GitHub secret storage, scoped tokens                               |
 | Private snapshot repository is copied or leaked | Optional AES-256-GCM authenticated encryption with a separate deployment key                 |
-| One snapshot in a batch is invalid              | Whole-bundle validation and rollback-safe persistence before publication                     |
+| Producer returns only part of a batch           | Authoritative expected-source comparison rejects missing, extra, or self-redefined bundles   |
+| Producer self-certifies unsafe output           | Independent private-repository pull-request validation before merge                          |
+| Sensitive text hides inside a valid field       | Universal secret scanning plus source-specific content guards over every snapshot string     |
 
 ## Data minimization
 
@@ -43,7 +45,7 @@ Client-side hiding is not authentication. Zaati OS keeps personal facts out of t
 
 ## Encryption boundary
 
-Encrypted snapshot storage is optional and disabled by default. It protects repository and filesystem copies from readers who do not have the separate key and detects ciphertext modification. It does not protect data from an authorized LLM workflow, the build process, the deployed dashboard payload, an authorized browser session, a compromised provider, or a leaked decryption key.
+Encrypted snapshot storage is optional and disabled by default. It protects repository and filesystem copies from readers who do not have the separate key and detects ciphertext modification. It does not protect data from an authorized LLM workflow, the build process, the deployed dashboard payload, an authorized browser session, a compromised provider, or a leaked decryption key. Do not give the key to a hosted LLM. Use this mode with trusted local or CI ingestion.
 
 Generate the ignored key with `npm run snapshot:keygen`. In production, store its value only as the protected `ZAATI_SNAPSHOT_KEY` deployment secret. Never commit the key beside encrypted files. Back it up securely because Zaati OS cannot recover encrypted snapshots without it.
 
@@ -56,4 +58,5 @@ Generate the ignored key with `npm run snapshot:keygen`. In production, store it
 5. Test an authorized session.
 6. Test an incognito unauthenticated request.
 7. Run `npm run access:verify -- your.private.hostname`.
-8. Only then connect the private data repository.
+8. Install and require the independent private-repository validation check.
+9. Only then connect the private data repository.

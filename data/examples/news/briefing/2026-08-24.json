@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/news.schema.json",
   "snapshot_id": "news:briefing:2026-08-24",
   "source_id": "news:briefing",
   "domain": "news",
@@ -17,6 +17,34 @@
     "title": "Three developments worth knowing",
     "summary": "The synthetic briefing prioritizes impact and removes duplicate commentary.",
     "attention": "low",
+    "facts": {
+      "stories": [
+        {
+          "id": "n1",
+          "title": "Open standards make agent workflows easier to move",
+          "summary": "Teams can change models without rebuilding every downstream view.",
+          "published_at": "2026-08-24T06:30:00Z",
+          "url": "https://example.com/ai-standards",
+          "topics": ["AI systems"]
+        },
+        {
+          "id": "n2",
+          "title": "Smaller software releases outperform big-bang delivery",
+          "summary": "Reliability improves when feedback arrives before architecture hardens.",
+          "published_at": "2026-08-24T06:20:00Z",
+          "url": "https://example.com/software-delivery",
+          "topics": ["Engineering"]
+        },
+        {
+          "id": "n3",
+          "title": "Privacy controls move closer to the data layer",
+          "summary": "Access boundaries become portable across hosting providers.",
+          "published_at": "2026-08-24T06:10:00Z",
+          "url": "https://example.com/privacy-controls",
+          "topics": ["Privacy"]
+        }
+      ]
+    },
     "presentation": {
       "layout": "timeline",
       "blocks": [

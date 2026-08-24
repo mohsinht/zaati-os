@@ -40,8 +40,8 @@ for (const file of workflowFiles) {
     if (!job["timeout-minutes"]) errors.push(`${file}#${jobName}: timeout-minutes is required`)
     for (const step of job.steps || []) {
       if (!step.uses) continue
-      if (!/^\.\//.test(step.uses) && !/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+@v\d+(?:\.\d+\.\d+)?$/.test(step.uses)) {
-        errors.push(`${file}#${jobName}: action ${step.uses} must use a reviewed major or exact release`)
+      if (!/^\.\//.test(step.uses) && !/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+@[0-9a-f]{40}$/.test(step.uses)) {
+        errors.push(`${file}#${jobName}: action ${step.uses} must be pinned to a reviewed full commit SHA`)
       }
       if (step.uses.startsWith("actions/checkout@") && step.with?.["persist-credentials"] !== false) {
         errors.push(`${file}#${jobName}: checkout must disable persisted credentials`)

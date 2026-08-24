@@ -30,14 +30,55 @@ test("an invalid nested snapshot rejects the whole bundle before writes", async 
   assert.ok(errors.some((error) => error.includes("source appears more than once")))
 })
 
+test("a partial or self-shrunk bundle cannot pass an authoritative workflow contract", async () => {
+  const bundle = JSON.parse(await createMockBundle())
+  const expected = [...bundle.expected_source_ids]
+  bundle.snapshots = bundle.snapshots.slice(0, 1)
+  const missing = await validateBundle(bundle, undefined, { expectedSourceIds: expected })
+  assert.ok(missing.some((error) => error.includes("missing expected sources")))
+
+  bundle.expected_source_ids = [bundle.snapshots[0].source_id]
+  const selfShrunk = await validateBundle(bundle, undefined, { expectedSourceIds: expected })
+  assert.ok(selfShrunk.some((error) => error.includes("omits authoritative sources")))
+})
+
+test("snapshot strings are scanned for credentials before persistence", async () => {
+  const bundle = JSON.parse(await createMockBundle())
+  bundle.snapshots[0].data.summary = `Synthetic leak ${"sk-proj-"}${"x".repeat(24)}`
+  const errors = await validateBundle(bundle, undefined, { expectedSourceIds: bundle.expected_source_ids })
+  assert.ok(errors.some((error) => error.includes("possible OpenAI-style key")))
+  assert.ok(errors.every((error) => !error.includes("x".repeat(24))))
+
+  bundle.snapshots[0].data.summary = `api_key=${"a".repeat(20)}`
+  const generic = await validateBundle(bundle, undefined, { expectedSourceIds: bundle.expected_source_ids })
+  assert.ok(generic.some((error) => error.includes("embedded credential")))
+})
+
+test("source-specific content guards reject raw messages and account numbers", async () => {
+  const inboxBundle = JSON.parse(await createMockBundle())
+  inboxBundle.snapshots.find((item) => item.source_id === "inbox:attention").data.summary =
+    "From: Example sender\nTo: Example recipient\nSubject: Full copied message\nDate: Today\n" + "Body ".repeat(40)
+  assert.ok((await validateBundle(inboxBundle)).some((error) => error.includes("raw-email content guard")))
+
+  const moneyBundle = JSON.parse(await createMockBundle())
+  moneyBundle.snapshots.find((item) => item.source_id === "money:pulse").data.summary = "Account 123456789012 should not be stored."
+  assert.ok((await validateBundle(moneyBundle)).some((error) => error.includes("account-number content guard")))
+})
+
+test("aggregate dependencies must follow direct candidates", async () => {
+  const bundle = JSON.parse(await createMockBundle())
+  bundle.snapshots.reverse()
+  const errors = await validateBundle(bundle)
+  assert.ok(errors.some((error) => error.includes("must appear earlier in the bundle")))
+})
+
 test("encrypted snapshots authenticate round trips and reject tampering", () => {
   const key = randomBytes(32)
   const snapshot = { snapshot_id: "example:daily:2026-08-24", data: { value: 42 } }
   const envelope = encryptSnapshot(snapshot, key)
   assert.deepEqual(decryptSnapshotEnvelope(envelope, key), snapshot)
-  const ciphertext = Buffer.from(envelope.ciphertext, "base64url")
-  ciphertext[0] ^= 0x01
-  const tampered = { ...envelope, ciphertext: ciphertext.toString("base64url") }
+  const replacement = envelope.ciphertext.endsWith("A") ? "B" : "A"
+  const tampered = { ...envelope, ciphertext: `${envelope.ciphertext.slice(0, -1)}${replacement}` }
   assert.throws(() => decryptSnapshotEnvelope(tampered, key), /authentication failed/)
   assert.throws(() => decryptSnapshotEnvelope(envelope, randomBytes(32)), /does not match/)
 })
@@ -85,6 +126,7 @@ test("ingestion rejects a symbolic-link escape inside the output tree", async ()
     await symlink(outside, path.join(workspace, "agenda", "primary"))
     const bundle = JSON.parse(await createMockBundle())
     bundle.snapshots = bundle.snapshots.filter((snapshot) => snapshot.source_id === "agenda:primary")
+    bundle.expected_source_ids = ["agenda:primary"]
     await assert.rejects(() => persistBundle(bundle, { outputRoot: workspace }), /symbolic links/)
   } finally {
     await rm(workspace, { recursive: true, force: true })

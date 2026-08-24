@@ -20,7 +20,7 @@ When the demo feels right, generate the complete prompt for your real scheduled 
 npm run prompt:create
 ```
 
-Choose sources, describe the result you need, name the approved tools, and select useful presentation blocks. Paste the private generated prompt into your LLM. Read [Prompt Studio](prompt-studio.md) for multi-source profiles and new-source setup.
+Choose a provider and starter dashboard, then enter your public code fork and private data repository. Review the generated permission receipt before pasting the prompt into your LLM. Read [Prompt Studio](prompt-studio.md) for advanced profiles and new-source setup.
 
 ## 2. Configure the instance
 
@@ -30,7 +30,13 @@ The wizard writes `config/instance.local.json`. It is ignored by Git. You can re
 
 For experimentation, write snapshots under ignored `data/snapshots/`.
 
-For production, keep the public code fork clean and create a separate private data repository with the same `data/snapshots/<domain>/<source>/...` shape. Follow [Private data repository](deployment/data-repository.md).
+For production, keep the public code fork clean and create a separate private data repository. Install its independent validator before connecting an LLM:
+
+```bash
+npm run data-repository:init -- --repository-root ../zaati-data --code-repository YOUR_USER/zaati-os --code-ref FULL_COMMIT_SHA
+```
+
+Require the `Validate Zaati snapshots` check on the private repository's default branch. Follow [Private data repository](deployment/data-repository.md).
 
 ## 4. Connect one multi-source workflow
 
@@ -42,7 +48,7 @@ A useful first set is:
 
 Open `prompts/daily-bundle.md` and `prompts/scheduled-github-bundle.md`. Replace their repository, source, and timezone placeholders. Give them to the LLM workflow that already has approved access.
 
-Run the complete prompt manually before scheduling it. One run should validate and commit all selected dated files together. For a command adapter, pipe exact JSON into the local transaction:
+Run the complete prompt manually before scheduling it. One run should open one pull request containing all selected dated files. The LLM must never merge or bypass the independent check. For a trusted command adapter, pipe exact JSON into the local transaction:
 
 ```bash
 your-llm-command | npm run snapshot:ingest -- --output-dir data/snapshots

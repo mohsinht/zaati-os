@@ -23,7 +23,7 @@
     "provider": { "enum": ["chatgpt", "claude", "gemini", "local", "custom"] },
     "timezone": { "type": "string", "minLength": 1, "maxLength": 80 },
     "schedule": { "type": "string", "minLength": 1, "maxLength": 240 },
-    "publication": { "enum": ["pull-request", "direct-commit"] },
+    "publication": { "const": "pull-request" },
     "allow_same_repository": { "type": "boolean", "default": false },
     "sources": {
       "type": "array",

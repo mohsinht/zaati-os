@@ -84,9 +84,14 @@ export async function executeWorkflow(options = {}) {
           ? await createMockBundle({ root, attempt, failAttempts: settings.mockFailures, sourceIds: workflow.source_ids })
           : await commandAdapter(settings.command, prompt)
       const bundle = JSON.parse(raw)
-      await assertValidBundle(bundle, contracts)
+      await assertValidBundle(bundle, contracts, { expectedSourceIds: workflow.source_ids })
       const files = settings.outputRoot
-        ? await persistBundle(bundle, { outputRoot: settings.outputRoot, encryption: settings.encrypt, contracts })
+        ? await persistBundle(bundle, {
+            outputRoot: settings.outputRoot,
+            encryption: settings.encrypt,
+            contracts,
+            expectedSourceIds: workflow.source_ids,
+          })
         : []
       console.log(
         `Workflow succeeded on attempt ${attempt}. Validated ${bundle.snapshots.length} snapshots${files.length ? " and committed the local file transaction" : " in dry mode"}.`,

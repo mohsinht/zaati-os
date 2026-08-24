@@ -23,3 +23,10 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - Configurable brand mark, local font stacks, heading styles, extended theme tokens, and a live theme studio.
 - Apache 2.0 license, governance, security, contribution, and domain-pack documentation.
 - Private Prompt Studio CLI, profile schema, and copy-ready scheduled-task prompts with exact contracts, source registration gates, multi-source publication, and bounded retries.
+- Authoritative whole-bundle completeness checks that reject missing, extra, duplicate, and self-redefined source sets.
+- Universal credential scanning, source-specific content guards, and redacted validation errors for every snapshot string.
+- Independent private-repository pull-request validation with immutable validator refs and branch-protection guidance.
+- Source-specific durable facts schemas separated from optional presentation intent.
+- Dynamic freshness, real provenance disclosure, evidence references, and bounded snapshot history navigation.
+- Plain-language Prompt Studio starters with a separate human-readable permission receipt.
+- SHA-pinned GitHub Actions, a public synthetic Pages demo, fork-sync, lifecycle, compatibility, support, and release guidance.

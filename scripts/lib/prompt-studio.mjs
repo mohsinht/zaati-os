@@ -85,9 +85,8 @@ export function validatePromptProfile(profile, contracts) {
   return normalized
 }
 
-function selectedBlockContract(uiSchema, kinds) {
-  const shared = Object.fromEntries(["span", "tone", "format", "metric"].map((name) => [name, uiSchema.$defs[name]]))
-  return { shared, blocks: Object.fromEntries(kinds.map((kind) => [kind, uiSchema.$defs[kind]])) }
+function selectedBlockSummary(uiSchema, kinds) {
+  return kinds.map((kind) => ({ kind, required_fields: uiSchema.$defs[kind].required, extra_fields_rejected: true }))
 }
 
 function sourceRegistration(source, contracts) {
@@ -112,6 +111,7 @@ function sourceRegistration(source, contracts) {
       expected_classification: "private",
       authorized_inputs: source.registration.authorized_inputs,
       forbidden_inputs: source.registration.forbidden_inputs,
+      content_guards: ["authentication-link", "encoded-blob"],
     },
   }
 }
@@ -128,10 +128,6 @@ function buildScheduledPrompt(profile, contracts, registrations, missing) {
     tools: source.tools,
     preferred_blocks: source.preferred_blocks,
   }))
-  const publication =
-    profile.publication === "pull-request"
-      ? "Create or update one pull request containing the complete run. Never create one pull request per source."
-      : "Create one commit on the configured data branch containing the complete run."
   const registrationGate = missing.length
     ? `\n## Setup gate\n\nThese sources are not yet registered: ${missing.join(", ")}. Do not schedule or run this recurring task until the one-time setup prompt has been merged into the code repository. On every run, stop safely if any selected source is absent from the current registry.\n`
     : ""
@@ -154,7 +150,7 @@ You are a Zaati OS v${VERSION} data producer. Read approved sources, build one c
 ### Repositories and permissions
 
 - Read the current default branch of ${profile.code_repository} for the authoritative contract.
-- Write only to ${profile.data_repository}.
+- Write only to a new branch and pull request in ${profile.data_repository}. Never write directly to its protected default branch and never merge your own pull request.
 - Never edit application code, schemas, prompts, configuration, workflows, CI, dependencies, or documentation during a recurring run.
 - Never put credentials, raw provider exports, account identifiers, complete messages, attachments, or unnecessary personal details into snapshots, commits, pull requests, logs, or comments.
 - Stop without writing if repository access, required tools, or source registration is unavailable.
@@ -192,6 +188,7 @@ Return exactly one JSON object with no prose or Markdown fences to the validatio
   "bundle_version": "0.1.1",
   "run_id": "${sourceSlug(profile.task_name)}:YYYY-MM-DD",
   "generated_at": "RFC 3339 date-time",
+  "expected_source_ids": ${json(profile.sources.map((source) => source.id))},
   "snapshots": [
     {
       "schema_version": "0.1.1",
@@ -214,32 +211,16 @@ Return exactly one JSON object with no prose or Markdown fences to the validatio
 }
 \`\`\`
 
-The exact bundle schema is:
-
-\`\`\`json
-${json(contracts.bundleSchema)}
-\`\`\`
-
-The exact snapshot envelope is:
-
-\`\`\`json
-${json(contracts.snapshotSchema)}
-\`\`\`
-
-The generic domain payload is:
-
-\`\`\`json
-${json(contracts.genericSchema)}
-\`\`\`
+The compact object above is orientation, not a replacement for validation. The current files in the code repository are authoritative: schemas/snapshot-bundle.schema.json, schemas/snapshot.schema.json, schemas/ui-blocks.schema.json, and each registration.schema_ref. Populate stable data.facts first, then derive data.presentation from those facts.
 
 ### Safe presentation blocks
 
 Choose the smallest useful set from only the preferred blocks in the source intent. Use line charts for ordered trends, bars for categories, calendars for timed events, tables for exact repeated fields, timelines for meaningful sequences, and notices for caveats. Do not add a chart when a sentence or table is clearer. Never emit HTML, SVG, CSS, JavaScript, component names, templates, or executable links.
 
-Selected block definitions and their shared definitions:
+Selected block summary. Read schemas/ui-blocks.schema.json for the exact nested fields and limits:
 
 \`\`\`json
-${json(selectedBlockContract(contracts.uiSchema, selectedKinds))}
+${json(selectedBlockSummary(contracts.uiSchema, selectedKinds))}
 \`\`\`
 
 ### Validate, retry, publish
@@ -249,8 +230,9 @@ ${json(selectedBlockContract(contracts.uiSchema, selectedKinds))}
 3. Make at most three total attempts. After the third failure, write nothing and preserve every previous snapshot.
 4. Reject duplicate source IDs, unregistered sources, wrong worker ownership, unexpected properties, invalid block kinds, and any partial bundle.
 5. Persist only the nested snapshots, never the bundle wrapper. Same-day reruns replace only today's owned files and preserve snapshot_id.
-6. ${publication}
-7. Include only derived target paths and a redacted success or failure summary in the run report. Never echo private facts.
+6. Open one pull request containing the complete run. The independent "Validate Zaati snapshots" check must pass. Do not bypass, disable, edit, or self-certify that check.
+7. Never merge the pull request. Branch protection and the independent validator are the publication authority.
+8. Include only derived target paths and a redacted success or failure summary in the run report. Never echo private facts.
 
 The run succeeds only when every requested source is valid and published together. Voilà means one calm refresh, not six tiny fires.
 `
@@ -269,10 +251,10 @@ For each source:
 
 1. Add a reusable entry to config/sources.json with deterministic worker ownership and target path.
 2. Add a provider-neutral worker prompt under prompts/ that states authorized and forbidden inputs.
-3. Use schemas/domains/generic.schema.json unless a new data contract is genuinely required.
+3. Add a source-specific facts schema under schemas/domains/. Presentation remains optional view intent derived from stable facts.
 4. Add an obviously synthetic public fixture with privacy.synthetic true, contains_personal_data false, and classification public.
 5. Add tests and concise setup, permissions, disabling, and removal documentation.
-6. If it joins a multi-source workflow, preserve whole-bundle validation and one-commit publication.
+6. If it joins a multi-source workflow, preserve whole-bundle validation and one-pull-request publication.
 7. Run npm run check and report the results in the pull request.
 
 Never add credentials, provider exports, account IDs, private repository names, personal values, identifying screenshots, or real snapshot data. Do not weaken privacy validation, ignored paths, CI, encryption, Access-first deployment, or schema safety. Stop and ask if the requested source cannot be implemented without private examples.
@@ -287,6 +269,7 @@ export function generatePromptArtifacts(profile, contracts) {
   const slug = sourceSlug(validProfile.task_name)
   const files = {
     [`${slug}.scheduled-task.md`]: buildScheduledPrompt(validProfile, contracts, registrations, missing),
+    [`${slug}.permissions.md`]: buildPermissionManifest(validProfile, registrations, missing),
     [`${slug}.profile.json`]: `${JSON.stringify(validProfile, null, 2)}\n`,
   }
   if (missing.length)
@@ -295,6 +278,44 @@ export function generatePromptArtifacts(profile, contracts) {
       registrations.filter((item) => missing.includes(item.id)),
     )
   return { profile: validProfile, slug, missing, files }
+}
+
+function buildPermissionManifest(profile, registrations, missing) {
+  const sourceRows = profile.sources
+    .map((source) => {
+      const registration = registrations.find((item) => item.id === source.id)
+      return `| ${registration.label} | ${source.tools.join(", ")} | ${registration.target_path} | ${source.preferred_blocks.join(", ")} |`
+    })
+    .join("\n")
+  return `# ${safeLine(profile.task_name)} permission manifest
+
+Review this short file before pasting the machine prompt.
+
+## Schedule
+
+- Provider: ${PROVIDER_NAMES[profile.provider]}
+- Schedule: ${safeLine(profile.schedule)}
+- Timezone: ${safeLine(profile.timezone)}
+
+## Repository access
+
+- Read contracts from: ${profile.code_repository}
+- Create branches and pull requests in: ${profile.data_repository}
+- Direct writes and self-merges: forbidden
+- Required independent check: Validate Zaati snapshots
+
+## Source permissions
+
+| Source | Approved tools | Owned path | Allowed views |
+| --- | --- | --- | --- |
+${sourceRows}
+
+## Safety boundary
+
+The task may read only registered authorized inputs. It must not retain registered forbidden inputs, credentials, raw provider exports, authentication links, complete messages, account numbers, or unrelated personal data. Zaati OS scans snapshots and validates the exact source set independently before merge.
+
+${missing.length ? `Setup is incomplete. Register these sources before scheduling: ${missing.join(", ")}.` : "Setup is ready once the private repository validation check is installed and required by branch protection."}
+`
 }
 
 export async function writePromptArtifacts(artifacts, outputDirectory, { force = false } = {}) {

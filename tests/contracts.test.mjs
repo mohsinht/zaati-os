@@ -28,7 +28,7 @@ test("bundle contract contains snapshots rather than LLM-controlled paths", asyn
 test("default daily workflow batches several sources into one publication", async () => {
   const registry = await readJson("config/workflows.json")
   const daily = registry.workflows.find((workflow) => workflow.id === "daily-core")
-  assert.equal(daily.publication, "single-commit")
+  assert.equal(daily.publication, "pull-request")
   assert.equal(daily.max_attempts, 3)
   assert.ok(daily.source_ids.length >= 3)
   assert.ok(daily.source_ids.includes("overview:daily"))

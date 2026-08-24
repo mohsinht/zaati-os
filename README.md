@@ -14,7 +14,7 @@ Zaati OS is an open-source, private-by-default personal operating system. Schedu
 You choose the LLM. You own the data. You control the deployment. Zaati OS has no hosted account, required telemetry, central database, or platform fee.
 
 <p align="center">
-<img width="720" height="405" alt="show_frustration_here_in_the_s (2)" src="https://github.com/user-attachments/assets/efa34769-a201-433e-851e-c407b33580f4" />
+<img width="720" height="405" alt="Animated preview of the Zaati OS synthetic dashboard" src="https://github.com/user-attachments/assets/efa34769-a201-433e-851e-c407b33580f4" />
 </p>
 
 > The LLM is the ingestion and reasoning layer. Your private snapshot store is the durable memory. The dashboard is the interface.
@@ -24,10 +24,13 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
   &nbsp;&nbsp;·&nbsp;&nbsp;
   <a href="docs/quickstart.md">Quickstart</a>
   &nbsp;&nbsp;·&nbsp;&nbsp;
-  <a href="docs/privacy.md">Privacy model</a>
+  <a href="https://mohsinht.github.io/zaati-os/">Live synthetic demo</a>
   &nbsp;&nbsp;·&nbsp;&nbsp;
-  <a href="docs/deployment/cloudflare.md">Deploy privately</a>
+  <a href="docs/privacy.md">Privacy model</a>
 </p>
+
+> [!IMPORTANT]
+> Zaati OS supplies contracts, prompts, validators, storage, rendering, and deployment infrastructure. It does not ship built-in Gmail, Jira, calendar, or financial connectors. Your chosen LLM or workflow must already have approved, read-only access to each source.
 
 ## What makes it different
 
@@ -37,8 +40,6 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
 - **Files before databases:** JSON is portable, diffable, inspectable, and easy for AI tools to create.
 - **Useful failure states:** Freshness, provenance, confidence, missing sources, and warnings remain visible.
 - **Forkable foundation:** The app, schemas, prompts, tests, CI, deployment recipes, theming, and synthetic examples ship together.
-
-![Zaati OS synthetic dashboard](docs/assets/dashboard-light.png)
 
 ## From fork to your first dashboard
 
@@ -77,7 +78,7 @@ The shortest useful loop is three sources, for example agenda, inbox attention, 
 
 ## Create a scheduled task prompt
 
-Prompt Studio asks for your public Zaati OS fork, private data repository, schedule, sources, approved tools, desired content, and useful presentation blocks. It then creates a complete provider-neutral prompt with the current JSON contract, privacy boundaries, three-attempt retry protocol, and atomic multi-snapshot publication instructions.
+Prompt Studio asks three plain-language questions, then creates a human-readable permission receipt and the complete machine prompt. Advanced users can supply a reusable profile.
 
 ```bash
 npm run prompt:create
@@ -86,8 +87,8 @@ npm run prompt:create
 ![Animated terminal showing Zaati OS Prompt Studio](docs/assets/onboarding/prompt-studio.gif)
 
 1. Answer the local wizard. Never enter credentials or real source values.
-2. Open `.zaati/generated-prompts/<task>.scheduled-task.md`.
-3. Paste it into ChatGPT, Claude, Gemini, a local model, or your preferred workflow. Voilà.
+2. Review `.zaati/generated-prompts/<task>.permissions.md`.
+3. Paste the scheduled-task prompt into your LLM. Voilà.
 
 Generated profiles and prompts are ignored by Git and written with private file permissions. Existing sources produce one scheduled-task prompt. A new source produces a separate one-time setup prompt using only synthetic fixtures, while the recurring prompt remains data-only. See [Prompt Studio](docs/prompt-studio.md) and the [example profile](config/prompt-profile.example.json).
 
@@ -106,7 +107,7 @@ No upstream Zaati OS service participates in this flow.
 
 ## One run, many snapshots
 
-`schemas/snapshot-bundle.schema.json` lets one LLM run produce up to 20 registered snapshots. Zaati OS validates the entire bundle, sends concise contract errors back for up to three attempts, and writes nothing until every nested snapshot passes. Valid bundles are persisted as one rollback-safe local transaction or one Git commit.
+`schemas/snapshot-bundle.schema.json` lets one LLM run produce up to 20 registered snapshots. Zaati OS compares the returned sources with the workflow's authoritative source set, sends concise contract errors back for up to three attempts, and writes nothing until every nested snapshot passes. Git publication uses one pull request whose independent validator must pass before a human or trusted merge policy accepts it.
 
 This is especially useful for scheduled AI products where active task capacity is limited. One daily task can refresh agenda, inbox, work, money, news, and the overview instead of consuming one task per source. Start with the [one-task tutorial](docs/tutorials/one-task-daily-bundle.md).
 
@@ -153,7 +154,7 @@ See [LLM contract](docs/llm-contract.md) and [`schemas/`](schemas/) for the exec
 | `daily-overview.md`  | Combine registered source snapshots                  | Adaptive dashboard            |
 | `weekly-review.md`   | Find patterns and produce an evidence-based review   | Progress, timeline, decisions |
 
-These are provider-neutral templates. Copy one into any tool that can read approved sources and write JSON to the private snapshot store.
+These are provider-neutral templates, not connectors. The ChatGPT scheduled-task recipe is the maintained first path. Other providers are contract-compatible but are not claimed as end-to-end certified until their documented release gate passes.
 
 ## Repository map
 
@@ -175,7 +176,7 @@ deployments/           Optional infrastructure recipes
 
 A public fork is code, not a diary. Real snapshots, instance configuration, connector exports, secrets, and generated dashboard data are ignored. CI rejects committed private snapshot paths and common secret shapes. Synthetic examples are visibly marked and schema-validated.
 
-Optional AES-256-GCM snapshot encryption protects files at rest with a key supplied only through an ignored local key file or protected deployment secret. It is feature flagged and off by default. Encryption does not replace Access because authorized builds and browsers must eventually decrypt displayed facts.
+Optional AES-256-GCM snapshot encryption protects files at rest with a key supplied only through an ignored local key file or protected CI secret. It is feature flagged and off by default. Use it only with a trusted ingestion process that can receive the key. Never paste the key into an LLM prompt. Encryption does not replace Access because authorized builds and browsers must eventually decrypt displayed facts.
 
 The dashboard is a static bundle. That bundle contains the snapshot facts needed for display, so it must be treated as private even if the source repository is public. The recommended deployment disables public `workers.dev` and preview URLs, then requires Cloudflare Access on a custom hostname before data deployment.
 
@@ -183,24 +184,25 @@ Read [Privacy and threat model](docs/privacy.md) before connecting a real source
 
 ## Commands
 
-| Command                      | Result                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------ |
-| `npm run dev`                | Build the data index and start Vite                                            |
-| `npm run setup`              | Complete the guided three-step local setup                                     |
-| `npm run tutorial`           | Run the retrying mock LLM bundle and open it locally                           |
-| `npm run workflow:run`       | Connect any command-based LLM adapter                                          |
-| `npm run snapshot:ingest`    | Atomically validate and persist one multi-snapshot bundle                      |
-| `npm run snapshot:keygen`    | Create an ignored 256-bit snapshot key                                         |
-| `npm run instance:configure` | Create ignored local settings                                                  |
-| `npm run source:add`         | Scaffold a source catalog entry and worker prompt                              |
-| `npm run prompt:create`      | Build a private copy-ready scheduled-task prompt from a local profile          |
-| `npm run data:validate`      | Validate registries, snapshots, ownership, and UI blocks                       |
-| `npm run privacy:validate`   | Reject private paths and common credential shapes                              |
-| `npm run format:check`       | Reject formatting drift with Prettier                                          |
-| `npm run lint`               | Run type-aware ESLint, React Hooks, and React Refresh rules                    |
-| `npm run test:coverage`      | Run tests with enforced line, branch, and function coverage                    |
-| `npm run check`              | Run contracts, security, build, retry, encryption, performance, and WCAG tests |
-| `npm run deploy`             | Validate, build, and deploy with Wrangler                                      |
+| Command                        | Result                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| `npm run dev`                  | Build the data index and start Vite                                            |
+| `npm run setup`                | Complete the guided three-step local setup                                     |
+| `npm run tutorial`             | Run the retrying mock LLM bundle and open it locally                           |
+| `npm run workflow:run`         | Connect any command-based LLM adapter                                          |
+| `npm run snapshot:ingest`      | Atomically validate and persist one multi-snapshot bundle                      |
+| `npm run snapshot:keygen`      | Create an ignored 256-bit snapshot key                                         |
+| `npm run instance:configure`   | Create ignored local settings                                                  |
+| `npm run source:add`           | Scaffold a source catalog entry and worker prompt                              |
+| `npm run prompt:create`        | Build a private copy-ready scheduled-task prompt from a local profile          |
+| `npm run data-repository:init` | Install the independent validator in a private snapshot repository             |
+| `npm run data:validate`        | Validate registries, snapshots, ownership, and UI blocks                       |
+| `npm run privacy:validate`     | Reject private paths and common credential shapes                              |
+| `npm run format:check`         | Reject formatting drift with Prettier                                          |
+| `npm run lint`                 | Run type-aware ESLint, React Hooks, and React Refresh rules                    |
+| `npm run test:coverage`        | Run tests with enforced line, branch, and function coverage                    |
+| `npm run check`                | Run contracts, security, build, retry, encryption, performance, and WCAG tests |
+| `npm run deploy`               | Validate, build, and deploy with Wrangler                                      |
 
 ## Enforced quality gates
 
@@ -229,19 +231,19 @@ Pull requests expose each gate as a separate job and finish with one `Quality ga
 
 Zaati OS charges no platform fee and can be deployed using free or already-owned tools, depending on provider, connector, model, storage, and hosting choices.
 
-The safe sequence is visualized step by step in [Onboarding](docs/onboarding.md). Deploy synthetic data first, verify the Access challenge, and only then import private snapshots.
-
 ## Release
 
 Current version: **v0.1.1**
 
-This release establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider adapters, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. See [CHANGELOG.md](CHANGELOG.md).
+This release establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. See [CHANGELOG.md](CHANGELOG.md).
+
+Before storing real data, read [Data lifecycle and key recovery](docs/data-lifecycle.md). Fork maintainers can follow [Upgrade and fork sync](docs/upgrading.md).
 
 ## Contributing
 
 Contributions should be composable domain packs with a source entry, schema, prompt, synthetic fixture, rendering behavior, tests, privacy notes, and removal steps. Maintainers must never need real personal data to review a contribution.
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [SECURITY.md](SECURITY.md).
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SUPPORT.md](SUPPORT.md), and [SECURITY.md](SECURITY.md).
 
 The long-term product direction is captured in [Product vision](docs/product-vision.md) and [Roadmap](docs/roadmap.md).
 

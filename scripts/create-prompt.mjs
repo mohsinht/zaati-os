@@ -5,6 +5,7 @@ import path from "node:path"
 import process from "node:process"
 import readline from "node:readline/promises"
 import { generatePromptArtifacts, loadPromptContracts, normalizeGitHubRepository, writePromptArtifacts } from "./lib/prompt-studio.mjs"
+import { detectedDefaults, expandDependencies } from "./lib/setup-options.mjs"
 
 const args = process.argv.slice(2)
 const valueFor = (name) => {
@@ -36,34 +37,89 @@ const splitList = (answer) =>
     .map((item) => item.trim())
     .filter(Boolean)
 
+const providerTools = {
+  chatgpt: ["Connected source selected in ChatGPT", "GitHub"],
+  claude: ["Connected source selected in Claude", "GitHub"],
+  gemini: ["Connected source selected in Gemini", "GitHub"],
+  local: ["User-approved local connector", "GitHub"],
+  custom: ["User-approved connector", "GitHub"],
+}
+
+const defaultBlocks = {
+  "agenda:primary": ["calendar", "list", "notice"],
+  "inbox:attention": ["list", "notice"],
+  "work:focus": ["list", "progress", "notice"],
+  "money:pulse": ["metric-group", "line-chart", "table", "notice"],
+  "news:briefing": ["list", "notice"],
+  "overview:daily": ["metric-group", "list", "calendar", "notice"],
+  "review:weekly": ["metric-group", "line-chart", "list", "notice"],
+}
+
 async function interactiveProfile(contracts) {
   if (!process.stdin.isTTY || !process.stdout.isTTY) throw new Error("Interactive mode needs a terminal. Use --config for automation.")
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   try {
-    console.log("\nZaati OS Prompt Studio\nAnswer a few questions. No credentials or source values belong here.\n")
-    const sourceChoices = contracts.registry.sources.map((source) => source.id)
-    console.log(`Registered sources: ${sourceChoices.join(", ")}`)
-    const sourceIds = splitList(await rl.question("Source IDs, comma separated: "))
-    const sources = []
-    for (const id of sourceIds) {
-      if (!sourceChoices.includes(id))
-        throw new Error(`Interactive mode currently supports registered sources only. Add ${id} with npm run source:add, or use --config.`)
-      sources.push({
-        id,
-        requirements: splitList(await rl.question(`What should ${id} contain? Comma separated: `)),
-        tools: splitList(await rl.question(`Which approved tools can ${id} use? Comma separated: `)),
-        preferred_blocks: splitList(await rl.question(`Preferred blocks for ${id} (for example line-chart, table, notice): `)),
-      })
+    const defaults = detectedDefaults()
+    const choose = async (question, options, fallback = 1) => {
+      options.forEach((option, index) => console.log(`  ${index + 1}. ${option}`))
+      const answer = (await rl.question(`${question} [${fallback}]: `)).trim() || String(fallback)
+      const index = Number(answer) - 1
+      if (!Number.isInteger(index) || !options[index]) throw new Error(`Choose a number from 1 to ${options.length}.`)
+      return index
     }
+
+    console.log("\nZaati OS Prompt Studio\nThree small choices. No credentials or private source values belong here.\n")
+    const providerNames = ["ChatGPT", "Claude", "Gemini", "Local model", "Another workflow"]
+    const providerIds = ["chatgpt", "claude", "gemini", "local", "custom"]
+    console.log("1 of 3, choose where the task will run")
+    const provider = providerIds[await choose("Provider", providerNames)]
+
+    console.log("\n2 of 3, choose what the task should prepare")
+    const pack = await choose("Starter", [
+      "Daily dashboard (recommended)",
+      "Essential agenda and work",
+      "Weekly review",
+      "Choose individual sources",
+    ])
+    let requestedIds
+    if (pack === 0) requestedIds = ["overview:daily"]
+    else if (pack === 1) requestedIds = ["agenda:primary", "work:focus"]
+    else if (pack === 2) requestedIds = ["review:weekly"]
+    else {
+      contracts.registry.sources.forEach((source, index) => console.log(`  ${index + 1}. ${source.label}: ${source.description}`))
+      const selected = splitList(await rl.question("Source numbers, comma separated: ")).map(Number)
+      if (!selected.length || selected.some((number) => !Number.isInteger(number) || !contracts.registry.sources[number - 1]))
+        throw new Error(`Choose source numbers from 1 to ${contracts.registry.sources.length}.`)
+      requestedIds = selected.map((number) => contracts.registry.sources[number - 1].id)
+    }
+    const sourceIds = expandDependencies(requestedIds, contracts.registry)
+    console.log(`  Zaati will publish ${sourceIds.length} complete snapshot${sourceIds.length === 1 ? "" : "s"} together.`)
+
+    console.log("\n3 of 3, point it at your repositories")
+    const codeRepository = normalizeGitHubRepository(await rl.question("Public Zaati OS fork (owner/repository): "))
+    const dataRepository = normalizeGitHubRepository(await rl.question("Private data repository (owner/repository): "))
+    const taskName = (await rl.question("Task name [Daily Zaati update]: ")).trim() || "Daily Zaati update"
+    const schedule = (await rl.question("When should it run? [Every day at 07:00]: ")).trim() || "Every day at 07:00"
+    const timezone = (await rl.question(`Timezone [${defaults.timezone}]: `)).trim() || defaults.timezone
+    const outcome = (await rl.question("Anything special you want? [A calm, useful summary]: ")).trim() || "A calm, useful summary"
+    const sources = sourceIds.map((id) => {
+      const registration = contracts.registry.sources.find((source) => source.id === id)
+      return {
+        id,
+        requirements: [registration.description, outcome],
+        tools: providerTools[provider],
+        preferred_blocks: defaultBlocks[id] || ["list", "notice"],
+      }
+    })
     return {
       profile_version: "0.1.1",
-      task_name: await rl.question("Task name: "),
-      code_repository: normalizeGitHubRepository(await rl.question("Public Zaati OS fork (owner/repository): ")),
-      data_repository: normalizeGitHubRepository(await rl.question("Private data repository (owner/repository): ")),
-      provider: (await rl.question("Provider [chatgpt]: ")) || "chatgpt",
-      timezone: (await rl.question("Timezone [Etc/UTC]: ")) || "Etc/UTC",
-      schedule: await rl.question("Schedule in plain language: "),
-      publication: (await rl.question("Publication [pull-request]: ")) || "pull-request",
+      task_name: taskName,
+      code_repository: codeRepository,
+      data_repository: dataRepository,
+      provider,
+      timezone,
+      schedule,
+      publication: "pull-request",
       sources,
     }
   } finally {
@@ -86,8 +142,9 @@ try {
   const written = await writePromptArtifacts(artifacts, outputDirectory, { force: has("--force") })
   console.log(`\nCreated ${written.length} private local file${written.length === 1 ? "" : "s"}:`)
   written.forEach((file) => console.log(`- ${path.relative(process.cwd(), file)}`))
-  if (artifacts.missing.length) console.log("\nMerge the source-setup prompt's pull request before creating the scheduled task.")
-  else console.log("\nCopy the scheduled-task prompt into your LLM. Then approve its requested GitHub and source connections.")
+  console.log(`\nReview ${artifacts.slug}.permissions.md first. It is the human-readable permission receipt.`)
+  if (artifacts.missing.length) console.log("Merge the source-setup prompt's pull request before creating the scheduled task.")
+  else console.log("Then copy the scheduled-task prompt into your LLM and approve only the listed connections.")
   if (has("--stdout")) console.log(`\n${artifacts.files[`${artifacts.slug}.scheduled-task.md`]}`)
 } catch (error) {
   console.error(`Prompt Studio stopped: ${error.message}`)

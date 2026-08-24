@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/inbox.schema.json",
   "snapshot_id": "inbox:attention:2026-08-24",
   "source_id": "inbox:attention",
   "domain": "inbox",
@@ -17,6 +17,25 @@
     "title": "Two messages deserve attention",
     "summary": "One scheduling decision and one document review need a response. Everything else can wait.",
     "attention": "medium",
+    "facts": {
+      "items": [
+        {
+          "id": "m1",
+          "sender_label": "Project collaborator",
+          "subject_summary": "Choose a planning window",
+          "reason": "decision",
+          "deadline": "2026-08-24T17:00:00Z",
+          "status": "open"
+        },
+        {
+          "id": "m2",
+          "sender_label": "Review partner",
+          "subject_summary": "Approve the revised outline",
+          "reason": "reply",
+          "status": "open"
+        }
+      ]
+    },
     "presentation": {
       "layout": "focus",
       "blocks": [

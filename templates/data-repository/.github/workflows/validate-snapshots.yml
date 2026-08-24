@@ -1,0 +1,42 @@
+name: Validate Zaati snapshots
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout private data candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Checkout immutable Zaati OS validator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: YOUR_USER/zaati-os
+          ref: v0.1.1
+          path: .zaati-validator
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: .zaati-validator/package-lock.json
+      - name: Install the validator
+        run: npm ci --prefix .zaati-validator
+      - name: List candidate changes without reading values
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: git diff --name-only "$BASE_SHA"...HEAD > .zaati-changed-files
+      - name: Validate exact source set, ownership, schemas, and privacy
+        env:
+          ZAATI_SNAPSHOT_KEY: ${{ secrets.ZAATI_SNAPSHOT_KEY }}
+        run: node .zaati-validator/scripts/validate-data-repository.mjs --repository-root . --changed-files .zaati-changed-files

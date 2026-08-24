@@ -15,6 +15,7 @@ export async function createMockBundle({ root = process.cwd(), attempt = 1, fail
     bundle_version: "0.1.1",
     run_id: "tutorial-daily-bundle-2026-08-24",
     generated_at: "2026-08-24T07:30:00Z",
+    expected_source_ids: sourceIds,
     snapshots,
   })
 }

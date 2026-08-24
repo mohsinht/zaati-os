@@ -4,6 +4,7 @@ import process from "node:process"
 import Ajv2020 from "ajv/dist/2020.js"
 import addFormats from "ajv-formats"
 import { decryptSnapshotEnvelope, loadSnapshotKey } from "./lib/snapshot-crypto.mjs"
+import { scanSnapshot } from "./lib/snapshot-safety.mjs"
 
 const root = process.cwd()
 const errors = []
@@ -63,7 +64,16 @@ const schemaPaths = [
   "schemas/instance.schema.json",
   "schemas/workflow-registry.schema.json",
   "schemas/prompt-profile.schema.json",
+  "schemas/data-repository.schema.json",
+  "schemas/domains/domain-base.schema.json",
   "schemas/domains/generic.schema.json",
+  "schemas/domains/agenda.schema.json",
+  "schemas/domains/inbox.schema.json",
+  "schemas/domains/work.schema.json",
+  "schemas/domains/money.schema.json",
+  "schemas/domains/news.schema.json",
+  "schemas/domains/overview.schema.json",
+  "schemas/domains/review.schema.json",
 ]
 const schemas = await Promise.all(schemaPaths.map(readJson))
 const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true })
@@ -165,6 +175,7 @@ for (const file of snapshotFiles) {
     errors.push(`${file}: unregistered source ${snapshot.source_id}`)
     continue
   }
+  errors.push(...scanSnapshot(snapshot, { contentGuards: registration.privacy.content_guards || [] }).map((error) => `${file}${error}`))
   if (snapshot.domain !== registration.domain || snapshot.source !== registration.source)
     errors.push(`${file}: domain and source do not match ${snapshot.source_id}`)
   if (snapshot.producer?.worker_id !== registration.worker_id) errors.push(`${file}: producer must be ${registration.worker_id}`)

@@ -29,7 +29,7 @@ You need:
 - an LLM or automation environment that can use your approved sources and write to GitHub
 - a Cloudflare account and custom domain only when you are ready to deploy
 
-ChatGPT, Claude, Gemini, local models, n8n, cron, and custom commands can all use the same generated contract. Provider menus differ, but the Zaati OS side does not.
+The contract is provider-neutral, but Zaati OS does not bundle source connectors. The maintained first real workflow is ChatGPT scheduled tasks. Other capable LLMs, local models, n8n, cron, and custom commands can use the same contract when they already have the required approved tools.
 
 ## 1. Fork, clone, and personalize
 
@@ -50,7 +50,7 @@ Good starter choices:
 
 | Question    | Recommended first answer                                      |
 | ----------- | ------------------------------------------------------------- |
-| Source pack | `everyday`                                                    |
+| Source pack | `daily`                                                    |
 | Palette     | `sage`                                                        |
 | Font        | `system`                                                      |
 | Headers     | `plain`                                                       |
@@ -84,7 +84,13 @@ data/
         <YYYY>/<MM>/<YYYY-MM-DD>.json
 ```
 
-Your code fork can stay public. Your data repository must stay private. See [Private data repository](deployment/data-repository.md) for permissions, encryption, retention, and same-day reruns.
+Your code fork can stay public. Your data repository must stay private. Install its independent validation gate before connecting an LLM:
+
+```bash
+npm run data-repository:init -- --target ../zaati-data --code-repository YOUR_GITHUB_USERNAME/zaati-os --code-ref FULL_COMMIT_SHA
+```
+
+Commit the generated files and require `Validate Zaati snapshots` in branch protection. See [Private data repository](deployment/data-repository.md) for permissions, encryption, retention, and same-day reruns.
 
 ## 4. Understand the environment setup
 
@@ -101,7 +107,7 @@ Keep values in the system that needs them:
 | GitHub and source access              | Your LLM provider's connection settings               | No         |
 | Hostname and Worker name              | GitHub `production` environment variables             | No         |
 | Cloudflare and data repository tokens | GitHub `production` environment secrets               | No         |
-| Optional snapshot key                 | Protected deployment secret or ignored local key file | No         |
+| Optional snapshot key                 | Trusted local or protected CI ingestion and deployment | No         |
 
 Never paste tokens into a generated prompt. Prefer provider-managed connections and narrow repository permissions.
 
@@ -122,27 +128,21 @@ For a useful first daily task, choose:
 - `work:focus`
 - `overview:daily`, after its dependencies
 
-Prompt Studio asks what each source should contain, which tools it may use, and which presentation blocks would help. It also asks for:
+Prompt Studio asks for a provider, a starter dashboard, the two repositories, and a schedule. It chooses registered dependencies and safe view types for the normal path.
 
-- your public Zaati OS code fork
-- your private data repository
-- provider and timezone
-- schedule in plain language
-- direct commit or pull request publication
-
-It creates `.zaati/generated-prompts/<task>.scheduled-task.md` with the current schemas, privacy limits, retry protocol, deterministic paths, and atomic publication rules.
+It creates a short `.permissions.md` receipt for human review plus `.scheduled-task.md` with current contract locations, privacy limits, retries, deterministic paths, and pull-request publication rules.
 
 ### Configure the provider
 
 In ChatGPT, Claude, Gemini, n8n, or another supported environment:
 
-1. Connect GitHub and grant access to the private data repository.
+1. Connect GitHub and grant permission to create branches and pull requests only in the private data repository.
 2. Connect only the source tools selected in Prompt Studio, for example calendar or email.
 3. Create a task, automation, or reusable workflow.
 4. Paste the complete generated scheduled-task prompt.
-5. Review the requested repositories, sources, paths, and schedule.
+5. Review the generated permission receipt, repositories, sources, paths, and schedule.
 6. Run it manually once before enabling recurrence.
-7. Confirm that all selected snapshots arrive in one commit or pull request.
+7. Confirm that all selected snapshots arrive in one pull request and the independent check passes.
 
 The provider must read the current default branch contracts on every run. A copied prompt alone is not permanent authority to ignore newer schemas.
 
@@ -154,9 +154,10 @@ Check the private repository, not the public fork. A successful run should:
 - update all selected sources together
 - contain no credentials, raw provider exports, or unnecessary personal content
 - preserve missing values, uncertainty, provenance, and warnings
-- leave no partial commit if one snapshot fails
+- leave no mergeable pull request if one snapshot fails
+- stop without merging its own pull request
 
-For safer review, keep `pull-request` publication until the workflow is stable.
+Pull-request publication and the independent validator are required for scheduled Git workflows.
 
 ### Local command alternative
 
@@ -224,7 +225,7 @@ Create a Cloudflare Access self-hosted application for the exact hostname. Use e
 npm run access:verify -- life.example.com
 ```
 
-The command must detect an unauthenticated Access challenge or denial.
+The command must detect an unauthenticated Access challenge or denial for HTML, dashboard data, and an asset path.
 
 ### D. Connect private data
 
@@ -235,7 +236,7 @@ Read [Private Cloudflare deployment](deployment/cloudflare.md) for token scopes,
 ## Go-live checklist
 
 - [ ] The code fork contains no real snapshots or local instance file.
-- [ ] The data repository is private.
+- [ ] The data repository is private and its independent validator is required.
 - [ ] The LLM has only the GitHub and source access it needs.
 - [ ] One manual bundle run succeeded before scheduling.
 - [ ] The dashboard shows freshness, provenance, and honest missing states.
@@ -252,3 +253,4 @@ Read [Private Cloudflare deployment](deployment/cloudflare.md) for token scopes,
 - [Encrypted snapshots](tutorials/encrypted-snapshots.md), protect repository copies at rest
 - [Theme Studio](tutorials/theme-studio.md), personalize the interface
 - [Troubleshooting](troubleshooting.md), diagnose common setup and deployment issues
+

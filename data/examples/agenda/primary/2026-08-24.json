@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/agenda.schema.json",
   "snapshot_id": "agenda:primary:2026-08-24",
   "source_id": "agenda:primary",
   "domain": "agenda",
@@ -17,6 +17,35 @@
     "title": "A focused Monday",
     "summary": "Two deep-work windows, one short sync, and enough recovery space remain.",
     "attention": "low",
+    "facts": {
+      "events": [
+        {
+          "id": "a1",
+          "title": "Build the first usable slice",
+          "start": "2026-08-24T08:30:00Z",
+          "end": "2026-08-24T10:30:00Z",
+          "status": "scheduled"
+        },
+        {
+          "id": "a2",
+          "title": "Project sync",
+          "start": "2026-08-24T11:00:00Z",
+          "end": "2026-08-24T11:30:00Z",
+          "status": "scheduled"
+        },
+        {
+          "id": "a3",
+          "title": "Review and ship",
+          "start": "2026-08-24T13:00:00Z",
+          "end": "2026-08-24T14:30:00Z",
+          "status": "scheduled"
+        }
+      ],
+      "actions": [
+        { "id": "p1", "title": "Open the acceptance criteria", "due_at": "2026-08-24T08:30:00Z", "status": "open" },
+        { "id": "p2", "title": "Write the sync decision", "due_at": "2026-08-24T11:00:00Z", "status": "open" }
+      ]
+    },
     "presentation": {
       "layout": "focus",
       "blocks": [
