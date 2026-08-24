@@ -1,0 +1,64 @@
+name: Deploy private dashboard
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zaati-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || vars.ZAATI_AUTO_DEPLOY == 'true'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ZAATI_HOSTNAME: ${{ vars.ZAATI_HOSTNAME }}
+      ZAATI_WORKER_NAME: ${{ vars.ZAATI_WORKER_NAME }}
+      ZAATI_INSTANCE_CONFIG_JSON: ${{ secrets.ZAATI_INSTANCE_CONFIG_JSON }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Generate private instance configuration
+        if: env.ZAATI_INSTANCE_CONFIG_JSON != ''
+        run: npm run instance:configure -- --from-env --force
+      - name: Verify Access before private data checkout
+        if: ${{ vars.ZAATI_DATA_REPOSITORY != '' }}
+        run: |
+          test "${{ vars.ZAATI_ACCESS_VERIFIED }}" = "true"
+          npm run access:verify -- "$ZAATI_HOSTNAME"
+      - name: Checkout private snapshot repository
+        if: ${{ vars.ZAATI_DATA_REPOSITORY != '' }}
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ vars.ZAATI_DATA_REPOSITORY }}
+          ref: ${{ vars.ZAATI_DATA_REF || 'main' }}
+          token: ${{ secrets.ZAATI_DATA_REPOSITORY_TOKEN }}
+          path: .private-data
+          persist-credentials: false
+      - name: Import private snapshots without logging content
+        if: ${{ vars.ZAATI_DATA_REPOSITORY != '' }}
+        run: node scripts/import-private-data.mjs .private-data/data/snapshots
+      - run: npm run check
+      - run: npm run deployment:configure
+      - name: Deploy Worker static assets
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config .wrangler.generated.jsonc
+      - name: Verify unauthenticated challenge after deploy
+        if: ${{ vars.ZAATI_DATA_REPOSITORY != '' }}
+        run: npm run access:verify -- "$ZAATI_HOSTNAME"

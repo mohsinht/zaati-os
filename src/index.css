@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-positive: var(--positive);
+  --color-positive-foreground: var(--positive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  color-scheme: light;
+  --radius: 0.9rem;
+  --background: #f6f7f4;
+  --foreground: #17201c;
+  --card: #ffffff;
+  --card-foreground: #17201c;
+  --popover: #ffffff;
+  --popover-foreground: #17201c;
+  --primary: #2f6f59;
+  --primary-foreground: #ffffff;
+  --secondary: #e9ece8;
+  --secondary-foreground: #22312a;
+  --muted: #ecefeb;
+  --muted-foreground: #68736d;
+  --accent: #e2eee8;
+  --accent-foreground: #245543;
+  --destructive: #c83f4d;
+  --border: #dde2de;
+  --input: #dde2de;
+  --ring: #2f6f59;
+  --positive: #3c8b68;
+  --positive-foreground: #226044;
+  --warning: #c58932;
+  --warning-foreground: #82591e;
+  --info: #4380a3;
+  --info-foreground: #2f6380;
+  --chart-1: #2f6f59;
+  --chart-2: #d29c4e;
+  --chart-3: #5287a4;
+  --chart-4: #8c6e9b;
+  --chart-5: #8f7d61;
+  --sidebar: #f0f2ee;
+  --sidebar-foreground: #26312b;
+  --sidebar-primary: #2f6f59;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e0e6e1;
+  --sidebar-accent-foreground: #17201c;
+  --sidebar-border: #d9dfda;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #111512;
+  --foreground: #eef2ef;
+  --card: #171c18;
+  --card-foreground: #eef2ef;
+  --popover: #1b211d;
+  --popover-foreground: #eef2ef;
+  --primary: #75b99d;
+  --primary-foreground: #0e2119;
+  --secondary: #252b27;
+  --secondary-foreground: #e4e9e5;
+  --muted: #202622;
+  --muted-foreground: #99a39c;
+  --accent: #233a30;
+  --accent-foreground: #bfe3d3;
+  --destructive: #f0707c;
+  --border: #2b332e;
+  --input: #2b332e;
+  --ring: #75b99d;
+  --positive: #62aa84;
+  --positive-foreground: #89d0a8;
+  --warning: #d5a14f;
+  --warning-foreground: #e2b96f;
+  --info: #65a0c0;
+  --info-foreground: #86bdd9;
+  --chart-1: #75b99d;
+  --chart-2: #d5a14f;
+  --chart-3: #65a0c0;
+  --chart-4: #a98cb8;
+  --chart-5: #ad9a7d;
+  --sidebar: #141915;
+  --sidebar-foreground: #dce3de;
+  --sidebar-primary: #75b99d;
+  --sidebar-primary-foreground: #0e2119;
+  --sidebar-accent: #222a25;
+  --sidebar-accent-foreground: #f0f4f1;
+  --sidebar-border: #29312c;
+}
+
+[data-palette="ocean"] {
+  --primary: #226f9a;
+  --ring: #226f9a;
+  --accent: #e0edf4;
+  --accent-foreground: #184f6f;
+  --sidebar-primary: #226f9a;
+  --chart-1: #226f9a;
+  --chart-2: #50a09a;
+  --chart-3: #d09146;
+}
+.dark[data-palette="ocean"] { --primary: #70b5da; --primary-foreground: #102834; --accent: #203946; --accent-foreground: #c1e3f4; --sidebar-primary: #70b5da; --chart-1: #70b5da; }
+[data-palette="plum"] { --primary: #765486; --ring: #765486; --accent: #eee6f1; --accent-foreground: #593c66; --sidebar-primary: #765486; --chart-1: #765486; --chart-2: #b07e7e; --chart-3: #5c8e87; }
+.dark[data-palette="plum"] { --primary: #b99ac6; --primary-foreground: #2d1c35; --accent: #392b3f; --accent-foreground: #ead8f0; --sidebar-primary: #b99ac6; --chart-1: #b99ac6; }
+[data-palette="sand"] { --primary: #8a6239; --ring: #8a6239; --accent: #f1e9df; --accent-foreground: #654521; --sidebar-primary: #8a6239; --chart-1: #8a6239; --chart-2: #6f8b62; --chart-3: #bd7a5d; }
+.dark[data-palette="sand"] { --primary: #c8a474; --primary-foreground: #302414; --accent: #3b3227; --accent-foreground: #f0dbc1; --sidebar-primary: #c8a474; --chart-1: #c8a474; }
+
+* { border-color: var(--border); }
+html { background: var(--background); }
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--background);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+}
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+::selection { background: color-mix(in srgb, var(--primary) 22%, transparent); }
+
+[data-density="compact"] main { --radius: 0.65rem; }
+[data-density="compact"] main .p-5 { padding: 1rem; }
+[data-density="compact"] main .gap-4 { gap: 0.75rem; }
+
+.palette-dot { display: block; width: 1.15rem; height: 1.15rem; border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, #000 10%, transparent); }
+.palette-sage { background: #2f6f59; }
+.palette-ocean { background: #226f9a; }
+.palette-plum { background: #765486; }
+.palette-sand { background: #8a6239; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

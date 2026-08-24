@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.1",
+  "schema_ref": "schemas/domains/generic.schema.json",
+  "snapshot_id": "inbox:attention:2026-08-24",
+  "source_id": "inbox:attention",
+  "domain": "inbox",
+  "source": "attention",
+  "generated_at": "2026-08-24T07:15:00Z",
+  "effective_period": { "start": "2026-08-23T07:15:00Z", "end": "2026-08-24T07:15:00Z", "timezone": "UTC" },
+  "status": "success",
+  "producer": { "worker_id": "inbox-attention-daily", "workflow": "example", "version": "0.1.1" },
+  "sources": [{ "label": "Synthetic inbox", "status": "ok", "as_of": "2026-08-24T07:15:00Z", "reference": "synthetic://inbox" }],
+  "freshness": { "expires_at": "2026-08-25T13:15:00Z" },
+  "quality": { "confidence": "high", "warnings": [] },
+  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "data": {
+    "title": "Two messages deserve attention",
+    "summary": "One scheduling decision and one document review need a response. Everything else can wait.",
+    "attention": "medium",
+    "presentation": {
+      "layout": "focus",
+      "blocks": [
+        { "id": "counts", "kind": "metric-group", "title": "Attention filter", "span": "full", "metrics": [{ "label": "Needs reply", "value": 2, "tone": "warning" }, { "label": "Waiting on others", "value": 1, "tone": "neutral" }, { "label": "Ignored noise", "value": 18, "tone": "positive" }] },
+        {
+          "id": "messages",
+          "kind": "list",
+          "title": "Reply queue",
+          "span": "two",
+          "items": [
+            { "id": "m1", "title": "Choose a planning window", "description": "A collaborator proposed two times for tomorrow.", "meta": "Due today", "status": "Decision", "tone": "warning" },
+            { "id": "m2", "title": "Approve the revised outline", "description": "The requested changes are ready for a quick review.", "meta": "15 minutes", "status": "Review", "tone": "info" }
+          ]
+        },
+        { "id": "noise", "kind": "notice", "title": "Noise stayed quiet", "body": "Newsletters, receipts, automated updates, and promotional messages were excluded from the attention queue.", "tone": "positive", "span": "one" }
+      ]
+    }
+  }
+}

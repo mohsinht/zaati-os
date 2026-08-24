@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.1.1",
+  "schema_ref": "schemas/domains/generic.schema.json",
+  "snapshot_id": "money:pulse:2026-08-24",
+  "source_id": "money:pulse",
+  "domain": "money",
+  "source": "pulse",
+  "generated_at": "2026-08-23T18:00:00Z",
+  "effective_period": { "start": "2026-08-23T00:00:00Z", "end": "2026-08-23T23:59:59Z", "timezone": "UTC" },
+  "status": "partial",
+  "producer": { "worker_id": "money-pulse-daily", "workflow": "example", "version": "0.1.1" },
+  "sources": [{ "label": "Synthetic account summary", "status": "stale", "as_of": "2026-08-23T18:00:00Z", "reference": "synthetic://money" }],
+  "freshness": { "expires_at": "2026-08-25T06:00:00Z" },
+  "quality": { "confidence": "medium", "warnings": ["One synthetic source has not refreshed today."] },
+  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "data": {
+    "title": "Goals are on pace",
+    "summary": "The synthetic savings rate remains ahead of target. One source is stale, so today's change is not treated as final.",
+    "attention": "low",
+    "presentation": {
+      "layout": "dashboard",
+      "blocks": [
+        { "id": "money-metrics", "kind": "metric-group", "title": "Synthetic money pulse", "span": "full", "metrics": [{ "label": "Goal funded", "value": 64, "format": "percent", "change": 2.4, "change_label": "this month", "tone": "positive" }, { "label": "Savings rate", "value": 31, "format": "percent", "tone": "positive" }, { "label": "Runway", "value": 11, "unit": "months", "tone": "info" }] },
+        {
+          "id": "goal-trend",
+          "kind": "line-chart",
+          "title": "Goal trajectory",
+          "description": "Synthetic index, not real money.",
+          "span": "two",
+          "y_format": "percent",
+          "series": [{ "key": "actual", "label": "Actual" }, { "key": "plan", "label": "Plan" }],
+          "points": [
+            { "x": "Mar", "values": { "actual": 48, "plan": 47 } },
+            { "x": "Apr", "values": { "actual": 51, "plan": 50 } },
+            { "x": "May", "values": { "actual": 55, "plan": 53 } },
+            { "x": "Jun", "values": { "actual": 58, "plan": 56 } },
+            { "x": "Jul", "values": { "actual": 61, "plan": 59 } },
+            { "x": "Aug", "values": { "actual": 64, "plan": 62 } }
+          ]
+        },
+        { "id": "money-goals", "kind": "progress", "title": "Goal progress", "span": "one", "items": [{ "label": "Emergency reserve", "value": 11, "max": 12, "value_label": "11 of 12 months", "tone": "positive" }, { "label": "Annual investing target", "value": 7.4, "max": 12, "value_label": "7.4 of 12 units", "tone": "info" }] },
+        { "id": "money-warning", "kind": "notice", "title": "Wait for the refresh", "body": "The latest movement remains provisional because one approved source is stale. Missing data is not converted to zero.", "tone": "warning", "span": "full" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/instance.schema.json",
+  "title": "Zaati OS instance configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["brand_name", "tagline", "timezone", "locale", "currency", "week_starts_on", "enabled_sources", "theme"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "brand_name": { "type": "string", "minLength": 1, "maxLength": 40 },
+    "tagline": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "timezone": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "locale": { "type": "string", "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$" },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "week_starts_on": { "enum": ["monday", "sunday"] },
+    "enabled_sources": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preset", "default_mode", "density", "radius", "custom_tokens"],
+      "properties": {
+        "preset": { "enum": ["sage", "ocean", "plum", "sand", "custom"] },
+        "default_mode": { "enum": ["system", "light", "dark"] },
+        "density": { "enum": ["compact", "comfortable"] },
+        "radius": { "type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+)?(?:px|rem)$" },
+        "custom_tokens": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "primary": { "$ref": "#/$defs/color" },
+            "primary_foreground": { "$ref": "#/$defs/color" },
+            "accent": { "$ref": "#/$defs/color" },
+            "accent_foreground": { "$ref": "#/$defs/color" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+  }
+}

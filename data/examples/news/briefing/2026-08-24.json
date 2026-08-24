@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.1.1",
+  "schema_ref": "schemas/domains/generic.schema.json",
+  "snapshot_id": "news:briefing:2026-08-24",
+  "source_id": "news:briefing",
+  "domain": "news",
+  "source": "briefing",
+  "generated_at": "2026-08-24T06:55:00Z",
+  "effective_period": { "start": "2026-08-23T06:55:00Z", "end": "2026-08-24T06:55:00Z", "timezone": "UTC" },
+  "status": "success",
+  "producer": { "worker_id": "news-briefing-daily", "workflow": "example", "version": "0.1.1" },
+  "sources": [{ "label": "Synthetic public reporting", "status": "ok", "as_of": "2026-08-24T06:45:00Z", "reference": "synthetic://news" }],
+  "freshness": { "expires_at": "2026-08-25T06:55:00Z" },
+  "quality": { "confidence": "high", "warnings": ["Stories and links in demo mode are illustrative, not current news."] },
+  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "data": {
+    "title": "Three developments worth knowing",
+    "summary": "The synthetic briefing prioritizes impact and removes duplicate commentary.",
+    "attention": "low",
+    "presentation": {
+      "layout": "timeline",
+      "blocks": [
+        {
+          "id": "briefing",
+          "kind": "list",
+          "title": "Briefing",
+          "span": "two",
+          "items": [
+            { "id": "n1", "title": "Open standards make agent workflows easier to move", "description": "Why it matters: teams can change models without rebuilding every downstream view.", "meta": "AI systems", "tone": "info", "href": "https://example.com/ai-standards" },
+            { "id": "n2", "title": "Smaller software releases continue to outperform big-bang delivery", "description": "Why it matters: reliability improves when feedback arrives before architecture hardens.", "meta": "Engineering", "tone": "positive", "href": "https://example.com/software-delivery" },
+            { "id": "n3", "title": "Privacy controls move closer to the data layer", "description": "Why it matters: access boundaries become portable across hosting providers.", "meta": "Privacy", "tone": "warning", "href": "https://example.com/privacy-controls" }
+          ]
+        },
+        { "id": "watch", "kind": "timeline", "title": "What to watch", "span": "one", "items": [{ "label": "This week", "title": "Provider portability", "description": "Look for concrete export formats, not broad interoperability claims.", "tone": "info" }, { "label": "Next", "title": "Access by default", "description": "Watch whether private deployments ship authentication as a first-class step.", "tone": "warning" }] }
+      ]
+    }
+  }
+}

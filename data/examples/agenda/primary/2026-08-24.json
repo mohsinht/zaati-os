@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.1.1",
+  "schema_ref": "schemas/domains/generic.schema.json",
+  "snapshot_id": "agenda:primary:2026-08-24",
+  "source_id": "agenda:primary",
+  "domain": "agenda",
+  "source": "primary",
+  "generated_at": "2026-08-24T07:20:00Z",
+  "effective_period": { "start": "2026-08-24T00:00:00Z", "end": "2026-08-24T23:59:59Z", "timezone": "UTC" },
+  "status": "success",
+  "producer": { "worker_id": "agenda-daily", "workflow": "example", "version": "0.1.1" },
+  "sources": [{ "label": "Synthetic calendar", "status": "ok", "as_of": "2026-08-24T07:20:00Z", "reference": "synthetic://calendar" }],
+  "freshness": { "expires_at": "2026-08-25T13:20:00Z" },
+  "quality": { "confidence": "high", "warnings": [] },
+  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "data": {
+    "title": "A focused Monday",
+    "summary": "Two deep-work windows, one short sync, and enough recovery space remain.",
+    "attention": "low",
+    "presentation": {
+      "layout": "focus",
+      "blocks": [
+        {
+          "id": "schedule",
+          "kind": "calendar",
+          "title": "Schedule",
+          "date": "2026-08-24",
+          "span": "two",
+          "events": [
+            { "id": "a1", "title": "Build the first usable slice", "start": "2026-08-24T08:30:00Z", "end": "2026-08-24T10:30:00Z", "tone": "positive" },
+            { "id": "a2", "title": "Project sync", "start": "2026-08-24T11:00:00Z", "end": "2026-08-24T11:30:00Z", "tone": "info" },
+            { "id": "a3", "title": "Review and ship", "start": "2026-08-24T13:00:00Z", "end": "2026-08-24T14:30:00Z", "tone": "positive" }
+          ]
+        },
+        {
+          "id": "prep",
+          "kind": "list",
+          "title": "Tiny preparation",
+          "span": "one",
+          "items": [
+            { "id": "p1", "title": "Open the acceptance criteria", "meta": "Before 08:30", "tone": "neutral" },
+            { "id": "p2", "title": "Write the sync decision in one sentence", "meta": "Before 11:00", "tone": "info" }
+          ]
+        }
+      ]
+    }
+  }
+}

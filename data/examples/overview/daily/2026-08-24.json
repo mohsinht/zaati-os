@@ -1,0 +1,110 @@
+{
+  "schema_version": "0.1.1",
+  "schema_ref": "schemas/domains/generic.schema.json",
+  "snapshot_id": "overview:daily:2026-08-24",
+  "source_id": "overview:daily",
+  "domain": "overview",
+  "source": "daily",
+  "generated_at": "2026-08-24T07:35:00Z",
+  "effective_period": { "start": "2026-08-24T00:00:00Z", "end": "2026-08-24T23:59:59Z", "timezone": "UTC" },
+  "status": "partial",
+  "producer": { "worker_id": "overview-daily", "workflow": "example", "version": "0.1.1" },
+  "sources": [
+    { "label": "Synthetic agenda", "status": "ok", "as_of": "2026-08-24T07:20:00Z", "reference": "agenda:primary:2026-08-24" },
+    { "label": "Synthetic inbox", "status": "ok", "as_of": "2026-08-24T07:15:00Z", "reference": "inbox:attention:2026-08-24" },
+    { "label": "Synthetic work", "status": "ok", "as_of": "2026-08-24T07:10:00Z", "reference": "work:focus:2026-08-24" },
+    { "label": "Synthetic money", "status": "stale", "as_of": "2026-08-23T18:00:00Z", "reference": "money:pulse:2026-08-24" },
+    { "label": "Synthetic news", "status": "ok", "as_of": "2026-08-24T06:55:00Z", "reference": "news:briefing:2026-08-24" }
+  ],
+  "freshness": { "expires_at": "2026-08-25T13:35:00Z", "next_expected_at": "2026-08-25T07:35:00Z" },
+  "quality": { "confidence": "medium", "warnings": ["The synthetic money source is intentionally marked stale to demonstrate a real failure state."] },
+  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "data": {
+    "title": "Good morning. Your day has shape.",
+    "summary": "Protect the first focus block, answer two time-sensitive messages, and leave the afternoon buffer intact.",
+    "attention": "medium",
+    "presentation": {
+      "layout": "dashboard",
+      "blocks": [
+        {
+          "id": "day-at-glance",
+          "kind": "metric-group",
+          "title": "Day at a glance",
+          "span": "full",
+          "metrics": [
+            { "label": "Focus time", "value": 3.5, "unit": "hours", "tone": "positive" },
+            { "label": "Needs a reply", "value": 2, "format": "number", "tone": "warning" },
+            { "label": "Open blockers", "value": 1, "format": "number", "tone": "neutral" },
+            { "label": "Goal pace", "value": 78, "format": "percent", "change": 6, "change_label": "this week", "tone": "positive" }
+          ]
+        },
+        {
+          "id": "attention-shape",
+          "kind": "line-chart",
+          "title": "Attention shape",
+          "description": "A synthetic seven-day view of completed focus blocks and interruptions.",
+          "span": "two",
+          "y_format": "number",
+          "series": [
+            { "key": "focus", "label": "Focus blocks" },
+            { "key": "interruptions", "label": "Interruptions" }
+          ],
+          "points": [
+            { "x": "Mon", "values": { "focus": 2, "interruptions": 5 } },
+            { "x": "Tue", "values": { "focus": 3, "interruptions": 4 } },
+            { "x": "Wed", "values": { "focus": 3, "interruptions": 3 } },
+            { "x": "Thu", "values": { "focus": 4, "interruptions": 2 } },
+            { "x": "Fri", "values": { "focus": 3, "interruptions": 3 } },
+            { "x": "Sat", "values": { "focus": 1, "interruptions": 1 } },
+            { "x": "Sun", "values": { "focus": 2, "interruptions": 1 } }
+          ]
+        },
+        {
+          "id": "today",
+          "kind": "calendar",
+          "title": "Today",
+          "description": "Four commitments with one protected buffer.",
+          "span": "one",
+          "date": "2026-08-24",
+          "events": [
+            { "id": "focus-1", "title": "Build the first usable slice", "start": "2026-08-24T08:30:00Z", "end": "2026-08-24T10:30:00Z", "tone": "positive" },
+            { "id": "sync", "title": "Project sync", "start": "2026-08-24T11:00:00Z", "end": "2026-08-24T11:30:00Z", "tone": "info" },
+            { "id": "focus-2", "title": "Review and ship", "start": "2026-08-24T13:00:00Z", "end": "2026-08-24T14:30:00Z", "tone": "positive" },
+            { "id": "buffer", "title": "Open buffer", "start": "2026-08-24T15:00:00Z", "end": "2026-08-24T16:00:00Z", "tone": "neutral" }
+          ]
+        },
+        {
+          "id": "next-actions",
+          "kind": "list",
+          "title": "Decide or do",
+          "description": "Only actions with a concrete next step appear here.",
+          "span": "one",
+          "items": [
+            { "id": "reply", "title": "Reply to the scheduling question", "description": "Confirm one of the two proposed windows.", "meta": "Before 10:00", "status": "Needs reply", "tone": "warning" },
+            { "id": "review", "title": "Review the small release", "description": "Check the acceptance criteria and approve or request changes.", "meta": "20 minutes", "status": "Ready", "tone": "positive" },
+            { "id": "plan", "title": "Choose tomorrow's first task", "description": "Write a single startable action before ending the day.", "meta": "End of day", "status": "Later", "tone": "neutral" }
+          ]
+        },
+        {
+          "id": "goal-progress",
+          "kind": "progress",
+          "title": "Goals in motion",
+          "span": "one",
+          "items": [
+            { "label": "Weekly deep work", "value": 7.5, "max": 10, "value_label": "7.5 of 10 hours", "tone": "positive" },
+            { "label": "Movement", "value": 4, "max": 5, "value_label": "4 of 5 sessions", "tone": "info" },
+            { "label": "Admin cleared", "value": 6, "max": 10, "value_label": "6 of 10 items", "tone": "warning" }
+          ]
+        },
+        {
+          "id": "protect-buffer",
+          "kind": "notice",
+          "title": "Protect the buffer",
+          "body": "The afternoon has enough space to absorb surprises. Filling it now would turn a calm plan into calendar Tetris.",
+          "tone": "info",
+          "span": "full"
+        }
+      ]
+    }
+  }
+}

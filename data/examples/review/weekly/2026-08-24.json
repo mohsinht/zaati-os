@@ -1,0 +1,37 @@
+{
+  "schema_version": "0.1.1",
+  "schema_ref": "schemas/domains/generic.schema.json",
+  "snapshot_id": "review:weekly:2026-08-24",
+  "source_id": "review:weekly",
+  "domain": "review",
+  "source": "weekly",
+  "generated_at": "2026-08-24T07:40:00Z",
+  "effective_period": { "start": "2026-08-18T00:00:00Z", "end": "2026-08-24T23:59:59Z", "timezone": "UTC" },
+  "status": "partial",
+  "producer": { "worker_id": "review-weekly", "workflow": "example", "version": "0.1.1" },
+  "sources": [
+    { "label": "Synthetic daily overviews", "status": "ok", "as_of": "2026-08-24T07:35:00Z", "reference": "overview:daily:2026-08-24" },
+    { "label": "Synthetic agenda", "status": "ok", "as_of": "2026-08-24T07:20:00Z", "reference": "agenda:primary:2026-08-24" },
+    { "label": "Synthetic inbox", "status": "ok", "as_of": "2026-08-24T07:15:00Z", "reference": "inbox:attention:2026-08-24" },
+    { "label": "Synthetic work", "status": "ok", "as_of": "2026-08-24T07:10:00Z", "reference": "work:focus:2026-08-24" },
+    { "label": "Synthetic money pulse", "status": "stale", "as_of": "2026-08-23T18:00:00Z", "reference": "money:pulse:2026-08-24" },
+    { "label": "Synthetic news", "status": "ok", "as_of": "2026-08-24T06:55:00Z", "reference": "news:briefing:2026-08-24" }
+  ],
+  "freshness": { "expires_at": "2026-09-01T07:40:00Z", "next_expected_at": "2026-08-31T07:40:00Z" },
+  "quality": { "confidence": "medium", "warnings": ["One input was stale, so money-related conclusions are intentionally limited."] },
+  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "data": {
+    "title": "A calmer week produced better output",
+    "summary": "Protected focus blocks rose while interruptions fell. The useful next move is to preserve the same morning boundary.",
+    "attention": "low",
+    "presentation": {
+      "layout": "timeline",
+      "blocks": [
+        { "id": "week-metrics", "kind": "metric-group", "title": "Week in numbers", "span": "full", "metrics": [{ "label": "Focus blocks", "value": 18, "change": 4, "change_label": "vs last week", "tone": "positive" }, { "label": "Completed decisions", "value": 9, "tone": "positive" }, { "label": "Carried forward", "value": 3, "tone": "warning" }] },
+        { "id": "week-goals", "kind": "progress", "title": "Commitments", "span": "one", "items": [{ "label": "Deep work", "value": 9.2, "max": 10, "value_label": "92%", "tone": "positive" }, { "label": "Movement", "value": 4, "max": 5, "value_label": "4 of 5", "tone": "info" }, { "label": "Weekly cleanup", "value": 1, "max": 1, "value_label": "Done", "tone": "positive" }] },
+        { "id": "week-story", "kind": "timeline", "title": "What changed", "span": "two", "items": [{ "label": "Monday", "title": "Reduced the active queue", "description": "Three low-value items were deliberately removed.", "tone": "positive" }, { "label": "Wednesday", "title": "Protected the first focus block", "description": "A meeting was moved instead of splitting the morning.", "tone": "info" }, { "label": "Friday", "title": "Shipped a complete slice", "description": "The smaller scope made review faster and clearer.", "tone": "positive" }] },
+        { "id": "week-decision", "kind": "notice", "title": "Decision for next week", "body": "Keep the first two hours meeting-free on at least three weekdays. The evidence is behavioral, not motivational: those mornings produced the week's completed work.", "tone": "positive", "span": "full" }
+      ]
+    }
+  }
+}

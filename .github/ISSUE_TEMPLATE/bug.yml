@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible Zaati OS problem using synthetic data.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Never include private snapshots, credentials, identifying screenshots, or deployment hostnames.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: v0.1.1
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Use the synthetic demo or a minimized synthetic fixture.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Validation output
+      description: Remove private paths and values before pasting logs.

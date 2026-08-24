@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.wrangler/
+.wrangler.generated.jsonc
+.private-data/
+.dev.vars
+.env
+.env.*
+!.env.example
+config/instance.local.json
+src/generated/*.json
+!src/generated/.gitkeep
+data/snapshots/**
+!data/snapshots/README.md
+*.log
+.DS_Store
+coverage/
