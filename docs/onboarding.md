@@ -50,7 +50,7 @@ Good starter choices:
 
 | Question    | Recommended first answer                                      |
 | ----------- | ------------------------------------------------------------- |
-| Source pack | `daily`                                                    |
+| Source pack | `daily`                                                       |
 | Palette     | `sage`                                                        |
 | Font        | `system`                                                      |
 | Headers     | `plain`                                                       |
@@ -100,13 +100,13 @@ There is no required `.env` file for the local demo. `.env.example` is a referen
 
 Keep values in the system that needs them:
 
-| Value                                 | Where it belongs                                      | Commit it? |
-| ------------------------------------- | ----------------------------------------------------- | ---------- |
-| Dashboard name, timezone, theme       | Ignored `config/instance.local.json`                  | No         |
-| Generated LLM task prompt             | Ignored `.zaati/generated-prompts/`                   | No         |
-| GitHub and source access              | Your LLM provider's connection settings               | No         |
-| Hostname and Worker name              | GitHub `production` environment variables             | No         |
-| Cloudflare and data repository tokens | GitHub `production` environment secrets               | No         |
+| Value                                 | Where it belongs                                       | Commit it? |
+| ------------------------------------- | ------------------------------------------------------ | ---------- |
+| Dashboard name, timezone, theme       | Ignored `config/instance.local.json`                   | No         |
+| Generated LLM task prompt             | Ignored `.zaati/generated-prompts/`                    | No         |
+| GitHub and source access              | Your LLM provider's connection settings                | No         |
+| Hostname and Worker name              | GitHub `production` environment variables              | No         |
+| Cloudflare and data repository tokens | GitHub `production` environment secrets                | No         |
 | Optional snapshot key                 | Trusted local or protected CI ingestion and deployment | No         |
 
 Never paste tokens into a generated prompt. Prefer provider-managed connections and narrow repository permissions.
@@ -253,4 +253,3 @@ Read [Private Cloudflare deployment](deployment/cloudflare.md) for token scopes,
 - [Encrypted snapshots](tutorials/encrypted-snapshots.md), protect repository copies at rest
 - [Theme Studio](tutorials/theme-studio.md), personalize the interface
 - [Troubleshooting](troubleshooting.md), diagnose common setup and deployment issues
-
