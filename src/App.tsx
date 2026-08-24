@@ -279,9 +279,15 @@ function Sidebar({
         id="primary-navigation"
       >
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
-            <span className="text-base font-black tracking-tight">{data.instance.brand_mark}</span>
-          </div>
+          {data.instance.brand_name === "Zaati OS" ? (
+            <div className="grid size-9 shrink-0 overflow-hidden rounded-xl border border-sidebar-border bg-white shadow-sm">
+              <img alt="" aria-hidden="true" className="size-full object-cover" src="/logo-mark.png" />
+            </div>
+          ) : (
+            <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
+              <span className="text-base font-black tracking-tight">{data.instance.brand_mark}</span>
+            </div>
+          )}
           <div className={cn("min-w-0 flex-1", compact && "md:hidden")}>
             <p className="truncate text-sm font-semibold">{data.instance.brand_name}</p>
             <p className="truncate text-[11px] text-sidebar-foreground/75">Private by default</p>
@@ -631,8 +637,8 @@ function AppLoading() {
   return (
     <div className="grid min-h-screen place-items-center bg-background text-foreground" role="status">
       <div className="text-center">
-        <div className="mx-auto grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-          <span className="font-black">Z</span>
+        <div className="mx-auto size-10 overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+          <img alt="" aria-hidden="true" className="size-full object-cover" src="/logo-mark.png" />
         </div>
         <p className="mt-4 text-sm font-medium">Preparing your dashboard</p>
         <p className="mt-1 text-xs text-muted-foreground">Loading the private data index</p>

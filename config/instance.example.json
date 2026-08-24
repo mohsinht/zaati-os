@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/instance.schema.json",
   "brand_name": "Zaati OS",
-  "brand_mark": "Z",
+  "brand_mark": "ذ",
   "tagline": "Your day, with context.",
   "timezone": "UTC",
   "locale": "en-US",
