@@ -2,15 +2,18 @@
 
 Use one LLM run to refresh several sources and publish them in one private pull request.
 
-## 1. Pick a small bundle
+## 1. Use the canonical daily bundle
 
-Start with three sources:
+The dependency-backed daily overview requires all five direct daily sources, so the canonical bundle is:
 
 - `agenda:primary`
+- `inbox:attention`
 - `work:focus`
+- `money:pulse`
+- `news:briefing`
 - `overview:daily`
 
-Add inbox, money, or news only when the workflow has the required approved tools. More sources do not grant broader permissions. Each registration keeps its own authorized and forbidden inputs.
+If the workflow lacks an approved tool, create a smaller independent bundle without `overview:daily`. More sources do not grant broader permissions. Each registration keeps its own authorized and forbidden inputs.
 
 ## 2. Install the independent gate
 

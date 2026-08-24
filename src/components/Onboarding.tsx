@@ -59,7 +59,8 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
             Personalize the shell, test one complete LLM loop, then connect your preferred workflow. Zaati OS handles contracts, validation,
-            retries, storage, rendering, and deployment plumbing.
+            retries, storage, rendering, and deployment plumbing. The dashboard is intentionally read-only and never changes a source
+            system.
           </p>
         </div>
         <Button onClick={onOpenDashboard} variant="outline">
@@ -152,7 +153,10 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
               <ShieldCheck className="size-4 text-positive-foreground" />
             </div>
             <CardTitle className="text-base">Secure from the first real snapshot</CardTitle>
-            <CardDescription>Public code and private memory stay separate. Invalid bundles never reach storage.</CardDescription>
+            <CardDescription>
+              Public code and private memory stay separate. Invalid bundles cannot enter the local store or merge into the protected data
+              branch.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <SecurityItem icon={GitCommitHorizontal} text="One atomic commit, no half-refreshed dashboard" />

@@ -151,6 +151,7 @@ You are a Zaati OS v${VERSION} data producer. Read approved sources, build one c
 
 - Read the current default branch of ${profile.code_repository} for the authoritative contract.
 - Write only to a new branch and pull request in ${profile.data_repository}. Never write directly to its protected default branch and never merge your own pull request.
+- Actions and Workflows write permission is forbidden. Repository administration and settings permissions are forbidden.
 - Never edit application code, schemas, prompts, configuration, workflows, CI, dependencies, or documentation during a recurring run.
 - Never put credentials, raw provider exports, account identifiers, complete messages, attachments, or unnecessary personal details into snapshots, commits, pull requests, logs, or comments.
 - Stop without writing if repository access, required tools, or source registration is unavailable.
@@ -230,7 +231,7 @@ ${json(selectedBlockSummary(contracts.uiSchema, selectedKinds))}
 3. Make at most three total attempts. After the third failure, write nothing and preserve every previous snapshot.
 4. Reject duplicate source IDs, unregistered sources, wrong worker ownership, unexpected properties, invalid block kinds, and any partial bundle.
 5. Persist only the nested snapshots, never the bundle wrapper. Same-day reruns replace only today's owned files and preserve snapshot_id.
-6. Open one pull request containing the complete run. The independent "Validate Zaati snapshots" check must pass. Do not bypass, disable, edit, or self-certify that check.
+6. Open one pull request containing the complete run. Candidate JSON enters the private branch before CI, so minimize it before writing. The independent "Validate Zaati snapshots" check must pass before merge. Do not bypass, disable, edit, or self-certify that check.
 7. Never merge the pull request. Branch protection and the independent validator are the publication authority.
 8. Include only derived target paths and a redacted success or failure summary in the run report. Never echo private facts.
 
@@ -270,6 +271,7 @@ export function generatePromptArtifacts(profile, contracts) {
   const files = {
     [`${slug}.scheduled-task.md`]: buildScheduledPrompt(validProfile, contracts, registrations, missing),
     [`${slug}.permissions.md`]: buildPermissionManifest(validProfile, registrations, missing),
+    [`${slug}.data-repository.md`]: buildDataRepositorySetup(validProfile),
     [`${slug}.profile.json`]: `${JSON.stringify(validProfile, null, 2)}\n`,
   }
   if (missing.length)
@@ -278,6 +280,21 @@ export function generatePromptArtifacts(profile, contracts) {
       registrations.filter((item) => missing.includes(item.id)),
     )
   return { profile: validProfile, slug, missing, files }
+}
+
+function buildDataRepositorySetup(profile) {
+  const codeRepository = profile.code_repository.replace("https://github.com/", "")
+  const sourceIds = profile.sources.map((source) => source.id).join(",")
+  return `# Private data repository setup
+
+Run this from your Zaati OS fork after replacing the validator revision with the current full 40-character commit SHA:
+
+\`\`\`bash
+npm run data-repository:init -- --repository-root ../zaati-data --code-repository ${codeRepository} --code-ref FULL_40_CHARACTER_COMMIT_SHA --sources ${sourceIds}
+\`\`\`
+
+This source list exactly matches the generated scheduled task. Review and commit the generated files before granting the producer access. Protect \`.github/**\` and \`zaati.data.json\`, and require the **Validate Zaati snapshots** check on the default branch.
+`
 }
 
 function buildPermissionManifest(profile, registrations, missing) {
@@ -302,6 +319,8 @@ Review this short file before pasting the machine prompt.
 - Read contracts from: ${profile.code_repository}
 - Create branches and pull requests in: ${profile.data_repository}
 - Direct writes and self-merges: forbidden
+- Actions and Workflows write permission: forbidden
+- Repository administration and settings permission: forbidden
 - Required independent check: Validate Zaati snapshots
 
 ## Source permissions

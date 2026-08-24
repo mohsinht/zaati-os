@@ -12,7 +12,7 @@ npm run prompt:create
 
 1. Choose a provider and a useful starter dashboard.
 2. Enter the public code fork and private data repository.
-3. Review `<task>.permissions.md`, then copy `<task>.scheduled-task.md` into your LLM and approve only the listed connections.
+3. Review `<task>.permissions.md`, run the matching command in `<task>.data-repository.md`, then copy `<task>.scheduled-task.md` into your LLM and approve only the listed connections.
 
 The normal wizard chooses registered sources, dependencies, safe blocks, and sensible tool labels for you. Repository names are the only technical concepts in the default path. Use a JSON profile when you need per-source control.
 
@@ -49,7 +49,7 @@ The preferred block list is a safe menu, not a forced layout. The LLM should cho
 
 Add several source objects to the same profile. The generated prompt includes `expected_source_ids`, requires one complete `snapshot-bundle`, retries the whole candidate at most three times, and opens one pull request. It never publishes a subset or merges its own pull request.
 
-The private repository must independently validate the candidate with `npm run data-repository:init`. This separates the LLM that reads and writes data from the policy gate that decides whether the candidate is mergeable.
+The private repository must independently validate the candidate with `npm run data-repository:init`. Prompt Studio generates an exact `--sources` command so one-source, starter, weekly, and custom selections install the same expected source set. This separates the LLM that reads and writes data from the policy gate that decides whether the candidate is mergeable.
 
 Direct sources should appear before aggregate sources. Registered aggregate dependencies still apply.
 
@@ -78,6 +78,7 @@ Use `--stdout` only when you deliberately want the generated scheduled prompt in
 - Confirm the code URL points to the intended Zaati OS fork.
 - Confirm the data URL points to a private repository.
 - Give the LLM only the source and GitHub permissions it needs.
+- Grant Contents and Pull requests access only. Deny Actions, Workflows, Administration, settings, environments, secrets, and variables write access.
 - Review provider retention and training settings.
 - Keep Cloudflare Access in front of the deployed dashboard.
 - Run once with synthetic or low-sensitivity data before enabling the schedule.

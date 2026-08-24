@@ -14,7 +14,7 @@
 | Concern            | Recommendation                                                        |
 | ------------------ | --------------------------------------------------------------------- |
 | Scheduled workflow | One daily bundle task plus one weekly review task                     |
-| First sources      | Agenda, work focus, and daily overview                                |
+| First sources      | Canonical six-source daily bundle, or a smaller independent bundle    |
 | Publication        | One independently validated pull request per bundle                   |
 | Hosting            | Cloudflare Worker static assets on a custom Access-protected hostname |
 | Repository         | Public code fork plus separate private snapshot repository            |
@@ -31,7 +31,7 @@
 
 ## Optional expansion
 
-- Add a fourth source with `npm run source:add` only after the three-source loop is stable.
+- Add a custom source with `npm run source:add` only after the selected starter bundle is stable.
 - Add custom theme tokens after the information hierarchy feels useful.
 - Enable automatic deployment only after a manual private deployment passes.
 - Add provider-specific adapters outside core when a simple command or scheduled workflow is not enough.

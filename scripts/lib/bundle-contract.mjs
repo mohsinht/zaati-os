@@ -4,7 +4,7 @@ import { createHash } from "node:crypto"
 import { lstat, mkdir, open, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { decryptSnapshotEnvelope, encryptSnapshot, loadSnapshotKey } from "./snapshot-crypto.mjs"
-import { scanSnapshot } from "./snapshot-safety.mjs"
+import { validateSnapshotPolicy } from "./snapshot-policy.mjs"
 
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"))
 const ajvErrors = (prefix, errors = []) => errors.map((error) => `${prefix}${error.instancePath || "/"}: ${error.message}`)
@@ -40,7 +40,7 @@ export function targetForSnapshot(registration, snapshot, outputRoot = "data/sna
   return target
 }
 
-export async function validateBundle(bundle, contracts, { expectedSourceIds } = {}) {
+export async function validateBundle(bundle, contracts, { expectedSourceIds, allowSynthetic = false } = {}) {
   contracts ||= await loadContracts()
   const errors = []
   const validate = contracts.ajv.getSchema(contracts.bundleSchema.$id)
@@ -77,7 +77,12 @@ export async function validateBundle(bundle, contracts, { expectedSourceIds } = 
       const dependencyIndex = actual.indexOf(dependency)
       if (dependencyIndex > index) errors.push(`${prefix}: dependency ${dependency} must appear earlier in the bundle`)
     }
-    errors.push(...scanSnapshot(snapshot, { contentGuards: registration.privacy.content_guards || [] }).map((error) => `${prefix}${error}`))
+    errors.push(
+      ...validateSnapshotPolicy(snapshot, registration, {
+        allowSynthetic,
+        bundleGeneratedAt: bundle.generated_at,
+      }).map((error) => `${prefix}${error}`),
+    )
     const domainPath = path.join(contracts.root, registration.schema_ref)
     const domainSchema = await readJson(domainPath).catch(() => null)
     if (!domainSchema) {
@@ -117,9 +122,12 @@ async function rejectSymlinkPath(root, target) {
   }
 }
 
-export async function persistBundle(bundle, { outputRoot = "data/snapshots", encryption = false, key, contracts, expectedSourceIds } = {}) {
+export async function persistBundle(
+  bundle,
+  { outputRoot = "data/snapshots", encryption = false, key, contracts, expectedSourceIds, allowSynthetic = false } = {},
+) {
   contracts ||= await loadContracts()
-  await assertValidBundle(bundle, contracts, { expectedSourceIds })
+  await assertValidBundle(bundle, contracts, { expectedSourceIds, allowSynthetic })
   const requestedRoot = path.resolve(outputRoot)
   await mkdir(requestedRoot, { recursive: true, mode: 0o700 })
   const resolvedRoot = await realpath(requestedRoot)

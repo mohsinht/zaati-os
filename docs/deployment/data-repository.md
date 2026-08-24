@@ -24,7 +24,7 @@ The public source catalog and schemas remain in the code repository. Workers rea
 
 Use separate, least-privilege identities:
 
-- The LLM workflow needs permission to create a branch and pull request only in the private data repository. Prefer its existing GitHub connection instead of putting a token inside the prompt.
+- The LLM workflow needs only **Contents: read and write** plus **Pull requests: read and write** in the private data repository. Explicitly deny Actions, Workflows, Administration, repository settings, environments, secrets, and variables write access. Prefer a narrowly configured GitHub App or fine-grained credential instead of putting a token inside the prompt.
 - The deployment workflow needs a fine-grained token restricted to this one private repository with Contents read permission.
 - Cloudflare credentials never belong in the data repository.
 
@@ -40,11 +40,19 @@ npm run data-repository:init -- --repository-root ../zaati-data --code-repositor
 
 Commit the generated `zaati.data.json` and workflow, then require `Validate Zaati snapshots` in branch protection. Use an immutable 40-character commit SHA until a reviewed release tag exists.
 
+The generated gate uses `pull_request_target` only to load the validator workflow from the protected base branch. It checks out the candidate commit as inert data, runs no candidate scripts, disables persisted credentials, and executes validator code from the immutable Zaati revision. Candidate branches therefore cannot replace the workflow while preserving its check name.
+
+Add a ruleset or CODEOWNERS requirement for `.github/**` and `zaati.data.json` that requires a trusted human or GitHub team. The producing identity must not bypass that ruleset. Enable GitHub secret scanning and push protection where available.
+
 ## Bundle writes
 
-A daily producer creates one branch and pull request containing every current-date path. It must never publish a subset, write directly to the default branch, edit the validation workflow, or merge its own pull request. The independent gate compares the candidate with the authoritative expected source set and rechecks paths, ownership, schemas, privacy rules, and encryption mode.
+A daily producer creates one branch and pull request containing every current-date path. Candidate JSON exists in private Git history before pull-request validation runs, so minimize and scan it before the first push. The gate prevents invalid data from merging, not from entering a candidate branch. The producer must never publish a subset, write directly to the default branch, edit protected files, or merge its own pull request.
 
-Single-source workers remain supported for independent cadences, but they use the same pull-request gate.
+Single-source and custom bundles use the same gate. Initialize the exact Prompt Studio selection with `--sources`:
+
+```bash
+npm run data-repository:init -- --repository-root ../zaati-data --code-repository YOUR_USER/zaati-os --code-ref FULL_COMMIT_SHA --sources money:pulse
+```
 
 Same-day reruns replace the same file and preserve `snapshot_id`. Workers fetch the latest target branch before writing and never force-push.
 

@@ -25,15 +25,17 @@ Users separately trust their selected source providers, LLM provider or local mo
 | Static bundle served publicly                   | `workers_dev` and preview URLs disabled, custom domain behind Access                         |
 | CI exposes data                                 | No private build artifacts, no snapshot logging, secrets only on protected deployment events |
 | A broad Access rule lets anyone in              | Deny by default, exact emails or constrained identity groups, unauthenticated preflight      |
-| Credential committed accidentally               | Common secret-shape scan, GitHub secret storage, scoped tokens                               |
+| Credential committed accidentally               | Common credential-shape scan, GitHub secret storage, scoped tokens, host push protection     |
 | Private snapshot repository is copied or leaked | Optional AES-256-GCM authenticated encryption with a separate deployment key                 |
 | Producer returns only part of a batch           | Authoritative expected-source comparison rejects missing, extra, or self-redefined bundles   |
-| Producer self-certifies unsafe output           | Independent private-repository pull-request validation before merge                          |
+| Producer self-certifies unsafe output           | Base-branch-controlled private-repository validation before merge                            |
 | Sensitive text hides inside a valid field       | Universal secret scanning plus source-specific content guards over every snapshot string     |
 
 ## Data minimization
 
 Keep a normalized action, measure, deadline, status, and evidence reference when they are enough. Avoid raw email bodies, full documents, attachments, statements, account identifiers, source code, customer data, authentication links, cookies, tokens, and unnecessary information about other people.
+
+Zaati detects common credential formats and source-specific risky shapes. No regular-expression list can identify every secret, medical fact, name, message excerpt, or unnecessary personal detail. Enable secret scanning and push protection on the private repository, minimize before the first branch push, and treat model and operator judgment as part of this boundary.
 
 ## Public fork rule
 

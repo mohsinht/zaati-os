@@ -1,7 +1,9 @@
 name: Validate Zaati snapshots
 
 on:
-  pull_request:
+  # The trusted workflow is loaded from the protected base branch. Candidate
+  # branches cannot replace this definition while keeping the check name.
+  pull_request_target:
     branches: [main]
 
 permissions:
@@ -12,16 +14,21 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - name: Require a branch inside this private repository
+        env:
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        run: test "$HEAD_REPOSITORY" = "$GITHUB_REPOSITORY"
       - name: Checkout private data candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Checkout immutable Zaati OS validator
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: YOUR_USER/zaati-os
-          ref: v0.1.1
+          ref: VALIDATOR_CODE_REF
           path: .zaati-validator
           persist-credentials: false
       - name: Set up Node.js

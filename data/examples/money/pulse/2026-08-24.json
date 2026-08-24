@@ -5,14 +5,14 @@
   "source_id": "money:pulse",
   "domain": "money",
   "source": "pulse",
-  "generated_at": "2026-08-23T18:00:00Z",
-  "effective_period": { "start": "2026-08-23T00:00:00Z", "end": "2026-08-23T23:59:59Z", "timezone": "UTC" },
+  "generated_at": "2026-08-24T07:00:00Z",
+  "effective_period": { "start": "2026-08-23T07:00:00Z", "end": "2026-08-24T07:00:00Z", "timezone": "UTC" },
   "status": "partial",
   "producer": { "worker_id": "money-pulse-daily", "workflow": "example", "version": "0.1.1" },
   "sources": [
     { "label": "Synthetic account summary", "status": "stale", "as_of": "2026-08-23T18:00:00Z", "reference": "synthetic://money" }
   ],
-  "freshness": { "expires_at": "2026-08-25T06:00:00Z" },
+  "freshness": { "expires_at": "2026-08-25T19:00:00Z" },
   "quality": { "confidence": "medium", "warnings": ["One synthetic source has not refreshed today."] },
   "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
   "data": {

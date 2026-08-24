@@ -29,7 +29,7 @@ You need:
 - an LLM or automation environment that can use your approved sources and write to GitHub
 - a Cloudflare account and custom domain only when you are ready to deploy
 
-The contract is provider-neutral, but Zaati OS does not bundle source connectors. The maintained first real workflow is ChatGPT scheduled tasks. Other capable LLMs, local models, n8n, cron, and custom commands can use the same contract when they already have the required approved tools.
+The contract is provider-neutral, but Zaati OS does not bundle source connectors. ChatGPT scheduled tasks are the target first real workflow, with recorded release evidence still pending. Other capable LLMs, local models, n8n, cron, and custom commands can use the same contract when they already have the required approved tools.
 
 ## 1. Fork, clone, and personalize
 
