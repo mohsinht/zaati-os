@@ -186,7 +186,7 @@ The browser receives the facts required to render the dashboard. Treat the local
 
 The safe order matters: deploy synthetic data, protect the hostname, verify Access from outside your session, then connect private snapshots.
 
-![Animated terminal showing the private deployment sequence](assets/onboarding/deploy.gif)
+![Animated terminal showing Cloudflare Access verification](assets/onboarding/deploy.gif)
 
 ### A. Create the protected GitHub environment
 

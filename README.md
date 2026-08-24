@@ -223,7 +223,7 @@ Pull requests expose each gate as a separate job and finish with one `Quality ga
 
 ## Deployment choices
 
-![Animated terminal showing the Access-first private deployment sequence](docs/assets/onboarding/deploy.gif)
+![Animated terminal showing Cloudflare Access verification](docs/assets/onboarding/deploy.gif)
 
 - **Recommended:** Cloudflare Workers static assets on a custom domain protected by Cloudflare Access.
 - **Supported:** Any private static host that provides real authentication before serving assets.
