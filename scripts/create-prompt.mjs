@@ -45,16 +45,6 @@ const providerTools = {
   custom: ["User-approved connector", "GitHub"],
 }
 
-const defaultBlocks = {
-  "agenda:primary": ["calendar", "list", "notice"],
-  "inbox:attention": ["list", "notice"],
-  "work:focus": ["list", "progress", "notice"],
-  "money:pulse": ["metric-group", "line-chart", "table", "notice"],
-  "news:briefing": ["list", "notice"],
-  "overview:daily": ["metric-group", "list", "calendar", "notice"],
-  "review:weekly": ["metric-group", "line-chart", "list", "notice"],
-}
-
 async function interactiveProfile(contracts) {
   if (!process.stdin.isTTY || !process.stdout.isTTY) throw new Error("Interactive mode needs a terminal. Use --config for automation.")
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -108,7 +98,7 @@ async function interactiveProfile(contracts) {
         id,
         requirements: [registration.description, outcome],
         tools: providerTools[provider],
-        preferred_blocks: defaultBlocks[id] || ["list", "notice"],
+        preferred_blocks: registration.presentation.preferred_blocks,
       }
     })
     return {

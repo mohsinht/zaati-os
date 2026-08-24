@@ -22,6 +22,13 @@ const toneBadge: Record<Tone, "outline" | "positive" | "warning" | "danger" | "i
 }
 const spanClass: Record<Span, string> = { one: "lg:col-span-1", two: "lg:col-span-2", full: "lg:col-span-3" }
 const ChartVisual = lazy(() => import("@/components/ChartVisual"))
+type Layout = "dashboard" | "focus" | "timeline"
+
+function layoutSpan(block: DashboardBlock, layout: Layout, emphasized = false) {
+  if (layout === "timeline") return "lg:col-span-1"
+  if (layout === "focus") return emphasized || block.span === "full" ? "lg:col-span-2" : "lg:col-span-1"
+  return spanClass[block.span || "one"]
+}
 
 function formatValue(value: string | number | boolean | null, format: ValueFormat = "text", instance: InstanceConfig) {
   if (value === null) return "Not available"
@@ -43,9 +50,21 @@ function formatValue(value: string | number | boolean | null, format: ValueForma
   return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(value)
 }
 
-function Panel({ block, children, className }: { block: DashboardBlock; children: React.ReactNode; className?: string }) {
+function Panel({
+  block,
+  children,
+  className,
+  emphasized,
+  layout,
+}: {
+  block: DashboardBlock
+  children: React.ReactNode
+  className?: string
+  emphasized: boolean
+  layout: Layout
+}) {
   return (
-    <Card className={cn("min-w-0 overflow-hidden", spanClass[block.span || "one"], className)}>
+    <Card className={cn("min-w-0 overflow-hidden", layoutSpan(block, layout, emphasized), emphasized && "border-primary/35", className)}>
       <CardHeader>
         <CardTitle>{block.title}</CardTitle>
         {"description" in block && block.description ? <CardDescription>{block.description}</CardDescription> : null}
@@ -55,13 +74,31 @@ function Panel({ block, children, className }: { block: DashboardBlock; children
   )
 }
 
-export function BlockRenderer({ block, instance }: { block: DashboardBlock; instance: InstanceConfig }) {
+export function BlockRenderer({
+  block,
+  emphasized = false,
+  instance,
+  layout = "dashboard",
+}: {
+  block: DashboardBlock
+  emphasized?: boolean
+  instance: InstanceConfig
+  layout?: Layout
+}) {
   if (block.kind === "metric-group") {
     return (
-      <Panel block={block} className="bg-card/80">
-        <div className="grid divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4">
+      <Panel block={block} className="bg-card/80" emphasized={emphasized} layout={layout}>
+        <div
+          className={cn(
+            "grid gap-px overflow-hidden rounded-lg bg-border sm:grid-cols-2",
+            block.metrics.length === 3 && "xl:grid-cols-3",
+            block.metrics.length === 4 && "xl:grid-cols-4",
+            block.metrics.length === 5 && "xl:grid-cols-5",
+            block.metrics.length === 6 && "xl:grid-cols-3",
+          )}
+        >
           {block.metrics.map((metric) => (
-            <div className="min-w-0 py-4 first:pt-0 sm:px-5 sm:py-1 sm:first:pl-0 sm:last:pr-0" key={metric.label}>
+            <div className="min-w-0 bg-card px-4 py-3" key={metric.label}>
               <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <span aria-hidden="true" className={cn("size-1.5 rounded-full", toneDot[metric.tone || "neutral"])} />
                 {metric.label}
@@ -90,7 +127,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
 
   if (block.kind === "list") {
     return (
-      <Panel block={block}>
+      <Panel block={block} emphasized={emphasized} layout={layout}>
         {block.items.length ? (
           <div className="divide-y divide-border">
             {block.items.map((item) => {
@@ -136,7 +173,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
 
   if (block.kind === "line-chart") {
     return (
-      <Panel block={block}>
+      <Panel block={block} emphasized={emphasized} layout={layout}>
         <Suspense fallback={<ChartLoading />}>
           <ChartVisual block={block} instance={instance} />
         </Suspense>
@@ -146,7 +183,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
 
   if (block.kind === "bar-chart") {
     return (
-      <Panel block={block}>
+      <Panel block={block} emphasized={emphasized} layout={layout}>
         <Suspense fallback={<ChartLoading />}>
           <ChartVisual block={block} instance={instance} />
         </Suspense>
@@ -158,7 +195,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
     const time = (value: string) =>
       new Intl.DateTimeFormat(instance.locale, { hour: "numeric", minute: "2-digit", timeZone: instance.timezone }).format(new Date(value))
     return (
-      <Panel block={block}>
+      <Panel block={block} emphasized={emphasized} layout={layout}>
         <div className="mb-4 flex items-center gap-2 rounded-lg bg-muted/70 px-3 py-2 text-xs font-medium text-foreground">
           <CalendarDays className="size-4" />
           {new Intl.DateTimeFormat(instance.locale, { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" }).format(
@@ -191,39 +228,48 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
 
   if (block.kind === "table") {
     return (
-      <Panel block={block}>
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full min-w-[520px] border-collapse text-left text-sm">
-            <caption className="sr-only">{block.title}</caption>
-            <thead className="bg-muted/70 text-xs text-muted-foreground">
-              <tr>
-                {block.columns.map((column) => (
-                  <th className="px-3 py-2.5 font-medium" key={column.key}>
-                    {column.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {block.rows.map((row, index) => (
-                <tr className="hover:bg-muted/40" key={index}>
+      <Panel block={block} emphasized={emphasized} layout={layout}>
+        {block.rows.length ? (
+          <div
+            aria-label={`${block.title} table`}
+            className="overflow-x-auto rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
+            role="region"
+            tabIndex={0}
+          >
+            <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+              <caption className="sr-only">{block.title}</caption>
+              <thead className="bg-muted/70 text-xs text-foreground">
+                <tr>
                   {block.columns.map((column) => (
-                    <td className="max-w-64 px-3 py-3 align-top" key={column.key}>
-                      {formatValue(row[column.key] ?? null, column.format, instance)}
-                    </td>
+                    <th className="px-3 py-2.5 font-medium" key={column.key}>
+                      {column.label}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {block.rows.map((row, index) => (
+                  <tr className="hover:bg-muted/40" key={index}>
+                    {block.columns.map((column) => (
+                      <td className="max-w-64 px-3 py-3 align-top" key={column.key}>
+                        {formatValue(row[column.key] ?? null, column.format, instance)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState label="No rows to show." />
+        )}
       </Panel>
     )
   }
 
   if (block.kind === "progress") {
     return (
-      <Panel block={block}>
+      <Panel block={block} emphasized={emphasized} layout={layout}>
         <div className="space-y-5">
           {block.items.map((item) => {
             const percent = (item.value / item.max) * 100
@@ -257,7 +303,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
       <div
         className={cn(
           "rounded-xl border p-5",
-          spanClass[block.span || "one"],
+          layoutSpan(block, layout, emphasized),
           block.tone === "warning" && "border-warning/30 bg-warning/10",
           block.tone === "danger" && "border-destructive/30 bg-destructive/10",
           block.tone === "positive" && "border-positive/25 bg-positive/10",
@@ -290,28 +336,32 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
 
   if (block.kind === "timeline") {
     return (
-      <Panel block={block}>
-        <div>
-          {block.items.map((item, index) => (
-            <div className="relative flex gap-4 pb-5 last:pb-0" key={`${item.label}-${item.title}`}>
-              <div className="flex w-3 shrink-0 flex-col items-center">
-                <span className={cn("mt-1.5 size-2.5 rounded-full ring-4 ring-background", toneDot[item.tone || "neutral"])} />
-                {index < block.items.length - 1 ? <span className="mt-1 h-full w-px bg-border" /> : null}
+      <Panel block={block} emphasized={emphasized} layout={layout}>
+        {block.items.length ? (
+          <div>
+            {block.items.map((item, index) => (
+              <div className="relative flex gap-4 pb-5 last:pb-0" key={`${item.label}-${item.title}`}>
+                <div className="flex w-3 shrink-0 flex-col items-center">
+                  <span className={cn("mt-1.5 size-2.5 rounded-full ring-4 ring-background", toneDot[item.tone || "neutral"])} />
+                  {index < block.items.length - 1 ? <span className="mt-1 h-full w-px bg-border" /> : null}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{item.label}</p>
+                  <p className="mt-1 text-sm font-medium">{item.title}</p>
+                  {item.description ? <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.description}</p> : null}
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{item.label}</p>
-                <p className="mt-1 text-sm font-medium">{item.title}</p>
-                {item.description ? <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{item.description}</p> : null}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState label="No events in this sequence." />
+        )}
       </Panel>
     )
   }
 
   return (
-    <Panel block={block}>
+    <Panel block={block} emphasized={emphasized} layout={layout}>
       <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{block.body}</p>
     </Panel>
   )

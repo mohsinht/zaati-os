@@ -31,6 +31,7 @@
         "cadence",
         "freshness_sla_hours",
         "dashboard_role",
+        "presentation",
         "depends_on",
         "target_path",
         "privacy"
@@ -47,6 +48,21 @@
         "cadence": { "enum": ["hourly", "daily", "weekdays", "weekly", "monthly", "manual", "event"] },
         "freshness_sla_hours": { "type": "integer", "minimum": 1, "maximum": 8760 },
         "dashboard_role": { "enum": ["primary", "supporting"] },
+        "presentation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["preferred_blocks"],
+          "properties": {
+            "preferred_blocks": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": ["metric-group", "list", "line-chart", "bar-chart", "calendar", "table", "progress", "notice", "timeline", "text"]
+              }
+            }
+          }
+        },
         "depends_on": {
           "type": "array",
           "uniqueItems": true,

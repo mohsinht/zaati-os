@@ -22,7 +22,11 @@
     "brand_mark": { "type": "string", "minLength": 1, "maxLength": 3 },
     "tagline": { "type": "string", "minLength": 1, "maxLength": 100 },
     "timezone": { "type": "string", "minLength": 1, "maxLength": 80 },
-    "locale": { "type": "string", "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$" },
+    "locale": {
+      "type": "string",
+      "maxLength": 35,
+      "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?(?:-(?:[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*$"
+    },
     "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
     "week_starts_on": { "enum": ["monday", "sunday"] },
     "enabled_sources": {
@@ -45,21 +49,28 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "primary": { "$ref": "#/$defs/color" },
-            "primary_foreground": { "$ref": "#/$defs/color" },
-            "accent": { "$ref": "#/$defs/color" },
-            "accent_foreground": { "$ref": "#/$defs/color" },
-            "background": { "$ref": "#/$defs/color" },
-            "foreground": { "$ref": "#/$defs/color" },
-            "card": { "$ref": "#/$defs/color" },
-            "border": { "$ref": "#/$defs/color" },
-            "sidebar": { "$ref": "#/$defs/color" },
-            "chart_1": { "$ref": "#/$defs/color" },
-            "chart_2": { "$ref": "#/$defs/color" },
-            "chart_3": { "$ref": "#/$defs/color" }
+            "light": { "$ref": "#/$defs/customTokenSet" },
+            "dark": { "$ref": "#/$defs/customTokenSet" }
           }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "preset": { "const": "custom" } }, "required": ["preset"] },
+          "then": {
+            "properties": {
+              "custom_tokens": {
+                "type": "object",
+                "required": ["light", "dark"],
+                "properties": {
+                  "light": { "$ref": "#/$defs/customTokenSet" },
+                  "dark": { "$ref": "#/$defs/customTokenSet" }
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "storage": {
       "type": "object",
@@ -71,6 +82,42 @@
     }
   },
   "$defs": {
-    "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+    "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+    "customTokenSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "primary_foreground",
+        "accent",
+        "accent_foreground",
+        "background",
+        "foreground",
+        "card",
+        "card_foreground",
+        "border",
+        "sidebar",
+        "sidebar_foreground",
+        "chart_1",
+        "chart_2",
+        "chart_3"
+      ],
+      "properties": {
+        "primary": { "$ref": "#/$defs/color" },
+        "primary_foreground": { "$ref": "#/$defs/color" },
+        "accent": { "$ref": "#/$defs/color" },
+        "accent_foreground": { "$ref": "#/$defs/color" },
+        "background": { "$ref": "#/$defs/color" },
+        "foreground": { "$ref": "#/$defs/color" },
+        "card": { "$ref": "#/$defs/color" },
+        "card_foreground": { "$ref": "#/$defs/color" },
+        "border": { "$ref": "#/$defs/color" },
+        "sidebar": { "$ref": "#/$defs/color" },
+        "sidebar_foreground": { "$ref": "#/$defs/color" },
+        "chart_1": { "$ref": "#/$defs/color" },
+        "chart_2": { "$ref": "#/$defs/color" },
+        "chart_3": { "$ref": "#/$defs/color" }
+      }
+    }
   }
 }

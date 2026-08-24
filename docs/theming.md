@@ -22,7 +22,7 @@ Zaati OS includes `sage`, `ocean`, `plum`, and `sand`. The interface also suppor
 
 ## Custom palette
 
-Set `preset` to `custom` and provide allowlisted six-digit hex tokens. Snapshot producers never control these values.
+Set `preset` to `custom` and provide complete light and dark token sets. Validation rejects text pairs below WCAG AA contrast and essential borders or chart colors below 3:1. Snapshot producers never control these values.
 
 ```json
 {
@@ -31,18 +31,38 @@ Set `preset` to `custom` and provide allowlisted six-digit hex tokens. Snapshot 
   "density": "compact",
   "radius": "0.7rem",
   "custom_tokens": {
-    "primary": "#315D8A",
-    "primary_foreground": "#FFFFFF",
-    "accent": "#E3ECF5",
-    "accent_foreground": "#1A3E62",
-    "background": "#F7F9FB",
-    "foreground": "#152332",
-    "card": "#FFFFFF",
-    "border": "#D9E1E8",
-    "sidebar": "#EEF3F7",
-    "chart_1": "#315D8A",
-    "chart_2": "#39705C",
-    "chart_3": "#9B6338"
+    "light": {
+      "primary": "#315D8A",
+      "primary_foreground": "#FFFFFF",
+      "accent": "#E3ECF5",
+      "accent_foreground": "#1A3E62",
+      "background": "#F7F9FB",
+      "foreground": "#152332",
+      "card": "#FFFFFF",
+      "card_foreground": "#152332",
+      "border": "#687580",
+      "sidebar": "#EEF3F7",
+      "sidebar_foreground": "#152332",
+      "chart_1": "#315D8A",
+      "chart_2": "#39705C",
+      "chart_3": "#9B6338"
+    },
+    "dark": {
+      "primary": "#89B9E8",
+      "primary_foreground": "#102033",
+      "accent": "#24384C",
+      "accent_foreground": "#E7F2FC",
+      "background": "#101820",
+      "foreground": "#EDF4FA",
+      "card": "#17222D",
+      "card_foreground": "#EDF4FA",
+      "border": "#74818D",
+      "sidebar": "#121C25",
+      "sidebar_foreground": "#EDF4FA",
+      "chart_1": "#89B9E8",
+      "chart_2": "#72C59F",
+      "chart_3": "#E0A873"
+    }
   }
 }
 ```

@@ -24,6 +24,7 @@ import {
 import { BlockRenderer } from "@/components/BlockRenderer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { snapshotFreshness, type FreshnessState } from "@/lib/freshness"
@@ -61,6 +62,19 @@ function initialMode(data: DashboardData): ThemeMode {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
+function initialView(data: DashboardData, fallback: string) {
+  const requested = new URL(window.location.href).searchParams.get("view")
+  if (requested === "start" && data.demoMode) return START_ID
+  if (data.sources.some((item) => item.definition.id === requested)) return requested as string
+  return data.demoMode ? START_ID : fallback
+}
+
+function initialNow(data: DashboardData) {
+  const injected = data.demoMode ? new URL(window.location.href).searchParams.get("at") : null
+  const parsed = injected ? Date.parse(injected) : Number.NaN
+  return Number.isFinite(parsed) ? parsed : Date.now()
+}
+
 export function App() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -86,7 +100,7 @@ export function App() {
 function DashboardApp({ data }: { data: DashboardData }) {
   const overviewId =
     data.sources.find((item) => item.definition.id === "overview:daily")?.definition.id || data.sources[0]?.definition.id || ""
-  const [selectedId, setSelectedId] = useState(data.demoMode ? START_ID : overviewId)
+  const [selectedId, setSelectedId] = useState(() => initialView(data, overviewId))
   const [mode, setMode] = useState<ThemeMode>(() => initialMode(data))
   const [palette, setPalette] = useState(() => localStorage.getItem("zaati-palette") || data.instance.theme.preset)
   const [density, setDensity] = useState<Density>(() => (localStorage.getItem("zaati-density") as Density) || data.instance.theme.density)
@@ -100,7 +114,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [sidebarCompact, setSidebarCompact] = useState(false)
-  const [now, setNow] = useState(() => Date.parse(data.generatedAt))
+  const [now, setNow] = useState(() => initialNow(data))
   const [historySnapshotId, setHistorySnapshotId] = useState("")
   const selected = data.sources.find((item) => item.definition.id === selectedId)
   const history = data.historyBySource[selectedId] || []
@@ -125,27 +139,46 @@ function DashboardApp({ data }: { data: DashboardData }) {
       background: "--background",
       foreground: "--foreground",
       card: "--card",
+      card_foreground: "--card-foreground",
       border: "--border",
       sidebar: "--sidebar",
+      sidebar_foreground: "--sidebar-foreground",
       chart_1: "--chart-1",
       chart_2: "--chart-2",
       chart_3: "--chart-3",
     } as const
     for (const token of Object.values(tokenMap)) root.style.removeProperty(token)
     if (palette === "custom") {
-      for (const [key, value] of Object.entries(data.instance.theme.custom_tokens)) {
+      for (const [key, value] of Object.entries(data.instance.theme.custom_tokens[mode] || {})) {
         if (key in tokenMap && /^#[0-9a-f]{6}$/i.test(value)) root.style.setProperty(tokenMap[key as keyof typeof tokenMap], value)
       }
     }
     document.title = data.instance.brand_name
-    document.documentElement.lang = data.instance.locale.split("-")[0]
-    localStorage.setItem("zaati-theme", mode)
+    document.documentElement.lang = data.instance.locale
+    try {
+      const locale = new Intl.Locale(data.instance.locale) as Intl.Locale & {
+        getTextInfo?: () => { direction: "ltr" | "rtl" }
+        textInfo?: { direction: "ltr" | "rtl" }
+      }
+      document.documentElement.dir = locale.getTextInfo?.().direction || locale.textInfo?.direction || "ltr"
+    } catch {
+      document.documentElement.dir = "ltr"
+    }
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", mode === "dark" ? "#111512" : "#f6f7f4")
     localStorage.setItem("zaati-palette", palette)
     localStorage.setItem("zaati-density", density)
     localStorage.setItem("zaati-font", fontFamily)
     localStorage.setItem("zaati-headings", headingStyle)
     localStorage.setItem("zaati-radius", radius)
   }, [data.instance, density, fontFamily, headingStyle, mode, palette, radius])
+
+  useEffect(() => {
+    if (localStorage.getItem("zaati-theme") || data.instance.theme.default_mode !== "system") return
+    const media = window.matchMedia("(prefers-color-scheme: dark)")
+    const sync = () => setMode(media.matches ? "dark" : "light")
+    media.addEventListener("change", sync)
+    return () => media.removeEventListener("change", sync)
+  }, [data.instance.theme.default_mode, mode])
 
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
@@ -159,6 +192,12 @@ function DashboardApp({ data }: { data: DashboardData }) {
   }, [])
 
   useEffect(() => {
+    const onPopState = () => setSelectedId(initialView(data, overviewId))
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [data, overviewId])
+
+  useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => window.clearInterval(timer)
   }, [])
@@ -167,6 +206,13 @@ function DashboardApp({ data }: { data: DashboardData }) {
     setSelectedId(id)
     setHistorySnapshotId("")
     setMobileOpen(false)
+    const url = new URL(window.location.href)
+    url.searchParams.set("view", id === START_ID ? "start" : id)
+    window.history.pushState({}, "", url)
+  }
+  const chooseMode = (value: ThemeMode) => {
+    localStorage.setItem("zaati-theme", value)
+    setMode(value)
   }
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -208,8 +254,11 @@ function DashboardApp({ data }: { data: DashboardData }) {
           <div className="flex items-center gap-2">
             {data.demoMode ? (
               <Badge variant="info">
-                <Sparkles className="mr-1 size-3" />
-                Synthetic demo
+                <Sparkles className="size-3 min-[360px]:mr-1" />
+                <span aria-hidden="true" className="hidden min-[360px]:inline">
+                  Synthetic demo
+                </span>
+                <span className="sr-only">Synthetic demo</span>
               </Badge>
             ) : (
               <Badge className="hidden sm:inline-flex" variant="positive">
@@ -218,42 +267,37 @@ function DashboardApp({ data }: { data: DashboardData }) {
               </Badge>
             )}
             <Button
-              onClick={() => setMode((value) => (value === "light" ? "dark" : "light"))}
+              onClick={() => chooseMode(mode === "light" ? "dark" : "light")}
               size="icon"
               variant="ghost"
               aria-label={`Use ${mode === "light" ? "dark" : "light"} mode`}
             >
               {mode === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
             </Button>
-            <div className="relative">
-              <Button
-                onClick={() => setSettingsOpen((value) => !value)}
-                size="icon"
-                variant="outline"
-                aria-controls="theme-studio"
-                aria-expanded={settingsOpen}
-                aria-label="Open theme studio"
-              >
-                <Settings2 className="size-4" />
-              </Button>
+            <Dialog onOpenChange={setSettingsOpen} open={settingsOpen}>
+              <DialogTrigger asChild>
+                <Button size="icon" variant="outline" aria-label="Open theme studio">
+                  <Settings2 className="size-4" />
+                </Button>
+              </DialogTrigger>
               {settingsOpen ? (
                 <ThemeMenu
                   density={density}
                   fontFamily={fontFamily}
+                  hasCustomTheme={Boolean(data.instance.theme.custom_tokens.light && data.instance.theme.custom_tokens.dark)}
                   headingStyle={headingStyle}
                   mode={mode}
-                  onClose={() => setSettingsOpen(false)}
                   onDensity={setDensity}
                   onFont={setFontFamily}
                   onHeading={setHeadingStyle}
-                  onMode={setMode}
+                  onMode={chooseMode}
                   onPalette={setPalette}
                   onRadius={setRadius}
                   palette={palette}
                   radius={radius}
                 />
               ) : null}
-            </div>
+            </Dialog>
           </div>
         </header>
         <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
@@ -300,100 +344,130 @@ function Sidebar({
 }) {
   return (
     <>
-      {mobileOpen ? (
-        <button className="fixed inset-0 z-40 bg-foreground/25 md:hidden" onClick={onClose} aria-label="Close navigation backdrop" />
-      ) : null}
+      <Dialog onOpenChange={(open) => !open && onClose()} open={mobileOpen}>
+        <DialogContent
+          className="md:hidden"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            document.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]')?.focus()
+          }}
+          side="left"
+        >
+          <DialogTitle className="sr-only">Dashboard navigation</DialogTitle>
+          <DialogDescription className="sr-only">Choose a Zaati OS section.</DialogDescription>
+          <SidebarPanel
+            compact={false}
+            data={data}
+            now={now}
+            onClose={onClose}
+            onCompact={onCompact}
+            onSelect={onSelect}
+            selectedId={selectedId}
+          />
+        </DialogContent>
+      </Dialog>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200 md:translate-x-0",
-          mobileOpen && "translate-x-0",
+          "fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex",
           compact && "md:w-[76px]",
         )}
         id="primary-navigation"
       >
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-          {data.instance.brand_name === "Zaati OS" ? (
-            <div className="grid size-9 shrink-0 overflow-hidden rounded-xl border border-sidebar-border bg-white shadow-sm">
-              <img alt="" aria-hidden="true" className="size-full object-cover" src={publicAsset("logo-mark.png")} />
-            </div>
-          ) : (
-            <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
-              <span className="text-base font-black tracking-tight">{data.instance.brand_mark}</span>
-            </div>
-          )}
-          <div className={cn("min-w-0 flex-1", compact && "md:hidden")}>
-            <p className="truncate text-sm font-semibold">{data.instance.brand_name}</p>
-            <p className="truncate text-[11px] text-sidebar-foreground/75">Private by default</p>
-          </div>
-          <Button aria-label="Close navigation" className="md:hidden" onClick={onClose} size="icon" variant="ghost">
-            <X className="size-4" />
-          </Button>
-        </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Dashboard sections">
-          <button
-            aria-current={selectedId === START_ID ? "page" : undefined}
-            className={cn(
-              "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              selectedId === START_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
-              compact && "md:justify-center md:px-2",
-            )}
-            onClick={() => onSelect(START_ID)}
-            title={compact ? "Start here" : undefined}
-          >
-            <Rocket className={cn("size-4 shrink-0 text-sidebar-foreground/55", selectedId === START_ID && "text-sidebar-primary")} />
-            <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>Start here</span>
-          </button>
-          <p
-            className={cn(
-              "px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/70",
-              compact && "md:hidden",
-            )}
-          >
-            Your system
-          </p>
-          {data.sources.map(({ definition, snapshot }) => {
-            const Icon = Object.hasOwn(domainIcons, definition.domain)
-              ? domainIcons[definition.domain as keyof typeof domainIcons]
-              : Activity
-            const active = definition.id === selectedId
-            const status = snapshotFreshness(snapshot, now)
-            return (
-              <button
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
-                  compact && "md:justify-center md:px-2",
-                )}
-                key={definition.id}
-                onClick={() => onSelect(definition.id)}
-                title={compact ? `${definition.label}, ${status}` : undefined}
-              >
-                <Icon className={cn("size-4 shrink-0 text-sidebar-foreground/55", active && "text-sidebar-primary")} />
-                <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>{definition.label}</span>
-                <span aria-hidden="true" className={cn("size-1.5 rounded-full", health[status].dot, compact && "md:hidden")} />
-                <span className="sr-only">{health[status].label}</span>
-              </button>
-            )
-          })}
-        </nav>
-        <div className="border-t border-sidebar-border p-3">
-          <button
-            aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
-            className={cn(
-              "flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-xs text-sidebar-foreground/75 hover:bg-sidebar-accent",
-              compact && "md:justify-center md:px-2",
-            )}
-            onClick={onCompact}
-          >
-            <span className="hidden md:block">
-              {compact ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-            </span>
-            <ShieldCheck className="size-4 md:hidden" />
-            <span className={cn(compact && "md:hidden")}>{compact ? "Expand" : "Collapse sidebar"}</span>
-          </button>
-        </div>
+        <SidebarPanel
+          compact={compact}
+          data={data}
+          now={now}
+          onClose={onClose}
+          onCompact={onCompact}
+          onSelect={onSelect}
+          selectedId={selectedId}
+        />
       </aside>
+    </>
+  )
+}
+
+function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, selectedId }: Omit<Parameters<typeof Sidebar>[0], "mobileOpen">) {
+  return (
+    <>
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
+        {data.instance.brand_name === "Zaati OS" ? (
+          <div className="grid size-9 shrink-0 overflow-hidden rounded-xl border border-sidebar-border bg-white shadow-sm">
+            <img alt="" aria-hidden="true" className="size-full object-cover" src={publicAsset("logo-mark.png")} />
+          </div>
+        ) : (
+          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
+            <span className="text-base font-black tracking-tight">{data.instance.brand_mark}</span>
+          </div>
+        )}
+        <div className={cn("min-w-0 flex-1", compact && "md:hidden")}>
+          <p className="truncate text-sm font-semibold">{data.instance.brand_name}</p>
+          <p className="truncate text-[11px] text-sidebar-foreground/75">Private by default</p>
+        </div>
+        <Button aria-label="Close navigation" className="md:hidden" onClick={onClose} size="icon" variant="ghost">
+          <X className="size-4" />
+        </Button>
+      </div>
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Dashboard sections">
+        <button
+          aria-current={selectedId === START_ID ? "page" : undefined}
+          className={cn(
+            "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            selectedId === START_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+            compact && "md:justify-center md:px-2",
+          )}
+          onClick={() => onSelect(START_ID)}
+          title={compact ? "Start here" : undefined}
+        >
+          <Rocket className={cn("size-4 shrink-0 text-sidebar-foreground/55", selectedId === START_ID && "text-sidebar-primary")} />
+          <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>Start here</span>
+        </button>
+        <p
+          className={cn(
+            "px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/70",
+            compact && "md:hidden",
+          )}
+        >
+          Your system
+        </p>
+        {data.sources.map(({ definition, snapshot }) => {
+          const Icon = Object.hasOwn(domainIcons, definition.domain) ? domainIcons[definition.domain as keyof typeof domainIcons] : Activity
+          const active = definition.id === selectedId
+          const status = snapshotFreshness(snapshot, now)
+          return (
+            <button
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+                compact && "md:justify-center md:px-2",
+              )}
+              key={definition.id}
+              onClick={() => onSelect(definition.id)}
+              title={compact ? `${definition.label}, ${status}` : undefined}
+            >
+              <Icon className={cn("size-4 shrink-0 text-sidebar-foreground/55", active && "text-sidebar-primary")} />
+              <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>{definition.label}</span>
+              <span aria-hidden="true" className={cn("size-1.5 rounded-full", health[status].dot, compact && "md:hidden")} />
+              <span className="sr-only">{health[status].label}</span>
+            </button>
+          )
+        })}
+      </nav>
+      <div className="hidden border-t border-sidebar-border p-3 md:block">
+        <button
+          aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-xs text-sidebar-foreground/75 hover:bg-sidebar-accent",
+            compact && "md:justify-center md:px-2",
+          )}
+          onClick={onCompact}
+        >
+          <span className="hidden md:block">{compact ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}</span>
+          <ShieldCheck className="size-4 md:hidden" />
+          <span className={cn(compact && "md:hidden")}>{compact ? "Expand" : "Collapse sidebar"}</span>
+        </button>
+      </div>
     </>
   )
 }
@@ -428,6 +502,12 @@ function DashboardPage({
       </section>
     )
   const freshness = snapshotFreshness(snapshot, now)
+  const layout = snapshot.data.presentation.layout
+  const blockGrid = {
+    dashboard: "lg:grid-cols-3",
+    focus: "mx-auto max-w-5xl lg:grid-cols-2",
+    timeline: "mx-auto max-w-3xl lg:grid-cols-1",
+  }[layout]
   return (
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -516,9 +596,9 @@ function DashboardPage({
           </div>
         </div>
       ) : null}
-      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {snapshot.data.presentation.blocks.map((block) => (
-          <BlockRenderer block={block} instance={instance} key={block.id} />
+      <div className={cn("mt-5 grid grid-cols-1 gap-4", blockGrid)} data-layout={layout}>
+        {snapshot.data.presentation.blocks.map((block, index) => (
+          <BlockRenderer block={block} emphasized={layout === "focus" && index === 0} instance={instance} key={block.id} layout={layout} />
         ))}
       </div>
       <footer className="mt-8 flex flex-col justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground sm:flex-row">
@@ -566,9 +646,9 @@ function PageEyebrow({
 function ThemeMenu({
   density,
   fontFamily,
+  hasCustomTheme,
   headingStyle,
   mode,
-  onClose,
   onDensity,
   onFont,
   onHeading,
@@ -580,9 +660,9 @@ function ThemeMenu({
 }: {
   density: Density
   fontFamily: FontFamily
+  hasCustomTheme: boolean
   headingStyle: HeadingStyle
   mode: ThemeMode
-  onClose: () => void
   onDensity: (value: Density) => void
   onFont: (value: FontFamily) => void
   onHeading: (value: HeadingStyle) => void
@@ -593,21 +673,11 @@ function ThemeMenu({
   radius: string
 }) {
   return (
-    <div
-      aria-label="Theme studio"
-      className="absolute right-0 top-11 z-50 max-h-[calc(100vh-5rem)] w-[min(21rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-xl"
-      id="theme-studio"
-      role="dialog"
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold">Theme studio</p>
-        <Button aria-label="Close theme studio" onClick={onClose} size="icon" variant="ghost">
-          <X className="size-4" />
-        </Button>
-      </div>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+    <DialogContent id="theme-studio">
+      <DialogTitle className="pr-10 text-sm font-semibold">Theme studio</DialogTitle>
+      <DialogDescription className="mt-1 text-xs leading-5 text-muted-foreground">
         Preview freely. Deployment defaults live in your ignored instance configuration.
-      </p>
+      </DialogDescription>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Button
           onClick={() => onMode("light")}
@@ -635,8 +705,10 @@ function ThemeMenu({
                 "grid min-h-14 place-items-center rounded-lg border p-2 capitalize",
                 palette === item ? "border-primary bg-accent" : "border-border",
               )}
+              disabled={item === "custom" && !hasCustomTheme}
               key={item}
               onClick={() => onPalette(item)}
+              title={item === "custom" && !hasCustomTheme ? "Configure accessible light and dark tokens first" : undefined}
             >
               <span className={cn("palette-dot", `palette-${item}`)} />
               <span className="mt-1 text-[10px]">{item}</span>
@@ -644,6 +716,11 @@ function ThemeMenu({
           ))}
         </div>
       </fieldset>
+      {!hasCustomTheme ? (
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          Custom palettes unlock after both validated light and dark token sets are configured.
+        </p>
+      ) : null}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <label className="text-xs font-semibold">
           Font
@@ -707,7 +784,7 @@ function ThemeMenu({
           ))}
         </div>
       </fieldset>
-    </div>
+    </DialogContent>
   )
 }
 

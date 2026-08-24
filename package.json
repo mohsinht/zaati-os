@@ -40,7 +40,9 @@
     "deploy": "npm run check && npm run deployment:configure && wrangler deploy --config .wrangler.generated.jsonc"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "1.1.23",
     "@radix-ui/react-slot": "1.2.3",
+    "@radix-ui/react-tabs": "1.1.21",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "1.31.0",

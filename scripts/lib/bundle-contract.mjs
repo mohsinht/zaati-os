@@ -181,7 +181,7 @@ export async function persistBundle(
       throw error
     }
     for (const item of writes) if (item.backedUp) await rm(item.backup, { force: true })
-    return writes.map((item) => item.target)
+    return writes.map((item) => path.join(requestedRoot, path.relative(resolvedRoot, item.target)))
   } finally {
     for (const item of writes) {
       await rm(item.temporary, { force: true }).catch(() => {})

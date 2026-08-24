@@ -99,6 +99,13 @@
               "tone": "warning"
             }
           ]
+        },
+        {
+          "id": "editor-note",
+          "kind": "text",
+          "title": "Reading note",
+          "body": "This synthetic briefing favors developments with a concrete decision consequence. Topics without new evidence stay out of the way.",
+          "span": "full"
         }
       ]
     }

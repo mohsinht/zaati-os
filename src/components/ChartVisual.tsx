@@ -2,6 +2,7 @@ import { useId } from "react"
 import type { BarChartBlock, InstanceConfig, LineChartBlock, ValueFormat } from "@/types"
 
 const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
+const dashPatterns = [undefined, "9 5", "2 5", "12 4 2 4", "5 4"]
 const width = 640
 const height = 260
 const plot = { left: 58, right: 18, top: 18, bottom: 48 }
@@ -82,12 +83,26 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
               key={series.key}
               points={points}
               stroke={colors[seriesIndex % colors.length]}
+              strokeDasharray={dashPatterns[seriesIndex % dashPatterns.length]}
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="3"
             />
           )
         })}
+        {block.series.flatMap((series, seriesIndex) =>
+          block.points.map((point, pointIndex) => (
+            <circle
+              cx={x(pointIndex)}
+              cy={yPosition(point.values[series.key], range.min, range.max)}
+              fill="var(--card)"
+              key={`${series.key}-${point.x}`}
+              r={seriesIndex % 2 === 0 ? 3.5 : 2.5}
+              stroke={colors[seriesIndex % colors.length]}
+              strokeWidth="2"
+            />
+          )),
+        )}
         {block.points.map((point, index) =>
           index === 0 || index === block.points.length - 1 || block.points.length <= 8 ? (
             <text
@@ -106,7 +121,17 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
       <div aria-hidden="true" className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1">
         {block.series.map((series, index) => (
           <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground" key={series.key}>
-            <span className="size-2 rounded-full" style={{ background: colors[index % colors.length] }} />
+            <svg aria-hidden="true" className="h-2 w-5" viewBox="0 0 20 8">
+              <line
+                stroke={colors[index % colors.length]}
+                strokeDasharray={dashPatterns[index % dashPatterns.length]}
+                strokeWidth="2"
+                x1="0"
+                x2="20"
+                y1="4"
+                y2="4"
+              />
+            </svg>
             {series.label}
           </span>
         ))}
@@ -174,7 +199,9 @@ function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; d
           const barHeight = Math.max(1, Math.abs(baseline - valueY))
           return (
             <g key={bar.label}>
-              <rect fill={colors[index % colors.length]} height={barHeight} rx="4" width={barWidth} x={x} y={y} />
+              <rect fill={colors[index % colors.length]} height={barHeight} rx="4" width={barWidth} x={x} y={y}>
+                <title>{`${bar.label}: ${format(bar.value, valueFormat, instance)}`}</title>
+              </rect>
               {index % labelEvery === 0 ? (
                 <text fill="var(--muted-foreground)" fontSize="10" textAnchor="middle" x={x + barWidth / 2} y={height - 18}>
                   {bar.label.length > 12 ? `${bar.label.slice(0, 11)}…` : bar.label}
