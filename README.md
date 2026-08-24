@@ -17,6 +17,16 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
 
 > The LLM is the ingestion and reasoning layer. Your private snapshot store is the durable memory. The dashboard is the interface.
 
+<p align="center">
+  <a href="docs/onboarding.md"><strong>Start onboarding</strong></a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="docs/quickstart.md">Quickstart</a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="docs/privacy.md">Privacy model</a>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="docs/deployment/cloudflare.md">Deploy privately</a>
+</p>
+
 ## What makes it different
 
 - **Any LLM workflow:** ChatGPT, Claude, Gemini, a local model, n8n, cron, or custom code can publish the same contract.
@@ -26,7 +36,7 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
 - **Useful failure states:** Freshness, provenance, confidence, missing sources, and warnings remain visible.
 - **Forkable foundation:** The app, schemas, prompts, tests, CI, deployment recipes, theming, and synthetic examples ship together.
 
-## Three steps, then voila
+## From fork to your first dashboard
 
 Requires Node.js 22 or newer.
 
@@ -39,6 +49,10 @@ npm run tutorial
 ```
 
 The setup assistant creates ignored local preferences. The tutorial runs a credential-free mock LLM that deliberately fails its first contract attempt, retries safely, creates six synthetic snapshots in one transaction, and opens the dashboard.
+
+![Animated terminal showing Zaati OS setup and the synthetic tutorial](docs/assets/onboarding/setup.gif)
+
+No `.env`, API key, connected provider, or personal data is required for this test drive. When you are ready for real sources, follow the complete [visual onboarding guide](docs/onboarding.md).
 
 Prefer Make?
 
@@ -64,6 +78,8 @@ Prompt Studio asks for your public Zaati OS fork, private data repository, sched
 ```bash
 npm run prompt:create
 ```
+
+![Animated terminal showing Zaati OS Prompt Studio](docs/assets/onboarding/prompt-studio.gif)
 
 1. Answer the local wizard. Never enter credentials or real source values.
 2. Open `.zaati/generated-prompts/<task>.scheduled-task.md`.
@@ -201,11 +217,15 @@ Pull requests expose each gate as a separate job and finish with one `Quality ga
 
 ## Deployment choices
 
+![Animated terminal showing the Access-first private deployment sequence](docs/assets/onboarding/deploy.gif)
+
 - **Recommended:** Cloudflare Workers static assets on a custom domain protected by Cloudflare Access.
 - **Supported:** Any private static host that provides real authentication before serving assets.
 - **Not recommended for real data:** Public GitHub Pages, unauthenticated preview URLs, or relying on an obscure URL.
 
 Zaati OS charges no platform fee and can be deployed using free or already-owned tools, depending on provider, connector, model, storage, and hosting choices.
+
+The safe sequence is visualized step by step in [Onboarding](docs/onboarding.md). Deploy synthetic data first, verify the Access challenge, and only then import private snapshots.
 
 ## Release
 
