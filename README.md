@@ -13,7 +13,9 @@ Zaati OS is an open-source, private-by-default personal operating system. Schedu
 
 You choose the LLM. You own the data. You control the deployment. Zaati OS has no hosted account, required telemetry, central database, or platform fee.
 
-![Zaati OS synthetic dashboard](docs/assets/dashboard-light.png)
+<p align="center">
+<img width="720" height="405" alt="show_frustration_here_in_the_s (2)" src="https://github.com/user-attachments/assets/efa34769-a201-433e-851e-c407b33580f4" />
+</p>
 
 > The LLM is the ingestion and reasoning layer. Your private snapshot store is the durable memory. The dashboard is the interface.
 
@@ -25,6 +27,8 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
 - **Files before databases:** JSON is portable, diffable, inspectable, and easy for AI tools to create.
 - **Useful failure states:** Freshness, provenance, confidence, missing sources, and warnings remain visible.
 - **Forkable foundation:** The app, schemas, prompts, tests, CI, deployment recipes, theming, and synthetic examples ship together.
+
+![Zaati OS synthetic dashboard](docs/assets/dashboard-light.png)
 
 ## Three steps, then voila
 
