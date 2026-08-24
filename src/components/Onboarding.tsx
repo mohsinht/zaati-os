@@ -20,9 +20,9 @@ import type { InstanceConfig } from "@/types"
 
 const paths = {
   chatgpt: {
-    label: "ChatGPT task",
+    label: "Prompt Studio",
     icon: Sparkles,
-    command: "Use prompts/scheduled-github-bundle.md with GitHub and your connected sources.",
+    command: "npm run prompt:create",
   },
   command: {
     label: "LLM command",
@@ -101,7 +101,9 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Connect the AI you already use</CardTitle>
-            <CardDescription>One daily run can collect several approved sources and publish every snapshot in one commit.</CardDescription>
+            <CardDescription>
+              Generate one copy-ready prompt with your repositories, sources, tools, contract, and schedule.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-2 sm:grid-cols-3" role="tablist" aria-label="LLM connection path">
@@ -138,8 +140,8 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
               </div>
             </div>
             <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              The provider only needs to return the public bundle contract. Credentials, tool permissions, and source access remain inside
-              your workflow.
+              Prompt Studio writes ignored private files under .zaati. Paste the scheduled-task prompt into your provider, then approve only
+              the GitHub and source connections it needs.
             </p>
           </CardContent>
         </Card>

@@ -32,6 +32,7 @@
     "access:verify": "node scripts/verify-access.mjs",
     "instance:configure": "node scripts/configure-instance.mjs",
     "source:add": "node scripts/add-source.mjs",
+    "prompt:create": "node scripts/create-prompt.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:coverage": "node --test --experimental-test-coverage --test-coverage-include='scripts/lib/*.mjs' --test-coverage-include='scripts/run-workflow.mjs' --test-coverage-lines=90 --test-coverage-branches=78 --test-coverage-functions=80 tests/*.test.mjs",
     "deploy": "npm run check && npm run deployment:configure && wrangler deploy --config .wrangler.generated.jsonc"

@@ -22,3 +22,4 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - Separate no-store dashboard payload, static security headers, performance budgets, and browser-based WCAG checks.
 - Configurable brand mark, local font stacks, heading styles, extended theme tokens, and a live theme studio.
 - Apache 2.0 license, governance, security, contribution, and domain-pack documentation.
+- Private Prompt Studio CLI, profile schema, and copy-ready scheduled-task prompts with exact contracts, source registration gates, multi-source publication, and bounded retries.

@@ -1,0 +1,23 @@
+{
+  "$schema": "../schemas/prompt-profile.schema.json",
+  "profile_version": "0.1.1",
+  "task_name": "Daily market pulse",
+  "code_repository": "https://github.com/your-user/zaati-os",
+  "data_repository": "https://github.com/your-user/zaati-data",
+  "provider": "chatgpt",
+  "timezone": "Etc/UTC",
+  "schedule": "Every weekday at 07:30",
+  "publication": "pull-request",
+  "sources": [
+    {
+      "id": "money:pulse",
+      "requirements": [
+        "Summarize the approved watchlist and portfolio-level changes.",
+        "Explain material movement without inventing a cause.",
+        "Keep exact values when they help a decision."
+      ],
+      "tools": ["A user-approved market data connector", "The GitHub repository connector"],
+      "preferred_blocks": ["metric-group", "line-chart", "table", "notice"]
+    }
+  ]
+}

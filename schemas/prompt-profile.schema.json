@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/prompt-profile.schema.json",
+  "title": "Zaati OS Prompt Studio profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile_version",
+    "task_name",
+    "code_repository",
+    "data_repository",
+    "provider",
+    "timezone",
+    "schedule",
+    "publication",
+    "sources"
+  ],
+  "properties": {
+    "profile_version": { "const": "0.1.1" },
+    "task_name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "code_repository": { "$ref": "#/$defs/repository" },
+    "data_repository": { "$ref": "#/$defs/repository" },
+    "provider": { "enum": ["chatgpt", "claude", "gemini", "local", "custom"] },
+    "timezone": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "schedule": { "type": "string", "minLength": 1, "maxLength": 240 },
+    "publication": { "enum": ["pull-request", "direct-commit"] },
+    "allow_same_repository": { "type": "boolean", "default": false },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": { "$ref": "#/$defs/source" }
+    }
+  },
+  "$defs": {
+    "repository": {
+      "type": "string",
+      "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+      "maxLength": 240
+    },
+    "textList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 30,
+      "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "requirements", "tools", "preferred_blocks"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" },
+        "requirements": { "$ref": "#/$defs/textList" },
+        "tools": { "$ref": "#/$defs/textList" },
+        "preferred_blocks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["metric-group", "list", "line-chart", "bar-chart", "calendar", "table", "progress", "notice", "timeline", "text"]
+          }
+        },
+        "registration": { "$ref": "#/$defs/registration" }
+      }
+    },
+    "registration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "description", "authorized_inputs", "forbidden_inputs", "cadence", "freshness_sla_hours", "dashboard_role"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "authorized_inputs": { "$ref": "#/$defs/textList" },
+        "forbidden_inputs": { "$ref": "#/$defs/textList" },
+        "cadence": { "enum": ["hourly", "daily", "weekdays", "weekly", "monthly", "manual"] },
+        "freshness_sla_hours": { "type": "integer", "minimum": 1, "maximum": 8760 },
+        "dashboard_role": { "enum": ["primary", "supporting", "hidden"] },
+        "depends_on": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" },
+          "default": []
+        }
+      }
+    }
+  }
+}

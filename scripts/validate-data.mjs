@@ -62,6 +62,7 @@ const schemaPaths = [
   "schemas/source-registry.schema.json",
   "schemas/instance.schema.json",
   "schemas/workflow-registry.schema.json",
+  "schemas/prompt-profile.schema.json",
   "schemas/domains/generic.schema.json",
 ]
 const schemas = await Promise.all(schemaPaths.map(readJson))
