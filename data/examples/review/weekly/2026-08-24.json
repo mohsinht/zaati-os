@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/review.schema.json",
   "snapshot_id": "review:weekly:2026-08-24",
   "source_id": "review:weekly",
   "domain": "review",
@@ -24,6 +24,32 @@
     "title": "A calmer week produced better output",
     "summary": "Protected focus blocks rose while interruptions fell. The useful next move is to preserve the same morning boundary.",
     "attention": "low",
+    "facts": {
+      "outcomes": [
+        {
+          "id": "complete-slice",
+          "label": "One complete slice shipped",
+          "status": "positive",
+          "evidence_snapshot_ids": ["work:focus:2026-08-24", "overview:daily:2026-08-24"]
+        }
+      ],
+      "patterns": [
+        {
+          "id": "protected-mornings",
+          "label": "Protected mornings coincided with completed work",
+          "status": "positive",
+          "evidence_snapshot_ids": ["agenda:primary:2026-08-24", "overview:daily:2026-08-24"]
+        }
+      ],
+      "next_actions": [
+        {
+          "id": "repeat-boundary",
+          "label": "Keep the first two hours meeting-free on three weekdays",
+          "status": "neutral",
+          "evidence_snapshot_ids": ["review:weekly:2026-08-24"]
+        }
+      ]
+    },
     "presentation": {
       "layout": "timeline",
       "blocks": [

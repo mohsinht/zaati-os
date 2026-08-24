@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/overview.schema.json",
   "snapshot_id": "overview:daily:2026-08-24",
   "source_id": "overview:daily",
   "domain": "overview",
@@ -26,6 +26,24 @@
     "title": "Good morning. Your day has shape.",
     "summary": "Protect the first focus block, answer two time-sensitive messages, and leave the afternoon buffer intact.",
     "attention": "medium",
+    "facts": {
+      "decisions": [
+        {
+          "id": "protect-focus",
+          "title": "Protect the first focus block",
+          "reason": "The agenda and work queue both identify it as the highest-value window.",
+          "source_ids": ["agenda:primary:2026-08-24", "work:focus:2026-08-24"]
+        }
+      ],
+      "actions": [
+        {
+          "id": "reply-window",
+          "title": "Reply to the scheduling question",
+          "reason": "The inbox snapshot records a decision due today.",
+          "source_ids": ["inbox:attention:2026-08-24"]
+        }
+      ]
+    },
     "presentation": {
       "layout": "dashboard",
       "blocks": [

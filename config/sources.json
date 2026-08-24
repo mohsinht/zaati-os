@@ -10,7 +10,7 @@
       "description": "A realistic day assembled from user-approved calendars, tasks, and reminders.",
       "worker_id": "agenda-daily",
       "prompt": "prompts/daily-agenda.md",
-      "schema_ref": "schemas/domains/generic.schema.json",
+      "schema_ref": "schemas/domains/agenda.schema.json",
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
@@ -19,7 +19,8 @@
       "privacy": {
         "expected_classification": "private",
         "authorized_inputs": ["Calendar event summaries", "Task titles and due dates", "User-authored reminders"],
-        "forbidden_inputs": ["Meeting credentials", "Private attendee notes", "Full document bodies"]
+        "forbidden_inputs": ["Meeting credentials", "Private attendee notes", "Full document bodies"],
+        "content_guards": ["authentication-link", "one-time-code", "encoded-blob"]
       }
     },
     {
@@ -30,7 +31,7 @@
       "description": "Only messages that need a response, decision, deadline, or follow-up.",
       "worker_id": "inbox-attention-daily",
       "prompt": "prompts/inbox-attention.md",
-      "schema_ref": "schemas/domains/generic.schema.json",
+      "schema_ref": "schemas/domains/inbox.schema.json",
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
@@ -39,7 +40,8 @@
       "privacy": {
         "expected_classification": "sensitive",
         "authorized_inputs": ["Message metadata", "Short action-oriented summaries", "Deadlines and sender labels"],
-        "forbidden_inputs": ["Complete message bodies", "Attachments", "Authentication links", "Credentials"]
+        "forbidden_inputs": ["Complete message bodies", "Attachments", "Authentication links", "Credentials"],
+        "content_guards": ["authentication-link", "one-time-code", "raw-email", "encoded-blob"]
       }
     },
     {
@@ -50,7 +52,7 @@
       "description": "Owned work, blockers, decisions, and the smallest useful next actions.",
       "worker_id": "work-focus-daily",
       "prompt": "prompts/work-focus.md",
-      "schema_ref": "schemas/domains/generic.schema.json",
+      "schema_ref": "schemas/domains/work.schema.json",
       "cadence": "weekdays",
       "freshness_sla_hours": 36,
       "dashboard_role": "primary",
@@ -59,7 +61,8 @@
       "privacy": {
         "expected_classification": "sensitive",
         "authorized_inputs": ["Assigned issue metadata", "Status and due dates", "User-visible pull request status"],
-        "forbidden_inputs": ["Source code", "Customer data", "Private incident transcripts", "Access tokens"]
+        "forbidden_inputs": ["Source code", "Customer data", "Private incident transcripts", "Access tokens"],
+        "content_guards": ["authentication-link", "encoded-blob"]
       }
     },
     {
@@ -70,7 +73,7 @@
       "description": "User-approved totals, changes, goals, and evidence without raw statements.",
       "worker_id": "money-pulse-daily",
       "prompt": "prompts/money-pulse.md",
-      "schema_ref": "schemas/domains/generic.schema.json",
+      "schema_ref": "schemas/domains/money.schema.json",
       "cadence": "daily",
       "freshness_sla_hours": 36,
       "dashboard_role": "primary",
@@ -79,7 +82,8 @@
       "privacy": {
         "expected_classification": "sensitive",
         "authorized_inputs": ["User-approved account totals", "Normalized portfolio summaries", "Goals and budgets"],
-        "forbidden_inputs": ["Account numbers", "Statement files", "Credentials", "Payment authorization data"]
+        "forbidden_inputs": ["Account numbers", "Statement files", "Credentials", "Payment authorization data"],
+        "content_guards": ["account-number", "authentication-link", "one-time-code", "encoded-blob"]
       }
     },
     {
@@ -90,7 +94,7 @@
       "description": "A small evidence-linked briefing based on configured interests.",
       "worker_id": "news-briefing-daily",
       "prompt": "prompts/news-briefing.md",
-      "schema_ref": "schemas/domains/generic.schema.json",
+      "schema_ref": "schemas/domains/news.schema.json",
       "cadence": "daily",
       "freshness_sla_hours": 24,
       "dashboard_role": "primary",
@@ -99,7 +103,8 @@
       "privacy": {
         "expected_classification": "private",
         "authorized_inputs": ["Public reporting", "Configured topics and regions"],
-        "forbidden_inputs": ["Paywalled full text", "Fabricated citations", "Unnecessary browsing history"]
+        "forbidden_inputs": ["Paywalled full text", "Fabricated citations", "Unnecessary browsing history"],
+        "content_guards": ["encoded-blob"]
       }
     },
     {
@@ -110,7 +115,7 @@
       "description": "The decision surface assembled from the latest primary snapshots.",
       "worker_id": "overview-daily",
       "prompt": "prompts/daily-overview.md",
-      "schema_ref": "schemas/domains/generic.schema.json",
+      "schema_ref": "schemas/domains/overview.schema.json",
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
@@ -119,7 +124,8 @@
       "privacy": {
         "expected_classification": "sensitive",
         "authorized_inputs": ["Registered normalized snapshots only"],
-        "forbidden_inputs": ["Direct provider access", "Raw content repeated from upstream sources"]
+        "forbidden_inputs": ["Direct provider access", "Raw content repeated from upstream sources"],
+        "content_guards": ["authentication-link", "one-time-code", "raw-email", "encoded-blob"]
       }
     },
     {
@@ -130,7 +136,7 @@
       "description": "An evidence-based review of patterns, progress, risks, and next-week decisions.",
       "worker_id": "review-weekly",
       "prompt": "prompts/weekly-review.md",
-      "schema_ref": "schemas/domains/generic.schema.json",
+      "schema_ref": "schemas/domains/review.schema.json",
       "cadence": "weekly",
       "freshness_sla_hours": 192,
       "dashboard_role": "primary",
@@ -139,7 +145,8 @@
       "privacy": {
         "expected_classification": "sensitive",
         "authorized_inputs": ["Latest seven days of registered normalized snapshots"],
-        "forbidden_inputs": ["Direct provider access", "Unsupported psychological or medical conclusions"]
+        "forbidden_inputs": ["Direct provider access", "Unsupported psychological or medical conclusions"],
+        "content_guards": ["authentication-link", "one-time-code", "raw-email", "encoded-blob"]
       }
     }
   ]

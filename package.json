@@ -20,6 +20,8 @@
     "data:validate": "node scripts/validate-data.mjs",
     "data:build": "node scripts/build-data-index.mjs",
     "snapshot:ingest": "node scripts/ingest-bundle.mjs",
+    "data-repository:init": "node scripts/init-data-repository.mjs",
+    "data-repository:validate": "node scripts/validate-data-repository.mjs",
     "snapshot:keygen": "node scripts/generate-snapshot-key.mjs",
     "workflow:run": "node scripts/run-workflow.mjs",
     "tutorial": "node scripts/run-tutorial.mjs",

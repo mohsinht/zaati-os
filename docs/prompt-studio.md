@@ -2,7 +2,7 @@
 
 Prompt Studio turns a small, private local profile into a complete prompt that you can paste into ChatGPT, Claude, Gemini, a local model, or another scheduled workflow. The generated prompt includes repository locations, source intent, current Zaati OS contracts, safe presentation blocks, privacy boundaries, validation, retries, and atomic publication.
 
-It does not connect to an LLM or store credentials.
+It does not connect to an LLM, install source connectors, or store credentials.
 
 ## Three steps
 
@@ -10,9 +10,11 @@ It does not connect to an LLM or store credentials.
 npm run prompt:create
 ```
 
-1. Choose one or more registered sources.
-2. Describe the information each source should contain, the approved tools it may use, and useful block types.
-3. Copy `.zaati/generated-prompts/<task>.scheduled-task.md` into your LLM and approve the connections it requests.
+1. Choose a provider and a useful starter dashboard.
+2. Enter the public code fork and private data repository.
+3. Review `<task>.permissions.md`, then copy `<task>.scheduled-task.md` into your LLM and approve only the listed connections.
+
+The normal wizard chooses registered sources, dependencies, safe blocks, and sensible tool labels for you. Repository names are the only technical concepts in the default path. Use a JSON profile when you need per-source control.
 
 The profile and prompts are ignored by Git. Their directory uses mode `0700` and each file uses mode `0600`. They may still reveal repository names and workflow intent, so treat them as private configuration.
 
@@ -45,7 +47,9 @@ The preferred block list is a safe menu, not a forced layout. The LLM should cho
 
 ## One task, many snapshots
 
-Add several source objects to the same profile. The generated prompt requires one complete `snapshot-bundle` result, validates all nested snapshots, retries the whole candidate at most three times, and publishes all dated files in one commit or pull request. It never publishes a valid subset from a failed run.
+Add several source objects to the same profile. The generated prompt includes `expected_source_ids`, requires one complete `snapshot-bundle`, retries the whole candidate at most three times, and opens one pull request. It never publishes a subset or merges its own pull request.
+
+The private repository must independently validate the candidate with `npm run data-repository:init`. This separates the LLM that reads and writes data from the policy gate that decides whether the candidate is mergeable.
 
 Direct sources should appear before aggregate sources. Registered aggregate dependencies still apply.
 

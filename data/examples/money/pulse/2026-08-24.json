@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/money.schema.json",
   "snapshot_id": "money:pulse:2026-08-24",
   "source_id": "money:pulse",
   "domain": "money",
@@ -19,6 +19,17 @@
     "title": "Goals are on pace",
     "summary": "The synthetic savings rate remains ahead of target. One source is stale, so today's change is not treated as final.",
     "attention": "low",
+    "facts": {
+      "measures": [
+        { "id": "goal-funded", "label": "Goal funded", "kind": "percent", "value": 64, "as_of": "2026-08-23T18:00:00Z" },
+        { "id": "savings-rate", "label": "Savings rate", "kind": "percent", "value": 31, "as_of": "2026-08-23T18:00:00Z" },
+        { "id": "runway", "label": "Runway", "kind": "duration", "value": 11, "unit": "months", "as_of": "2026-08-23T18:00:00Z" }
+      ],
+      "goals": [
+        { "id": "reserve", "label": "Emergency reserve", "current": 11, "target": 12, "unit": "months" },
+        { "id": "investing", "label": "Annual investing target", "current": 7.4, "target": 12, "unit": "synthetic units" }
+      ]
+    },
     "presentation": {
       "layout": "dashboard",
       "blocks": [

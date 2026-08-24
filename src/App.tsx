@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   ChevronDown,
+  Clock3,
   CircleDollarSign,
   Inbox,
   LayoutDashboard,
@@ -25,6 +26,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { snapshotFreshness, type FreshnessState } from "@/lib/freshness"
 import type { DashboardData, InstanceConfig, Snapshot, SourceDefinition } from "@/types"
 
 const Onboarding = lazy(() => import("@/components/Onboarding"))
@@ -38,6 +40,15 @@ const domainIcons = {
   review: Activity,
 } as const
 const START_ID = "__start"
+const publicAsset = (file: string) => `${import.meta.env.BASE_URL}${file.replace(/^\//, "")}`
+const health = {
+  fresh: { label: "Fresh and complete", dot: "bg-positive" },
+  aging: { label: "Refresh expected soon", dot: "bg-info" },
+  stale: { label: "Expired snapshot", dot: "bg-warning" },
+  partial: { label: "Some evidence limited", dot: "bg-warning" },
+  failed: { label: "Source unavailable", dot: "bg-destructive" },
+  missing: { label: "No snapshot yet", dot: "bg-muted-foreground" },
+} satisfies Record<FreshnessState, { label: string; dot: string }>
 type ThemeMode = "light" | "dark"
 type Density = "compact" | "comfortable"
 type FontFamily = InstanceConfig["theme"]["font_family"]
@@ -55,7 +66,7 @@ export function App() {
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     const controller = new AbortController()
-    fetch("/data/dashboard-data.json", { cache: "no-store", credentials: "same-origin", signal: controller.signal })
+    fetch(publicAsset("data/dashboard-data.json"), { cache: "no-store", credentials: "same-origin", signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`Dashboard data returned ${response.status}.`)
         return response.json() as Promise<DashboardData>
@@ -89,7 +100,13 @@ function DashboardApp({ data }: { data: DashboardData }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [sidebarCompact, setSidebarCompact] = useState(false)
+  const [now, setNow] = useState(() => Date.parse(data.generatedAt))
+  const [historySnapshotId, setHistorySnapshotId] = useState("")
   const selected = data.sources.find((item) => item.definition.id === selectedId)
+  const history = data.historyBySource[selectedId] || []
+  const activeSnapshot = historySnapshotId
+    ? history.find((snapshot) => snapshot.snapshot_id === historySnapshotId) || selected?.snapshot
+    : selected?.snapshot
   const selectedLabel = selectedId === START_ID ? "Start here" : selected?.definition.label || "Dashboard"
 
   useEffect(() => {
@@ -141,8 +158,14 @@ function DashboardApp({ data }: { data: DashboardData }) {
     return () => document.removeEventListener("keydown", close)
   }, [])
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const select = (id: string) => {
     setSelectedId(id)
+    setHistorySnapshotId("")
     setMobileOpen(false)
   }
   return (
@@ -156,6 +179,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
       <Sidebar
         compact={sidebarCompact}
         data={data}
+        now={now}
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
         onCompact={() => setSidebarCompact((value) => !value)}
@@ -238,7 +262,14 @@ function DashboardApp({ data }: { data: DashboardData }) {
               <Onboarding instance={data.instance} onOpenDashboard={() => select(overviewId)} />
             </Suspense>
           ) : selected ? (
-            <DashboardPage definition={selected.definition} instance={data.instance} snapshot={selected.snapshot} />
+            <DashboardPage
+              definition={selected.definition}
+              history={history}
+              instance={data.instance}
+              now={now}
+              onHistory={setHistorySnapshotId}
+              snapshot={activeSnapshot || null}
+            />
           ) : (
             <EmptyDashboard />
           )}
@@ -252,6 +283,7 @@ function Sidebar({
   compact,
   data,
   mobileOpen,
+  now,
   onClose,
   onCompact,
   onSelect,
@@ -260,6 +292,7 @@ function Sidebar({
   compact: boolean
   data: DashboardData
   mobileOpen: boolean
+  now: number
   onClose: () => void
   onCompact: () => void
   onSelect: (id: string) => void
@@ -281,7 +314,7 @@ function Sidebar({
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
           {data.instance.brand_name === "Zaati OS" ? (
             <div className="grid size-9 shrink-0 overflow-hidden rounded-xl border border-sidebar-border bg-white shadow-sm">
-              <img alt="" aria-hidden="true" className="size-full object-cover" src="/logo-mark.png" />
+              <img alt="" aria-hidden="true" className="size-full object-cover" src={publicAsset("logo-mark.png")} />
             </div>
           ) : (
             <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
@@ -323,7 +356,7 @@ function Sidebar({
               ? domainIcons[definition.domain as keyof typeof domainIcons]
               : Activity
             const active = definition.id === selectedId
-            const status = snapshot ? snapshot.status : "missing"
+            const status = snapshotFreshness(snapshot, now)
             return (
               <button
                 aria-current={active ? "page" : undefined}
@@ -338,21 +371,8 @@ function Sidebar({
               >
                 <Icon className={cn("size-4 shrink-0 text-sidebar-foreground/55", active && "text-sidebar-primary")} />
                 <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>{definition.label}</span>
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "size-1.5 rounded-full",
-                    snapshot
-                      ? snapshot.status === "success"
-                        ? "bg-positive"
-                        : snapshot.status === "partial"
-                          ? "bg-warning"
-                          : "bg-destructive"
-                      : "bg-muted-foreground",
-                    compact && "md:hidden",
-                  )}
-                />
-                <span className="sr-only">{status}</span>
+                <span aria-hidden="true" className={cn("size-1.5 rounded-full", health[status].dot, compact && "md:hidden")} />
+                <span className="sr-only">{health[status].label}</span>
               </button>
             )
           })}
@@ -380,11 +400,17 @@ function Sidebar({
 
 function DashboardPage({
   definition,
+  history,
   instance,
+  now,
+  onHistory,
   snapshot,
 }: {
   definition: SourceDefinition
+  history: Snapshot[]
   instance: InstanceConfig
+  now: number
+  onHistory: (snapshotId: string) => void
   snapshot: Snapshot | null
 }) {
   if (!snapshot)
@@ -401,31 +427,81 @@ function DashboardPage({
         </div>
       </section>
     )
+  const freshness = snapshotFreshness(snapshot, now)
   return (
     <section>
-      <PageEyebrow definition={definition} instance={instance} snapshot={snapshot} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageEyebrow definition={definition} instance={instance} snapshot={snapshot} />
+        {history.length > 1 ? (
+          <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            Snapshot
+            <select
+              className="min-h-9 rounded-md border border-input bg-background px-2 text-foreground"
+              onChange={(event) => onHistory(event.target.value)}
+              value={snapshot.snapshot_id === history.at(-1)?.snapshot_id ? "" : snapshot.snapshot_id}
+            >
+              <option value="">Latest</option>
+              {[...history]
+                .reverse()
+                .slice(1)
+                .map((item) => (
+                  <option key={item.snapshot_id} value={item.snapshot_id}>
+                    {formatTimestamp(item.generated_at, instance)}
+                  </option>
+                ))}
+            </select>
+          </label>
+        ) : null}
+      </div>
       <div className="mt-5 flex flex-col justify-between gap-5 border-b border-border pb-7 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
           <h1 className="text-pretty text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{snapshot.data.title}</h1>
           <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">{snapshot.data.summary}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-          <span
-            aria-hidden="true"
-            className={cn(
-              "size-2 rounded-full",
-              snapshot.status === "success" ? "bg-positive" : snapshot.status === "partial" ? "bg-warning" : "bg-destructive",
-            )}
-          />
-          <span>
-            {snapshot.status === "success"
-              ? "All expected inputs"
-              : snapshot.status === "partial"
-                ? "Some evidence limited"
-                : "Source unavailable"}
-          </span>
-          <ChevronDown aria-hidden="true" className="size-3.5 opacity-50" />
-        </div>
+        <details className="group shrink-0 rounded-lg border border-border bg-card text-xs text-muted-foreground lg:max-w-md">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-3 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span aria-hidden="true" className={cn("size-2 rounded-full", health[freshness].dot)} />
+            <span>{health[freshness].label}</span>
+            <ChevronDown aria-hidden="true" className="size-3.5 opacity-50 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-border px-3 py-3">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+              <dt>Generated</dt>
+              <dd className="text-foreground">{formatTimestamp(snapshot.generated_at, instance)}</dd>
+              <dt>Expires</dt>
+              <dd className="text-foreground">{formatTimestamp(snapshot.freshness.expires_at, instance)}</dd>
+              {snapshot.freshness.next_expected_at ? (
+                <>
+                  <dt>Next run</dt>
+                  <dd className="text-foreground">{formatTimestamp(snapshot.freshness.next_expected_at, instance)}</dd>
+                </>
+              ) : null}
+            </dl>
+            <p className="mt-3 font-medium text-foreground">Evidence consulted</p>
+            <ul className="mt-2 space-y-2">
+              {snapshot.sources.map((source, index) => (
+                <li className="flex items-start justify-between gap-4" key={`${source.label}-${source.as_of}-${index}`}>
+                  <span>
+                    <span className="text-foreground">{source.label}</span>
+                    <span className="block">As of {formatTimestamp(source.as_of, instance)}</span>
+                    {source.reference ? (
+                      /^https:\/\//.test(source.reference) ? (
+                        <a className="block underline underline-offset-2" href={source.reference} rel="noreferrer" target="_blank">
+                          Open evidence
+                        </a>
+                      ) : (
+                        <span className="block break-all">Reference: {source.reference}</span>
+                      )
+                    ) : null}
+                  </span>
+                  <Badge variant={source.status === "ok" ? "positive" : source.status === "unavailable" ? "danger" : "warning"}>
+                    {source.status}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </details>
       </div>
       {snapshot.quality.warnings.length ? (
         <div className="mt-5 flex gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4">
@@ -446,7 +522,9 @@ function DashboardPage({
         ))}
       </div>
       <footer className="mt-8 flex flex-col justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground sm:flex-row">
-        <span>Snapshot {snapshot.snapshot_id}</span>
+        <span className="inline-flex items-center gap-1.5">
+          <Clock3 className="size-3.5" /> Last successful update {formatTimestamp(snapshot.generated_at, instance)}
+        </span>
         <span>
           {snapshot.quality.confidence} confidence, {snapshot.sources.length} source{snapshot.sources.length === 1 ? "" : "s"}, expires{" "}
           {formatTimestamp(snapshot.freshness.expires_at, instance)}
@@ -638,7 +716,7 @@ function AppLoading() {
     <div className="grid min-h-screen place-items-center bg-background text-foreground" role="status">
       <div className="text-center">
         <div className="mx-auto size-10 overflow-hidden rounded-xl border border-border bg-white shadow-sm">
-          <img alt="" aria-hidden="true" className="size-full object-cover" src="/logo-mark.png" />
+          <img alt="" aria-hidden="true" className="size-full object-cover" src={publicAsset("logo-mark.png")} />
         </div>
         <p className="mt-4 text-sm font-medium">Preparing your dashboard</p>
         <p className="mt-1 text-xs text-muted-foreground">Loading the private data index</p>

@@ -105,7 +105,6 @@ test("rejects a new source with an unknown dependency", () => {
 test("generates a complete multi-source scheduled task from live contracts", () => {
   const artifacts = generatePromptArtifacts(
     profile({
-      publication: "direct-commit",
       sources: [
         profile().sources[0],
         {
@@ -124,11 +123,20 @@ test("generates a complete multi-source scheduled task from live contracts", () 
   assert.match(promptText, /https:\/\/github\.com\/example\/zaati-data/)
   assert.match(promptText, /"bundle_version": "0\.1\.1"/)
   assert.match(promptText, /"run_id": "daily-calm-pulse:YYYY-MM-DD"/)
+  assert.match(promptText, /"expected_source_ids"/)
   assert.match(promptText, /"line-chart"/)
   assert.match(promptText, /"list"/)
   assert.match(promptText, /Make at most three total attempts/)
-  assert.match(promptText, /Create one commit on the configured data branch/)
+  assert.match(promptText, /Open one pull request containing the complete run/)
+  assert.match(promptText, /independent "Validate Zaati snapshots" check must pass/)
+  assert.match(promptText, /Never merge the pull request/)
   assert.match(promptText, /Never edit application code/)
+  assert.ok(promptText.split("\n").length < 260, "generated prompt should stay readable")
+  assert.match(artifacts.files["daily-calm-pulse.permissions.md"], /human-readable permission receipt|permission manifest/i)
+})
+
+test("rejects direct publication to the default branch", () => {
+  assert.throws(() => validatePromptProfile(profile({ publication: "direct-commit" }), contracts), /Invalid prompt profile/)
 })
 
 test("escapes profile text before placing it in Markdown", () => {
@@ -161,6 +169,7 @@ test("creates a separate synthetic setup prompt for a new source", () => {
   assert.match(artifacts.files["habits.scheduled-task.md"], /Do not schedule or run this recurring task/)
   assert.match(artifacts.files["habits.source-setup.md"], /obviously synthetic public fixture/)
   assert.match(artifacts.files["habits.source-setup.md"], /Never add credentials/)
+  assert.match(artifacts.files["habits.permissions.md"], /Setup is incomplete/)
   assert.match(artifacts.files["habits.profile.json"], /"habits:daily"/)
 })
 
@@ -192,9 +201,9 @@ test("writes private artifacts and refuses accidental replacement", async () => 
   const directory = await mkdtemp(path.join(os.tmpdir(), "zaati-prompt-test-"))
   const artifacts = generatePromptArtifacts(profile(), contracts)
   const written = await writePromptArtifacts(artifacts, directory)
-  assert.equal(written.length, 2)
+  assert.equal(written.length, 3)
   assert.equal((await stat(directory)).mode & 0o777, 0o700)
   assert.equal((await stat(written[0])).mode & 0o777, 0o600)
   await assert.rejects(() => writePromptArtifacts(artifacts, directory), /already exists/)
-  assert.equal((await writePromptArtifacts(artifacts, directory, { force: true })).length, 2)
+  assert.equal((await writePromptArtifacts(artifacts, directory, { force: true })).length, 3)
 })

@@ -59,11 +59,18 @@
         "privacy": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["expected_classification", "authorized_inputs", "forbidden_inputs"],
+          "required": ["expected_classification", "authorized_inputs", "forbidden_inputs", "content_guards"],
           "properties": {
             "expected_classification": { "enum": ["private", "sensitive"] },
             "authorized_inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
-            "forbidden_inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+            "forbidden_inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "content_guards": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": ["account-number", "authentication-link", "one-time-code", "raw-email", "encoded-blob"]
+              }
+            }
           }
         }
       }

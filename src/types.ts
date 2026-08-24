@@ -78,6 +78,7 @@ export type Snapshot = {
     title: string
     summary: string
     attention?: "none" | "low" | "medium" | "high"
+    facts?: Record<string, unknown>
     presentation: { layout: "dashboard" | "focus" | "timeline"; blocks: DashboardBlock[] }
   }
 }
@@ -130,6 +131,10 @@ export type DashboardData = {
   generatedAt: string
   demoMode: boolean
   instance: InstanceConfig
-  sources: Array<{ definition: SourceDefinition; snapshot: Snapshot | null }>
-  historyBySource: Record<string, Array<{ snapshot_id: string; generated_at: string; status: string }>>
+  sources: Array<{
+    definition: SourceDefinition
+    snapshot: Snapshot | null
+    freshnessState: "fresh" | "aging" | "stale" | "partial" | "failed" | "missing"
+  }>
+  historyBySource: Record<string, Snapshot[]>
 }

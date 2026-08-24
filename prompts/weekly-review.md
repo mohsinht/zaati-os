@@ -14,5 +14,7 @@ Produce an evidence-based review with:
 - source gaps that limit confidence
 - decisions for next week with a concrete first action
 
+Normalize these into facts.outcomes, facts.patterns, and facts.next_actions. Every item must carry one or more evidence snapshot IDs.
+
 Use progress only for explicit goals with known denominators. Use a timeline for meaningful sequence, not a daily diary. Avoid psychological, medical, employment, legal, or financial conclusions beyond the evidence. Prefer an honest partial review to a confident story built from missing data.
 ```

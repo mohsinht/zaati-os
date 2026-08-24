@@ -4,22 +4,24 @@ import { createHash } from "node:crypto"
 import { lstat, mkdir, open, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { decryptSnapshotEnvelope, encryptSnapshot, loadSnapshotKey } from "./snapshot-crypto.mjs"
+import { scanSnapshot } from "./snapshot-safety.mjs"
 
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"))
 const ajvErrors = (prefix, errors = []) => errors.map((error) => `${prefix}${error.instancePath || "/"}: ${error.message}`)
 
 export async function loadContracts(root = process.cwd()) {
+  const registry = await readJson(path.join(root, "config/sources.json"))
   const files = [
     "schemas/ui-blocks.schema.json",
     "schemas/snapshot.schema.json",
     "schemas/snapshot-bundle.schema.json",
-    "schemas/domains/generic.schema.json",
+    "schemas/domains/domain-base.schema.json",
+    ...new Set(registry.sources.map((source) => source.schema_ref)),
   ]
-  const [ui, snapshot, bundle, generic] = await Promise.all(files.map((file) => readJson(path.join(root, file))))
-  const registry = await readJson(path.join(root, "config/sources.json"))
+  const [ui, snapshot, bundle, ...domains] = await Promise.all(files.map((file) => readJson(path.join(root, file))))
   const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true })
   addFormats(ajv)
-  for (const schema of [ui, snapshot, bundle, generic]) ajv.addSchema(schema)
+  for (const schema of [ui, snapshot, bundle, ...domains]) if (!ajv.getSchema(schema.$id)) ajv.addSchema(schema)
   return { ajv, registry, bundleSchema: bundle, root }
 }
 
@@ -38,14 +40,27 @@ export function targetForSnapshot(registration, snapshot, outputRoot = "data/sna
   return target
 }
 
-export async function validateBundle(bundle, contracts) {
+export async function validateBundle(bundle, contracts, { expectedSourceIds } = {}) {
   contracts ||= await loadContracts()
   const errors = []
   const validate = contracts.ajv.getSchema(contracts.bundleSchema.$id)
   if (!validate(bundle)) errors.push(...ajvErrors("bundle", validate.errors))
   if (!Array.isArray(bundle?.snapshots)) return errors
+  const declared = Array.isArray(bundle.expected_source_ids) ? bundle.expected_source_ids : []
+  const actual = bundle.snapshots.map((snapshot) => snapshot?.source_id).filter(Boolean)
+  const authoritative = expectedSourceIds || declared
+  const missing = authoritative.filter((sourceId) => !actual.includes(sourceId))
+  const extra = actual.filter((sourceId) => !authoritative.includes(sourceId))
+  if (missing.length) errors.push(`bundle: missing expected sources ${missing.join(", ")}`)
+  if (extra.length) errors.push(`bundle: contains unexpected sources ${extra.join(", ")}`)
+  if (expectedSourceIds) {
+    const undeclared = expectedSourceIds.filter((sourceId) => !declared.includes(sourceId))
+    const unapproved = declared.filter((sourceId) => !expectedSourceIds.includes(sourceId))
+    if (undeclared.length) errors.push(`bundle: expected_source_ids omits authoritative sources ${undeclared.join(", ")}`)
+    if (unapproved.length) errors.push(`bundle: expected_source_ids contains unapproved sources ${unapproved.join(", ")}`)
+  }
   const seen = new Set()
-  for (const snapshot of bundle.snapshots) {
+  for (const [index, snapshot] of bundle.snapshots.entries()) {
     const prefix = snapshot?.source_id || "unknown-source"
     if (seen.has(snapshot?.source_id)) errors.push(`${prefix}: source appears more than once in one bundle`)
     seen.add(snapshot?.source_id)
@@ -58,6 +73,11 @@ export async function validateBundle(bundle, contracts) {
       errors.push(`${prefix}: domain or source does not match its registration`)
     if (snapshot.schema_ref !== registration.schema_ref) errors.push(`${prefix}: schema_ref must be ${registration.schema_ref}`)
     if (snapshot.producer?.worker_id !== registration.worker_id) errors.push(`${prefix}: worker_id must be ${registration.worker_id}`)
+    for (const dependency of registration.depends_on) {
+      const dependencyIndex = actual.indexOf(dependency)
+      if (dependencyIndex > index) errors.push(`${prefix}: dependency ${dependency} must appear earlier in the bundle`)
+    }
+    errors.push(...scanSnapshot(snapshot, { contentGuards: registration.privacy.content_guards || [] }).map((error) => `${prefix}${error}`))
     const domainPath = path.join(contracts.root, registration.schema_ref)
     const domainSchema = await readJson(domainPath).catch(() => null)
     if (!domainSchema) {
@@ -71,8 +91,8 @@ export async function validateBundle(bundle, contracts) {
   return errors
 }
 
-export async function assertValidBundle(bundle, contracts) {
-  const errors = await validateBundle(bundle, contracts)
+export async function assertValidBundle(bundle, contracts, options) {
+  const errors = await validateBundle(bundle, contracts, options)
   if (errors.length) {
     const error = new Error(`Snapshot bundle rejected with ${errors.length} validation error${errors.length === 1 ? "" : "s"}.`)
     error.validationErrors = errors
@@ -97,9 +117,9 @@ async function rejectSymlinkPath(root, target) {
   }
 }
 
-export async function persistBundle(bundle, { outputRoot = "data/snapshots", encryption = false, key, contracts } = {}) {
+export async function persistBundle(bundle, { outputRoot = "data/snapshots", encryption = false, key, contracts, expectedSourceIds } = {}) {
   contracts ||= await loadContracts()
-  await assertValidBundle(bundle, contracts)
+  await assertValidBundle(bundle, contracts, { expectedSourceIds })
   const requestedRoot = path.resolve(outputRoot)
   await mkdir(requestedRoot, { recursive: true, mode: 0o700 })
   const resolvedRoot = await realpath(requestedRoot)

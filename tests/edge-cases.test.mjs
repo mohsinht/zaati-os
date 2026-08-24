@@ -71,6 +71,7 @@ test("persistence rejects path escapes, mixed storage, and target identity confl
   const workspace = await mkdtemp(path.join(tmpdir(), "zaati-storage-"))
   const bundle = JSON.parse(await createMockBundle())
   bundle.snapshots = bundle.snapshots.filter((snapshot) => snapshot.source_id === "agenda:primary")
+  bundle.expected_source_ids = ["agenda:primary"]
   const snapshot = bundle.snapshots[0]
   const registration = {
     target_path: "data/snapshots/../../outside/{YYYY-MM-DD}.json",

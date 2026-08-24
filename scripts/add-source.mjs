@@ -39,17 +39,20 @@ const dependencies = options["depends-on"]
 for (const dependency of dependencies)
   if (!registry.sources.some((item) => item.id === dependency)) throw new Error(`Unknown dependency ${dependency}`)
 const promptPath = `prompts/${workerId}.md`
+const schemaPath = `schemas/domains/${options.domain}-${options.source}.schema.json`
 const workflowPath = path.resolve("config/workflows.json")
 const workflows = JSON.parse(await readFile(workflowPath, "utf8"))
 const selectedWorkflow = options.workflow ? workflows.workflows.find((item) => item.id === options.workflow) : null
 if (options.workflow && !selectedWorkflow) throw new Error(`Unknown workflow ${options.workflow}.`)
-await access(path.resolve(promptPath))
-  .then(() => {
-    throw new Error(`${promptPath} already exists.`)
-  })
-  .catch((error) => {
-    if (error.code !== "ENOENT") throw error
-  })
+for (const candidate of [promptPath, schemaPath]) {
+  await access(path.resolve(candidate))
+    .then(() => {
+      throw new Error(`${candidate} already exists.`)
+    })
+    .catch((error) => {
+      if (error.code !== "ENOENT") throw error
+    })
+}
 const registration = {
   id,
   domain: options.domain,
@@ -58,7 +61,7 @@ const registration = {
   description: options.description,
   worker_id: workerId,
   prompt: promptPath,
-  schema_ref: "schemas/domains/generic.schema.json",
+  schema_ref: schemaPath,
   cadence: options.cadence || "daily",
   freshness_sla_hours: Number(options.freshness || 30),
   dashboard_role: options.role || (domainHasPrimary ? "supporting" : "primary"),
@@ -68,6 +71,7 @@ const registration = {
     expected_classification: "private",
     authorized_inputs: options["authorized-inputs"].split(",").map((item) => item.trim()),
     forbidden_inputs: options["forbidden-inputs"].split(",").map((item) => item.trim()),
+    content_guards: ["authentication-link", "encoded-blob"],
   },
 }
 registry.sources.push(registration)
@@ -98,11 +102,48 @@ ${registration.privacy.forbidden_inputs.map((item) => `- ${item}`).join("\n")}
 
 ## Output guidance
 
-Choose the smallest set of safe UI blocks that helps the user notice, decide, or act. Preserve missing data and warnings. Do not add a visualization just because one is available.
+Populate stable facts before deriving presentation. Refine the scaffolded facts schema with domain names before connecting real data. Choose the smallest set of safe UI blocks that helps the user notice, decide, or act. Preserve missing data and warnings. Do not add a visualization just because one is available.
 `
+const schema = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: `https://zaati-os.dev/${schemaPath}`,
+  title: `${options.label} domain payload`,
+  allOf: [
+    { $ref: "https://zaati-os.dev/schemas/domains/domain-base.schema.json" },
+    {
+      type: "object",
+      properties: {
+        facts: {
+          type: "object",
+          additionalProperties: false,
+          required: ["records"],
+          properties: {
+            records: {
+              type: "array",
+              maxItems: 100,
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["id", "label", "value"],
+                properties: {
+                  id: { type: "string", minLength: 1, maxLength: 120 },
+                  label: { type: "string", minLength: 1, maxLength: 160 },
+                  value: { anyOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }, { type: "null" }] },
+                  status: { type: "string", maxLength: 80 },
+                  observed_at: { type: "string", format: "date-time" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  ],
+}
 await writeFile(promptPath, prompt, { flag: "wx" })
+await writeFile(schemaPath, `${JSON.stringify(schema, null, 2)}\n`, { flag: "wx" })
 await writeFile(registryPath, `${JSON.stringify(registry, null, 2)}\n`)
 if (selectedWorkflow) await writeFile(workflowPath, `${JSON.stringify(workflows, null, 2)}\n`)
 console.log(
-  `Added ${id}, created ${promptPath}${selectedWorkflow ? `, and joined ${selectedWorkflow.id}` : ""}. Add one synthetic fixture, then run npm run check.`,
+  `Added ${id}, created ${promptPath} and ${schemaPath}${selectedWorkflow ? `, and joined ${selectedWorkflow.id}` : ""}. Refine the facts schema, add one synthetic fixture, then run npm run check.`,
 )

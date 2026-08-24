@@ -17,7 +17,7 @@ A producer must:
 
 ## Multi-snapshot bundles
 
-One workflow may publish several registered sources through `schemas/snapshot-bundle.schema.json`. The bundle contains snapshots, never file paths. Zaati OS derives every target from the source registry, rejects duplicate source IDs, validates all nested contracts, and persists nothing until the complete set passes.
+One workflow may publish several registered sources through `schemas/snapshot-bundle.schema.json`. The bundle contains snapshots, never file paths. `expected_source_ids` is compared with the authoritative workflow configuration, so a producer cannot quietly redefine a six-source run as a successful one-source run. Zaati OS derives every target from the source registry, rejects missing, extra, duplicate, or misordered sources, validates all nested contracts, and persists nothing until the complete set passes.
 
 Use `prompts/daily-bundle.md` for one daily LLM run. Build direct-source candidates before aggregates so an overview can depend on valid snapshots from the same run.
 
@@ -28,6 +28,8 @@ The orchestration layer should attempt a complete candidate at most three times.
 ## Presentation is a request, not code
 
 The LLM chooses the information shape. The application keeps control of rendering, colors, accessibility, responsive behavior, links, and executable code.
+
+Each source-specific domain schema requires stable `data.facts`. Facts carry durable dates, amounts, statuses, references, and decisions without depending on a visual component. `data.presentation` is a derived view of those facts. A future renderer can change a table into a graph without rewriting memory.
 
 | Block          | Use it for                                        | Do not use it for                 |
 | -------------- | ------------------------------------------------- | --------------------------------- |
@@ -44,7 +46,9 @@ The LLM chooses the information shape. The application keeps control of renderin
 
 ## Safety limits
 
-The schema rejects unknown properties and limits block, row, point, item, series, text, and URL sizes. Links require HTTPS. Snapshots cannot contain scripts, HTML execution, private-key blocks, or secret-shaped keys. The app never evaluates snapshot text.
+The schema rejects unknown properties and limits block, row, point, item, series, text, and URL sizes. Links require HTTPS. Snapshots cannot contain scripts, HTML execution, private-key blocks, secret-shaped values, authentication links, raw messages, or source-specific forbidden content. Validation reports field paths and rule names without repeating the suspect value. The app never evaluates snapshot text.
+
+For Git publication, the producer opens a pull request and stops. A separately installed workflow validates exact source completeness, source ownership, schemas, paths, encryption mode, and privacy rules before merge.
 
 ## Versioning
 

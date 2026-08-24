@@ -9,5 +9,7 @@ Review only the approved inbox window and extract messages that require a reply,
 
 For each retained message, store a neutral short title, why it matters, the smallest next action, deadline if explicit, sender label only when useful, and a safe source reference. Do not store the complete subject when it contains personal data, complete message bodies, quoted threads, attachments, authentication links, or unnecessary recipient details.
 
+Store every retained attention item in facts.items with a stable ID, sender label, subject summary, reason, optional deadline, and status.
+
 Prefer a prioritized list. A metric group may show only useful queue counts, including ignored noise. A notice is appropriate when the source is incomplete or a deadline is ambiguous.
 ```
