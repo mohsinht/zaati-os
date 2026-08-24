@@ -27,10 +27,62 @@
     "presentation": {
       "layout": "timeline",
       "blocks": [
-        { "id": "week-metrics", "kind": "metric-group", "title": "Week in numbers", "span": "full", "metrics": [{ "label": "Focus blocks", "value": 18, "change": 4, "change_label": "vs last week", "tone": "positive" }, { "label": "Completed decisions", "value": 9, "tone": "positive" }, { "label": "Carried forward", "value": 3, "tone": "warning" }] },
-        { "id": "week-goals", "kind": "progress", "title": "Commitments", "span": "one", "items": [{ "label": "Deep work", "value": 9.2, "max": 10, "value_label": "92%", "tone": "positive" }, { "label": "Movement", "value": 4, "max": 5, "value_label": "4 of 5", "tone": "info" }, { "label": "Weekly cleanup", "value": 1, "max": 1, "value_label": "Done", "tone": "positive" }] },
-        { "id": "week-story", "kind": "timeline", "title": "What changed", "span": "two", "items": [{ "label": "Monday", "title": "Reduced the active queue", "description": "Three low-value items were deliberately removed.", "tone": "positive" }, { "label": "Wednesday", "title": "Protected the first focus block", "description": "A meeting was moved instead of splitting the morning.", "tone": "info" }, { "label": "Friday", "title": "Shipped a complete slice", "description": "The smaller scope made review faster and clearer.", "tone": "positive" }] },
-        { "id": "week-decision", "kind": "notice", "title": "Decision for next week", "body": "Keep the first two hours meeting-free on at least three weekdays. The evidence is behavioral, not motivational: those mornings produced the week's completed work.", "tone": "positive", "span": "full" }
+        {
+          "id": "week-metrics",
+          "kind": "metric-group",
+          "title": "Week in numbers",
+          "span": "full",
+          "metrics": [
+            { "label": "Focus blocks", "value": 18, "change": 4, "change_label": "vs last week", "tone": "positive" },
+            { "label": "Completed decisions", "value": 9, "tone": "positive" },
+            { "label": "Carried forward", "value": 3, "tone": "warning" }
+          ]
+        },
+        {
+          "id": "week-goals",
+          "kind": "progress",
+          "title": "Commitments",
+          "span": "one",
+          "items": [
+            { "label": "Deep work", "value": 9.2, "max": 10, "value_label": "92%", "tone": "positive" },
+            { "label": "Movement", "value": 4, "max": 5, "value_label": "4 of 5", "tone": "info" },
+            { "label": "Weekly cleanup", "value": 1, "max": 1, "value_label": "Done", "tone": "positive" }
+          ]
+        },
+        {
+          "id": "week-story",
+          "kind": "timeline",
+          "title": "What changed",
+          "span": "two",
+          "items": [
+            {
+              "label": "Monday",
+              "title": "Reduced the active queue",
+              "description": "Three low-value items were deliberately removed.",
+              "tone": "positive"
+            },
+            {
+              "label": "Wednesday",
+              "title": "Protected the first focus block",
+              "description": "A meeting was moved instead of splitting the morning.",
+              "tone": "info"
+            },
+            {
+              "label": "Friday",
+              "title": "Shipped a complete slice",
+              "description": "The smaller scope made review faster and clearer.",
+              "tone": "positive"
+            }
+          ]
+        },
+        {
+          "id": "week-decision",
+          "kind": "notice",
+          "title": "Decision for next week",
+          "body": "Keep the first two hours meeting-free on at least three weekdays. The evidence is behavioral, not motivational: those mornings produced the week's completed work.",
+          "tone": "positive",
+          "span": "full"
+        }
       ]
     }
   }

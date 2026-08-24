@@ -26,13 +26,17 @@ function parseOptions(argv) {
   }
 }
 
-function commandAdapter(command, prompt, timeoutMs = 120000) {
+export function commandAdapter(command, prompt, timeoutMs = 120000) {
   if (!command.length) throw new Error("The command adapter requires an executable after --.")
   return new Promise((resolve, reject) => {
     const child = spawn(command[0], command.slice(1), { shell: false, stdio: ["pipe", "pipe", "pipe"], env: process.env })
     const output = []
     let bytes = 0
-    const timer = setTimeout(() => child.kill("SIGTERM"), timeoutMs)
+    let timedOut = false
+    const timer = setTimeout(() => {
+      timedOut = true
+      child.kill("SIGTERM")
+    }, timeoutMs)
     child.stdout.on("data", (chunk) => {
       bytes += chunk.length
       if (bytes > 2_000_000) child.kill("SIGTERM")
@@ -43,6 +47,7 @@ function commandAdapter(command, prompt, timeoutMs = 120000) {
     child.on("close", (code) => {
       clearTimeout(timer)
       if (bytes > 2_000_000) reject(new Error("Provider output exceeded the 2 MB safety limit."))
+      else if (timedOut) reject(new Error(`Provider command timed out after ${timeoutMs} ms.`))
       else if (code !== 0) reject(new Error(`Provider command exited with code ${code}.`))
       else resolve(Buffer.concat(output).toString("utf8"))
     })
@@ -57,8 +62,11 @@ export async function executeWorkflow(options = {}) {
   const workflow = workflowRegistry.workflows.find((item) => item.id === settings.workflowId)
   if (!workflow) throw new Error(`Unknown workflow ${settings.workflowId}.`)
   settings.maxAttempts ??= workflow.max_attempts
-  if (!Number.isInteger(settings.maxAttempts) || settings.maxAttempts < 1 || settings.maxAttempts > 5) throw new Error("max-attempts must be between 1 and 5.")
-  const instancePath = await readFile(path.join(root, "config/instance.local.json"), "utf8").then(() => "config/instance.local.json").catch(() => "config/instance.example.json")
+  if (!Number.isInteger(settings.maxAttempts) || settings.maxAttempts < 1 || settings.maxAttempts > 5)
+    throw new Error("max-attempts must be between 1 and 5.")
+  const instancePath = await readFile(path.join(root, "config/instance.local.json"), "utf8")
+    .then(() => "config/instance.local.json")
+    .catch(() => "config/instance.example.json")
   const instance = JSON.parse(await readFile(path.join(root, instancePath), "utf8"))
   const bundlePrompt = (await readFile(path.join(root, workflow.prompt), "utf8"))
     .replaceAll("{{SOURCE_IDS}}", workflow.source_ids.join(", "))
@@ -71,20 +79,27 @@ export async function executeWorkflow(options = {}) {
     const prompt = `${bundlePrompt}${feedback}`
     let raw
     try {
-      raw = settings.adapter === "mock"
-        ? await createMockBundle({ root, attempt, failAttempts: settings.mockFailures, sourceIds: workflow.source_ids })
-        : await commandAdapter(settings.command, prompt)
+      raw =
+        settings.adapter === "mock"
+          ? await createMockBundle({ root, attempt, failAttempts: settings.mockFailures, sourceIds: workflow.source_ids })
+          : await commandAdapter(settings.command, prompt)
       const bundle = JSON.parse(raw)
       await assertValidBundle(bundle, contracts)
       const files = settings.outputRoot
         ? await persistBundle(bundle, { outputRoot: settings.outputRoot, encryption: settings.encrypt, contracts })
         : []
-      console.log(`Workflow succeeded on attempt ${attempt}. Validated ${bundle.snapshots.length} snapshots${files.length ? " and committed the local file transaction" : " in dry mode"}.`)
+      console.log(
+        `Workflow succeeded on attempt ${attempt}. Validated ${bundle.snapshots.length} snapshots${files.length ? " and committed the local file transaction" : " in dry mode"}.`,
+      )
       return { bundle, files, attempts: attempt }
     } catch (error) {
       const reasons = error.validationErrors || [error instanceof SyntaxError ? "Output was not exact JSON." : error.message]
-      if (attempt === settings.maxAttempts) throw new Error(`Workflow failed after ${attempt} attempts. Last rejection: ${reasons.slice(0, 5).join("; ")}`)
-      feedback = `\n\n## Machine validation feedback for retry ${attempt + 1}\nThe previous output was rejected. Return a complete replacement bundle, not a patch. Fix only these contract errors:\n${reasons.slice(0, 12).map((item) => `- ${item}`).join("\n")}\n`
+      if (attempt === settings.maxAttempts)
+        throw new Error(`Workflow failed after ${attempt} attempts. Last rejection: ${reasons.slice(0, 5).join("; ")}`, { cause: error })
+      feedback = `\n\n## Machine validation feedback for retry ${attempt + 1}\nThe previous output was rejected. Return a complete replacement bundle, not a patch. Fix only these contract errors:\n${reasons
+        .slice(0, 12)
+        .map((item) => `- ${item}`)
+        .join("\n")}\n`
       console.log(`Attempt ${attempt} rejected safely. Retrying without writing snapshots.`)
     }
   }

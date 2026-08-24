@@ -7,9 +7,16 @@
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "dev": "npm run data:build && vite",
-    "build": "npm run data:validate && npm run privacy:validate && npm run deployment:validate && npm run data:build && tsc -b && vite build",
+    "build": "npm run contracts:check && npm run build:app",
+    "build:app": "npm run data:build && npm run typecheck && vite build",
     "preview": "vite preview",
-    "check": "npm run build && npm test && npm run performance:check && npm run accessibility:check",
+    "check": "npm run format:check && npm run lint && npm run repository:validate && npm run build && npm run test:coverage && npm run tutorial:check && npm run performance:check && npm run accessibility:check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc -b",
+    "contracts:check": "npm run data:validate && npm run privacy:validate && npm run deployment:validate",
+    "repository:validate": "node scripts/check-repository.mjs",
     "data:validate": "node scripts/validate-data.mjs",
     "data:build": "node scripts/build-data-index.mjs",
     "snapshot:ingest": "node scripts/ingest-bundle.mjs",
@@ -26,6 +33,7 @@
     "instance:configure": "node scripts/configure-instance.mjs",
     "source:add": "node scripts/add-source.mjs",
     "test": "node --test tests/*.test.mjs",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include='scripts/lib/*.mjs' --test-coverage-include='scripts/run-workflow.mjs' --test-coverage-lines=90 --test-coverage-branches=78 --test-coverage-functions=80 tests/*.test.mjs",
     "deploy": "npm run check && npm run deployment:configure && wrangler deploy --config .wrangler.generated.jsonc"
   },
   "dependencies": {
@@ -38,18 +46,25 @@
     "tailwind-merge": "3.6.0"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "22.12.0",
     "@types/react": "19.0.3",
     "@types/react-dom": "19.0.2",
     "@vitejs/plugin-react": "6.0.5",
-    "axe-core": "4.13.0",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
+    "axe-core": "4.13.0",
+    "eslint": "10.9.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.4",
+    "prettier": "3.9.6",
     "tailwindcss": "4.3.3",
     "typescript": "5.7.2",
+    "typescript-eslint": "8.67.0",
     "vite": "8.2.1",
-    "wrangler": "4.124.0"
+    "wrangler": "4.124.0",
+    "yaml": "2.9.0"
   },
   "engines": {
     "node": ">=22"

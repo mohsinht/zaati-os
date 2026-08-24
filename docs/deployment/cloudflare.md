@@ -8,24 +8,24 @@ Cloudflare documents the same `assets.directory` and `single-page-application` p
 
 Create a protected environment named `production`, then add:
 
-| Variable | Example shape | Purpose |
-| --- | --- | --- |
-| `ZAATI_WORKER_NAME` | `zaati-private` | Cloudflare Worker name |
-| `ZAATI_HOSTNAME` | `life.example.com` | Exact custom hostname |
-| `ZAATI_ACCESS_VERIFIED` | `true` | Enables private-data deploy after verification |
-| `ZAATI_DATA_REPOSITORY` | `account/private-data` | Optional private snapshot repository |
-| `ZAATI_DATA_REF` | `main` | Private data branch |
-| `ZAATI_AUTO_DEPLOY` | `true` | Optional main-branch deployment |
+| Variable                | Example shape          | Purpose                                        |
+| ----------------------- | ---------------------- | ---------------------------------------------- |
+| `ZAATI_WORKER_NAME`     | `zaati-private`        | Cloudflare Worker name                         |
+| `ZAATI_HOSTNAME`        | `life.example.com`     | Exact custom hostname                          |
+| `ZAATI_ACCESS_VERIFIED` | `true`                 | Enables private-data deploy after verification |
+| `ZAATI_DATA_REPOSITORY` | `account/private-data` | Optional private snapshot repository           |
+| `ZAATI_DATA_REF`        | `main`                 | Private data branch                            |
+| `ZAATI_AUTO_DEPLOY`     | `true`                 | Optional main-branch deployment                |
 
 Add these environment secrets:
 
-| Secret | Permission |
-| --- | --- |
-| `CLOUDFLARE_ACCOUNT_ID` | Target account ID |
-| `CLOUDFLARE_API_TOKEN` | Scoped Workers edit token |
-| `ZAATI_INSTANCE_CONFIG_JSON` | Complete instance JSON, optional |
+| Secret                        | Permission                                                |
+| ----------------------------- | --------------------------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID`       | Target account ID                                         |
+| `CLOUDFLARE_API_TOKEN`        | Scoped Workers edit token                                 |
+| `ZAATI_INSTANCE_CONFIG_JSON`  | Complete instance JSON, optional                          |
 | `ZAATI_DATA_REPOSITORY_TOKEN` | Read-only access to one private data repository, optional |
-| `ZAATI_SNAPSHOT_KEY` | Optional 256-bit encrypted-snapshot key |
+| `ZAATI_SNAPSHOT_KEY`          | Optional 256-bit encrypted-snapshot key                   |
 
 Cloudflare's [GitHub Actions guide](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) recommends storing the API token and account ID as CI secrets and scoping the token to the target account.
 

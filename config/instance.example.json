@@ -7,15 +7,7 @@
   "locale": "en-US",
   "currency": "USD",
   "week_starts_on": "monday",
-  "enabled_sources": [
-    "overview:daily",
-    "agenda:primary",
-    "inbox:attention",
-    "work:focus",
-    "money:pulse",
-    "news:briefing",
-    "review:weekly"
-  ],
+  "enabled_sources": ["overview:daily", "agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing", "review:weekly"],
   "theme": {
     "preset": "sage",
     "default_mode": "system",

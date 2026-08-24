@@ -7,14 +7,7 @@
       "label": "Daily core bundle",
       "description": "Refresh the primary daily sources and build the overview in one validated run.",
       "prompt": "prompts/daily-bundle.md",
-      "source_ids": [
-        "agenda:primary",
-        "inbox:attention",
-        "work:focus",
-        "money:pulse",
-        "news:briefing",
-        "overview:daily"
-      ],
+      "source_ids": ["agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing", "overview:daily"],
       "max_attempts": 3,
       "publication": "single-commit"
     }

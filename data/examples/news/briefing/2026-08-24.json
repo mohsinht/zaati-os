@@ -26,12 +26,52 @@
           "title": "Briefing",
           "span": "two",
           "items": [
-            { "id": "n1", "title": "Open standards make agent workflows easier to move", "description": "Why it matters: teams can change models without rebuilding every downstream view.", "meta": "AI systems", "tone": "info", "href": "https://example.com/ai-standards" },
-            { "id": "n2", "title": "Smaller software releases continue to outperform big-bang delivery", "description": "Why it matters: reliability improves when feedback arrives before architecture hardens.", "meta": "Engineering", "tone": "positive", "href": "https://example.com/software-delivery" },
-            { "id": "n3", "title": "Privacy controls move closer to the data layer", "description": "Why it matters: access boundaries become portable across hosting providers.", "meta": "Privacy", "tone": "warning", "href": "https://example.com/privacy-controls" }
+            {
+              "id": "n1",
+              "title": "Open standards make agent workflows easier to move",
+              "description": "Why it matters: teams can change models without rebuilding every downstream view.",
+              "meta": "AI systems",
+              "tone": "info",
+              "href": "https://example.com/ai-standards"
+            },
+            {
+              "id": "n2",
+              "title": "Smaller software releases continue to outperform big-bang delivery",
+              "description": "Why it matters: reliability improves when feedback arrives before architecture hardens.",
+              "meta": "Engineering",
+              "tone": "positive",
+              "href": "https://example.com/software-delivery"
+            },
+            {
+              "id": "n3",
+              "title": "Privacy controls move closer to the data layer",
+              "description": "Why it matters: access boundaries become portable across hosting providers.",
+              "meta": "Privacy",
+              "tone": "warning",
+              "href": "https://example.com/privacy-controls"
+            }
           ]
         },
-        { "id": "watch", "kind": "timeline", "title": "What to watch", "span": "one", "items": [{ "label": "This week", "title": "Provider portability", "description": "Look for concrete export formats, not broad interoperability claims.", "tone": "info" }, { "label": "Next", "title": "Access by default", "description": "Watch whether private deployments ship authentication as a first-class step.", "tone": "warning" }] }
+        {
+          "id": "watch",
+          "kind": "timeline",
+          "title": "What to watch",
+          "span": "one",
+          "items": [
+            {
+              "label": "This week",
+              "title": "Provider portability",
+              "description": "Look for concrete export formats, not broad interoperability claims.",
+              "tone": "info"
+            },
+            {
+              "label": "Next",
+              "title": "Access by default",
+              "description": "Watch whether private deployments ship authentication as a first-class step.",
+              "tone": "warning"
+            }
+          ]
+        }
       ]
     }
   }

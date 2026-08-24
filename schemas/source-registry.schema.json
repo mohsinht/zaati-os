@@ -19,7 +19,22 @@
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "domain", "source", "label", "description", "worker_id", "prompt", "schema_ref", "cadence", "freshness_sla_hours", "dashboard_role", "depends_on", "target_path", "privacy"],
+      "required": [
+        "id",
+        "domain",
+        "source",
+        "label",
+        "description",
+        "worker_id",
+        "prompt",
+        "schema_ref",
+        "cadence",
+        "freshness_sla_hours",
+        "dashboard_role",
+        "depends_on",
+        "target_path",
+        "privacy"
+      ],
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" },
         "domain": { "$ref": "#/$defs/slug" },
@@ -37,7 +52,10 @@
           "uniqueItems": true,
           "items": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" }
         },
-        "target_path": { "type": "string", "pattern": "^data/snapshots/[a-z0-9-]+/[a-z0-9-]+/\\{YYYY\\}/\\{MM\\}/\\{YYYY-MM-DD\\}\\.json$" },
+        "target_path": {
+          "type": "string",
+          "pattern": "^data/snapshots/[a-z0-9-]+/[a-z0-9-]+/\\{YYYY\\}/\\{MM\\}/\\{YYYY-MM-DD\\}\\.json$"
+        },
         "privacy": {
           "type": "object",
           "additionalProperties": false,

@@ -12,10 +12,24 @@ const host = "127.0.0.1"
 const appPort = 4300 + (process.pid % 500)
 const debugPort = 9300 + (process.pid % 500)
 const appUrl = process.env.ZAATI_A11Y_URL || `http://${host}:${appPort}`
-const candidates = [process.env.CHROME_PATH, "/tmp/chromium", "/usr/bin/google-chrome", "/usr/bin/google-chrome-stable", "/usr/bin/chromium", "/usr/bin/chromium-browser"].filter(Boolean)
+const candidates = [
+  process.env.CHROME_PATH,
+  "/tmp/chromium",
+  "/usr/bin/google-chrome",
+  "/usr/bin/google-chrome-stable",
+  "/usr/bin/chromium",
+  "/usr/bin/chromium-browser",
+].filter(Boolean)
 let browser
 for (const candidate of candidates) {
-  if (await access(candidate, constants.X_OK).then(() => true).catch(() => false)) { browser = candidate; break }
+  if (
+    await access(candidate, constants.X_OK)
+      .then(() => true)
+      .catch(() => false)
+  ) {
+    browser = candidate
+    break
+  }
 }
 if (!browser) throw new Error("Accessibility validation requires Chromium or Chrome. Set CHROME_PATH to the executable.")
 
@@ -55,7 +69,9 @@ function cdp(url) {
       socket.send(JSON.stringify({ id, method, params }))
       return response
     },
-    close() { socket.close() },
+    close() {
+      socket.close()
+    },
   }
 }
 
@@ -81,7 +97,15 @@ async function audit(client, label) {
   if (!result) throw new Error(`Axe did not return a result for ${label}.`)
   const violations = result.violations || []
   if (violations.length) {
-    const summary = violations.map((violation) => `${violation.id}: ${violation.nodes.slice(0, 3).map((node) => node.target.join(" ")).join(", ")}`).join("; ")
+    const summary = violations
+      .map(
+        (violation) =>
+          `${violation.id}: ${violation.nodes
+            .slice(0, 3)
+            .map((node) => node.target.join(" "))
+            .join(", ")}`,
+      )
+      .join("; ")
     throw new Error(`${label} has ${violations.length} accessibility violation groups. ${summary}`)
   }
   console.log(`${label}: axe found no WCAG A or AA violations.`)
@@ -102,11 +126,25 @@ async function stop(child) {
 
 const profile = await mkdtemp(path.join(tmpdir(), "zaati-a11y-"))
 const vite = path.resolve("node_modules/.bin", process.platform === "win32" ? "vite.cmd" : "vite")
-const preview = process.env.ZAATI_A11Y_URL ? null : spawn(vite, ["preview", "--host", host, "--port", String(appPort)], { stdio: "ignore", shell: process.platform === "win32" })
+const preview = process.env.ZAATI_A11Y_URL
+  ? null
+  : spawn(vite, ["preview", "--host", host, "--port", String(appPort)], { stdio: "ignore", shell: process.platform === "win32" })
 let chrome
 try {
   await waitForJson(`${appUrl}/data/dashboard-data.json`)
-  chrome = spawn(browser, ["--headless=new", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage", `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, appUrl], { stdio: "ignore" })
+  chrome = spawn(
+    browser,
+    [
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      `--remote-debugging-port=${debugPort}`,
+      `--user-data-dir=${profile}`,
+      appUrl,
+    ],
+    { stdio: "ignore" },
+  )
   const targets = await waitForJson(`http://${host}:${debugPort}/json`)
   const page = targets.find((target) => target.type === "page")
   if (!page) throw new Error("Chromium did not expose a page target.")
@@ -117,28 +155,41 @@ try {
   await client.send("Page.reload", { ignoreCache: true })
   await audit(client, "Desktop light tutorial")
   await capture(client, "onboarding-light.png")
-  await client.send("Runtime.evaluate", { expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()" })
+  await client.send("Runtime.evaluate", {
+    expression:
+      "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()",
+  })
   await new Promise((resolve) => setTimeout(resolve, 100))
   await audit(client, "Desktop light dashboard")
   await capture(client, "dashboard-light.png")
-  await client.send("Runtime.evaluate", { expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Start here')?.click()" })
+  await client.send("Runtime.evaluate", {
+    expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Start here')?.click()",
+  })
   await new Promise((resolve) => setTimeout(resolve, 100))
   await client.send("Runtime.evaluate", { expression: "document.querySelector('button[aria-label=\"Use dark mode\"]')?.click()" })
   await new Promise((resolve) => setTimeout(resolve, 100))
   await audit(client, "Desktop dark tutorial")
   await capture(client, "onboarding-dark.png")
-  await client.send("Runtime.evaluate", { expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()" })
+  await client.send("Runtime.evaluate", {
+    expression:
+      "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()",
+  })
   await new Promise((resolve) => setTimeout(resolve, 100))
   await audit(client, "Desktop dark dashboard")
   await capture(client, "dashboard-dark.png")
   await client.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
   await client.send("Page.reload", { ignoreCache: true })
   await waitForApp(client)
-  await client.send("Runtime.evaluate", { expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Start here')?.click()" })
+  await client.send("Runtime.evaluate", {
+    expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Start here')?.click()",
+  })
   await new Promise((resolve) => setTimeout(resolve, 100))
   await audit(client, "Mobile tutorial")
   await capture(client, "onboarding-mobile.png")
-  await client.send("Runtime.evaluate", { expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()" })
+  await client.send("Runtime.evaluate", {
+    expression:
+      "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()",
+  })
   await new Promise((resolve) => setTimeout(resolve, 100))
   await audit(client, "Mobile dashboard")
   await capture(client, "dashboard-mobile.png")

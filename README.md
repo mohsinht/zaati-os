@@ -1,5 +1,8 @@
 # Zaati OS
 
+[![CI](../../actions/workflows/ci.yml/badge.svg?branch=main)](../../actions/workflows/ci.yml)
+[![CodeQL](../../actions/workflows/codeql.yml/badge.svg?branch=main)](../../actions/workflows/codeql.yml)
+
 **Your life, organized by the AI you already use.**
 
 Zaati OS is an open-source, private-by-default personal operating system. Scheduled AI workflows turn approved sources into versioned snapshots, and a schema-driven dashboard turns those snapshots into useful daily views, trends, calendars, lists, tables, and reviews.
@@ -92,9 +95,7 @@ The common envelope records source identity, time period, producer, status, prov
     "summary": "Two focus blocks and one decision need attention.",
     "presentation": {
       "layout": "dashboard",
-      "blocks": [
-        { "id": "day", "kind": "calendar", "title": "Today", "date": "2030-01-15", "events": [] }
-      ]
+      "blocks": [{ "id": "day", "kind": "calendar", "title": "Today", "date": "2030-01-15", "events": [] }]
     }
   }
 }
@@ -104,15 +105,15 @@ See [LLM contract](docs/llm-contract.md) and [`schemas/`](schemas/) for the exec
 
 ## Included starter workflows
 
-| Prompt | Purpose | Default visualization |
-| --- | --- | --- |
-| `inbox-attention.md` | Extract only messages needing a decision or response | Prioritized list |
-| `daily-agenda.md` | Turn calendars and tasks into a realistic day | Calendar and action list |
-| `work-focus.md` | Surface owned work, blockers, and next actions | Status metrics and table |
-| `money-pulse.md` | Normalize user-approved financial summaries | Metrics, line chart, notices |
-| `news-briefing.md` | Keep only high-value developments | Evidence-linked list |
-| `daily-overview.md` | Combine registered source snapshots | Adaptive dashboard |
-| `weekly-review.md` | Find patterns and produce an evidence-based review | Progress, timeline, decisions |
+| Prompt               | Purpose                                              | Default visualization         |
+| -------------------- | ---------------------------------------------------- | ----------------------------- |
+| `inbox-attention.md` | Extract only messages needing a decision or response | Prioritized list              |
+| `daily-agenda.md`    | Turn calendars and tasks into a realistic day        | Calendar and action list      |
+| `work-focus.md`      | Surface owned work, blockers, and next actions       | Status metrics and table      |
+| `money-pulse.md`     | Normalize user-approved financial summaries          | Metrics, line chart, notices  |
+| `news-briefing.md`   | Keep only high-value developments                    | Evidence-linked list          |
+| `daily-overview.md`  | Combine registered source snapshots                  | Adaptive dashboard            |
+| `weekly-review.md`   | Find patterns and produce an evidence-based review   | Progress, timeline, decisions |
 
 These are provider-neutral templates. Copy one into any tool that can read approved sources and write JSON to the private snapshot store.
 
@@ -144,20 +145,40 @@ Read [Privacy and threat model](docs/privacy.md) before connecting a real source
 
 ## Commands
 
-| Command | Result |
-| --- | --- |
-| `npm run dev` | Build the data index and start Vite |
-| `npm run setup` | Complete the guided three-step local setup |
-| `npm run tutorial` | Run the retrying mock LLM bundle and open it locally |
-| `npm run workflow:run` | Connect any command-based LLM adapter |
-| `npm run snapshot:ingest` | Atomically validate and persist one multi-snapshot bundle |
-| `npm run snapshot:keygen` | Create an ignored 256-bit snapshot key |
-| `npm run instance:configure` | Create ignored local settings |
-| `npm run source:add` | Scaffold a source catalog entry and worker prompt |
-| `npm run data:validate` | Validate registries, snapshots, ownership, and UI blocks |
-| `npm run privacy:validate` | Reject private paths and common credential shapes |
-| `npm run check` | Run contracts, security, build, retry, encryption, performance, and WCAG tests |
-| `npm run deploy` | Validate, build, and deploy with Wrangler |
+| Command                      | Result                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| `npm run dev`                | Build the data index and start Vite                                            |
+| `npm run setup`              | Complete the guided three-step local setup                                     |
+| `npm run tutorial`           | Run the retrying mock LLM bundle and open it locally                           |
+| `npm run workflow:run`       | Connect any command-based LLM adapter                                          |
+| `npm run snapshot:ingest`    | Atomically validate and persist one multi-snapshot bundle                      |
+| `npm run snapshot:keygen`    | Create an ignored 256-bit snapshot key                                         |
+| `npm run instance:configure` | Create ignored local settings                                                  |
+| `npm run source:add`         | Scaffold a source catalog entry and worker prompt                              |
+| `npm run data:validate`      | Validate registries, snapshots, ownership, and UI blocks                       |
+| `npm run privacy:validate`   | Reject private paths and common credential shapes                              |
+| `npm run format:check`       | Reject formatting drift with Prettier                                          |
+| `npm run lint`               | Run type-aware ESLint, React Hooks, and React Refresh rules                    |
+| `npm run test:coverage`      | Run tests with enforced line, branch, and function coverage                    |
+| `npm run check`              | Run contracts, security, build, retry, encryption, performance, and WCAG tests |
+| `npm run deploy`             | Validate, build, and deploy with Wrangler                                      |
+
+## Enforced quality gates
+
+The badges at the top of this README reflect the current default-branch CI and CodeQL results. A red badge means the published branch is failing a real check, not that someone forgot to update a status table.
+
+| Gate                  | Enforced standard                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Formatting            | Zero Prettier drift                                                                                                |
+| Static analysis       | Zero ESLint errors or warnings, strict TypeScript build                                                            |
+| Repository policy     | Exact dependency versions, valid workflow YAML, timeouts, least-privilege permissions, safe checkout configuration |
+| Contracts and privacy | Every registry, snapshot, schema, ownership rule, deployment boundary, and committed path validates                |
+| Unit coverage         | At least 90% lines, 78% branches, and 80% functions across the ingestion and encryption core                       |
+| Performance           | At most 120 KB JavaScript gzip, 20 KB CSS gzip, and 120 KB dashboard data gzip                                     |
+| Accessibility         | Zero axe WCAG A or AA violation groups across tutorial and dashboard, light, dark, desktop, and mobile             |
+| Security              | Zero high-severity npm audit findings plus CodeQL analysis                                                         |
+
+Pull requests expose each gate as a separate job and finish with one `Quality gate` result suitable for branch protection. Run `npm run check` locally for the same product checks before pushing.
 
 ## Deployment choices
 

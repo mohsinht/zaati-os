@@ -17,7 +17,10 @@
     { "label": "Synthetic news", "status": "ok", "as_of": "2026-08-24T06:55:00Z", "reference": "news:briefing:2026-08-24" }
   ],
   "freshness": { "expires_at": "2026-08-25T13:35:00Z", "next_expected_at": "2026-08-25T07:35:00Z" },
-  "quality": { "confidence": "medium", "warnings": ["The synthetic money source is intentionally marked stale to demonstrate a real failure state."] },
+  "quality": {
+    "confidence": "medium",
+    "warnings": ["The synthetic money source is intentionally marked stale to demonstrate a real failure state."]
+  },
   "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
   "data": {
     "title": "Good morning. Your day has shape.",
@@ -67,9 +70,21 @@
           "span": "one",
           "date": "2026-08-24",
           "events": [
-            { "id": "focus-1", "title": "Build the first usable slice", "start": "2026-08-24T08:30:00Z", "end": "2026-08-24T10:30:00Z", "tone": "positive" },
+            {
+              "id": "focus-1",
+              "title": "Build the first usable slice",
+              "start": "2026-08-24T08:30:00Z",
+              "end": "2026-08-24T10:30:00Z",
+              "tone": "positive"
+            },
             { "id": "sync", "title": "Project sync", "start": "2026-08-24T11:00:00Z", "end": "2026-08-24T11:30:00Z", "tone": "info" },
-            { "id": "focus-2", "title": "Review and ship", "start": "2026-08-24T13:00:00Z", "end": "2026-08-24T14:30:00Z", "tone": "positive" },
+            {
+              "id": "focus-2",
+              "title": "Review and ship",
+              "start": "2026-08-24T13:00:00Z",
+              "end": "2026-08-24T14:30:00Z",
+              "tone": "positive"
+            },
             { "id": "buffer", "title": "Open buffer", "start": "2026-08-24T15:00:00Z", "end": "2026-08-24T16:00:00Z", "tone": "neutral" }
           ]
         },
@@ -80,9 +95,30 @@
           "description": "Only actions with a concrete next step appear here.",
           "span": "one",
           "items": [
-            { "id": "reply", "title": "Reply to the scheduling question", "description": "Confirm one of the two proposed windows.", "meta": "Before 10:00", "status": "Needs reply", "tone": "warning" },
-            { "id": "review", "title": "Review the small release", "description": "Check the acceptance criteria and approve or request changes.", "meta": "20 minutes", "status": "Ready", "tone": "positive" },
-            { "id": "plan", "title": "Choose tomorrow's first task", "description": "Write a single startable action before ending the day.", "meta": "End of day", "status": "Later", "tone": "neutral" }
+            {
+              "id": "reply",
+              "title": "Reply to the scheduling question",
+              "description": "Confirm one of the two proposed windows.",
+              "meta": "Before 10:00",
+              "status": "Needs reply",
+              "tone": "warning"
+            },
+            {
+              "id": "review",
+              "title": "Review the small release",
+              "description": "Check the acceptance criteria and approve or request changes.",
+              "meta": "20 minutes",
+              "status": "Ready",
+              "tone": "positive"
+            },
+            {
+              "id": "plan",
+              "title": "Choose tomorrow's first task",
+              "description": "Write a single startable action before ending the day.",
+              "meta": "End of day",
+              "status": "Later",
+              "tone": "neutral"
+            }
           ]
         },
         {
