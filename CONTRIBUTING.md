@@ -8,7 +8,7 @@ Zaati OS welcomes focused improvements that help users notice, decide, or act wh
 2. For substantial architecture or contract changes, open a proposal before implementation.
 3. Fork the repository and create a descriptive branch.
 4. Keep all fixtures synthetic.
-5. Run `npm ci` and `npm run check`.
+5. Run `npm ci` and `npm run check`. Formatting, lint, repository policy, coverage, performance, privacy, and accessibility failures are blocking.
 6. Open a pull request using the template.
 
 ## Domain packs

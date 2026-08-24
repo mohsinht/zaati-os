@@ -29,18 +29,18 @@ The orchestration layer should attempt a complete candidate at most three times.
 
 The LLM chooses the information shape. The application keeps control of rendering, colors, accessibility, responsive behavior, links, and executable code.
 
-| Block | Use it for | Do not use it for |
-| --- | --- | --- |
-| `metric-group` | A few current decision measures | A wall of arbitrary counts |
-| `line-chart` | Ordered comparable trends | One point or unrelated categories |
-| `bar-chart` | Categorical comparison | Time-series storytelling |
-| `calendar` | Events with real dates or times | Untimed task lists |
-| `table` | Exact repeated fields | Narrative or one record |
-| `list` | Actions, ranked items, attention queue | Raw provider dumps |
-| `progress` | Explicit target with known denominator | Vague motivation scores |
-| `timeline` | Meaningful event sequence | Decorative daily diary |
-| `notice` | One caveat, risk, or insight | Repeating normal content |
-| `text` | Short analysis that loses meaning when structured | Executable Markdown or HTML |
+| Block          | Use it for                                        | Do not use it for                 |
+| -------------- | ------------------------------------------------- | --------------------------------- |
+| `metric-group` | A few current decision measures                   | A wall of arbitrary counts        |
+| `line-chart`   | Ordered comparable trends                         | One point or unrelated categories |
+| `bar-chart`    | Categorical comparison                            | Time-series storytelling          |
+| `calendar`     | Events with real dates or times                   | Untimed task lists                |
+| `table`        | Exact repeated fields                             | Narrative or one record           |
+| `list`         | Actions, ranked items, attention queue            | Raw provider dumps                |
+| `progress`     | Explicit target with known denominator            | Vague motivation scores           |
+| `timeline`     | Meaningful event sequence                         | Decorative daily diary            |
+| `notice`       | One caveat, risk, or insight                      | Repeating normal content          |
+| `text`         | Short analysis that loses meaning when structured | Executable Markdown or HTML       |
 
 ## Safety limits
 

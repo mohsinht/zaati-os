@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.zaati/
+public/data/dashboard-data.json
+config/instance.local.json
+package-lock.json
+docs/assets/
+*.tsbuildinfo

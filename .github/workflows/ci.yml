@@ -14,9 +14,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  static-contracts:
+    name: Static analysis and contracts
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
@@ -26,5 +27,104 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run check
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run repository:validate
+      - run: npm run contracts:check
+
+  unit-coverage:
+    name: Unit tests and coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:coverage
+      - run: npm run tutorial:check
+
+  build-performance:
+    name: Production build and budgets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run performance:check
+
+  accessibility:
+    name: Accessibility matrix
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run accessibility:check
+
+  security-audit:
+    name: Dependency security audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - run: npm audit --audit-level=high
+
+  quality-gate:
+    name: Quality gate
+    if: always()
+    needs: [static-contracts, unit-coverage, build-performance, accessibility, security-audit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every quality dimension
+        env:
+          ACCESSIBILITY_RESULT: ${{ needs.accessibility.result }}
+          BUILD_RESULT: ${{ needs['build-performance'].result }}
+          SECURITY_RESULT: ${{ needs['security-audit'].result }}
+          STATIC_RESULT: ${{ needs['static-contracts'].result }}
+          UNIT_RESULT: ${{ needs['unit-coverage'].result }}
+        run: |
+          failed=0
+          for result in "$STATIC_RESULT" "$UNIT_RESULT" "$BUILD_RESULT" "$ACCESSIBILITY_RESULT" "$SECURITY_RESULT"; do
+            if [ "$result" != "success" ]; then
+              failed=1
+            fi
+          done
+          if [ "$failed" -ne 0 ]; then
+            echo "One or more required quality jobs did not pass."
+            exit 1
+          fi
+      - name: Publish quality summary
+        run: |
+          {
+            echo "## Zaati OS quality gate"
+            echo
+            echo "All required formatting, static analysis, contract, coverage, build, performance, accessibility, and dependency audit jobs passed."
+          } >> "$GITHUB_STEP_SUMMARY"

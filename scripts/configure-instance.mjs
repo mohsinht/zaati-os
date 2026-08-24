@@ -9,9 +9,11 @@ const force = process.argv.includes("--force")
 const fromEnvironment = process.argv.includes("--from-env")
 
 async function exists(file) {
-  return readFile(file).then(() => true).catch((error) => error.code === "ENOENT" ? false : Promise.reject(error))
+  return readFile(file)
+    .then(() => true)
+    .catch((error) => (error.code === "ENOENT" ? false : Promise.reject(error)))
 }
-if (await exists(target) && !force) throw new Error("config/instance.local.json already exists. Use --force to replace it.")
+if ((await exists(target)) && !force) throw new Error("config/instance.local.json already exists. Use --force to replace it.")
 
 let config
 if (fromEnvironment) {

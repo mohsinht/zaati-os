@@ -20,20 +20,55 @@
     "presentation": {
       "layout": "dashboard",
       "blocks": [
-        { "id": "work-counts", "kind": "metric-group", "title": "Current work", "span": "full", "metrics": [{ "label": "In progress", "value": 1, "tone": "positive" }, { "label": "Ready", "value": 2, "tone": "info" }, { "label": "Blocked", "value": 1, "tone": "warning" }] },
+        {
+          "id": "work-counts",
+          "kind": "metric-group",
+          "title": "Current work",
+          "span": "full",
+          "metrics": [
+            { "label": "In progress", "value": 1, "tone": "positive" },
+            { "label": "Ready", "value": 2, "tone": "info" },
+            { "label": "Blocked", "value": 1, "tone": "warning" }
+          ]
+        },
         {
           "id": "owned-work",
           "kind": "table",
           "title": "Owned work",
           "span": "two",
-          "columns": [{ "key": "item", "label": "Item" }, { "key": "state", "label": "State" }, { "key": "next", "label": "Next action" }],
+          "columns": [
+            { "key": "item", "label": "Item" },
+            { "key": "state", "label": "State" },
+            { "key": "next", "label": "Next action" }
+          ],
           "rows": [
             { "item": "Adaptive block renderer", "state": "In progress", "next": "Complete the table component" },
             { "item": "Private deployment recipe", "state": "Ready", "next": "Verify Access checklist" },
             { "item": "Connector example", "state": "Blocked", "next": "Wait for source permission" }
           ]
         },
-        { "id": "work-next", "kind": "list", "title": "Best next moves", "span": "one", "items": [{ "id": "w1", "title": "Finish one end-to-end path", "description": "Prefer a complete thin slice over three half-started components.", "meta": "90 minutes", "tone": "positive" }, { "id": "w2", "title": "Write the open decision", "description": "Make the blocker answerable in one message.", "meta": "10 minutes", "tone": "info" }] }
+        {
+          "id": "work-next",
+          "kind": "list",
+          "title": "Best next moves",
+          "span": "one",
+          "items": [
+            {
+              "id": "w1",
+              "title": "Finish one end-to-end path",
+              "description": "Prefer a complete thin slice over three half-started components.",
+              "meta": "90 minutes",
+              "tone": "positive"
+            },
+            {
+              "id": "w2",
+              "title": "Write the open decision",
+              "description": "Make the blocker answerable in one message.",
+              "meta": "10 minutes",
+              "tone": "info"
+            }
+          ]
+        }
       ]
     }
   }

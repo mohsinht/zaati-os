@@ -3,7 +3,15 @@ import process from "node:process"
 import { executeWorkflow } from "./run-workflow.mjs"
 
 const outputRoot = ".zaati/tutorial-snapshots"
-await executeWorkflow({ workflowId: "daily-core", adapter: "mock", mockFailures: 1, maxAttempts: 3, outputRoot, encrypt: false, command: [] })
+await executeWorkflow({
+  workflowId: "daily-core",
+  adapter: "mock",
+  mockFailures: 1,
+  maxAttempts: 3,
+  outputRoot,
+  encrypt: false,
+  command: [],
+})
 const env = { ...process.env, ZAATI_DATA_DIR: outputRoot, ZAATI_TUTORIAL_MODE: "true" }
 if (process.argv.includes("--check")) {
   const child = spawn(process.execPath, ["scripts/build-data-index.mjs"], { stdio: "inherit", env })

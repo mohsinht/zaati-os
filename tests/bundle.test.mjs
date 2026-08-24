@@ -60,7 +60,14 @@ test("encrypted bundle persistence never creates plaintext snapshot files", asyn
 test("workflow retries invalid LLM output and writes only the valid attempt", async () => {
   const workspace = await mkdtemp(path.join(tmpdir(), "zaati-retry-"))
   try {
-    const result = await executeWorkflow({ adapter: "mock", mockFailures: 2, maxAttempts: 3, outputRoot: workspace, encrypt: false, command: [] })
+    const result = await executeWorkflow({
+      adapter: "mock",
+      mockFailures: 2,
+      maxAttempts: 3,
+      outputRoot: workspace,
+      encrypt: false,
+      command: [],
+    })
     assert.equal(result.attempts, 3)
     assert.equal(result.files.length, 6)
   } finally {

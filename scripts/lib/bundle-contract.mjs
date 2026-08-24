@@ -1,5 +1,6 @@
 import Ajv2020 from "ajv/dist/2020.js"
 import addFormats from "ajv-formats"
+import { createHash } from "node:crypto"
 import { lstat, mkdir, open, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { decryptSnapshotEnvelope, encryptSnapshot, loadSnapshotKey } from "./snapshot-crypto.mjs"
@@ -32,7 +33,8 @@ export function targetForSnapshot(registration, snapshot, outputRoot = "data/sna
     .replace(/^[/\\]/, "")
   const resolvedRoot = path.resolve(outputRoot)
   const target = path.resolve(resolvedRoot, relative)
-  if (target !== resolvedRoot && !target.startsWith(`${resolvedRoot}${path.sep}`)) throw new Error("Snapshot target escaped the configured output directory.")
+  if (target !== resolvedRoot && !target.startsWith(`${resolvedRoot}${path.sep}`))
+    throw new Error("Snapshot target escaped the configured output directory.")
   return target
 }
 
@@ -52,7 +54,8 @@ export async function validateBundle(bundle, contracts) {
       errors.push(`${prefix}: source is not registered`)
       continue
     }
-    if (snapshot.domain !== registration.domain || snapshot.source !== registration.source) errors.push(`${prefix}: domain or source does not match its registration`)
+    if (snapshot.domain !== registration.domain || snapshot.source !== registration.source)
+      errors.push(`${prefix}: domain or source does not match its registration`)
     if (snapshot.schema_ref !== registration.schema_ref) errors.push(`${prefix}: schema_ref must be ${registration.schema_ref}`)
     if (snapshot.producer?.worker_id !== registration.worker_id) errors.push(`${prefix}: worker_id must be ${registration.worker_id}`)
     const domainPath = path.join(contracts.root, registration.schema_ref)
@@ -79,7 +82,9 @@ export async function assertValidBundle(bundle, contracts) {
 }
 
 async function exists(file) {
-  return stat(file).then(() => true).catch((error) => error.code === "ENOENT" ? false : Promise.reject(error))
+  return stat(file)
+    .then(() => true)
+    .catch((error) => (error.code === "ENOENT" ? false : Promise.reject(error)))
 }
 
 async function rejectSymlinkPath(root, target) {
@@ -87,7 +92,7 @@ async function rejectSymlinkPath(root, target) {
   let current = root
   for (const part of relative.split(path.sep).filter(Boolean)) {
     current = path.join(current, part)
-    const info = await lstat(current).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error))
+    const info = await lstat(current).catch((error) => (error.code === "ENOENT" ? null : Promise.reject(error)))
     if (info?.isSymbolicLink()) throw new Error("Snapshot output paths cannot contain symbolic links.")
   }
 }
@@ -100,12 +105,13 @@ export async function persistBundle(bundle, { outputRoot = "data/snapshots", enc
   const resolvedRoot = await realpath(requestedRoot)
   const zaatiDir = path.resolve(".zaati")
   await mkdir(zaatiDir, { recursive: true, mode: 0o700 })
-  const lockPath = path.join(zaatiDir, "ingest.lock")
+  const lockId = createHash("sha256").update(resolvedRoot).digest("hex").slice(0, 16)
+  const lockPath = path.join(zaatiDir, `ingest-${lockId}.lock`)
   const lock = await open(lockPath, "wx", 0o600).catch((error) => {
     if (error.code === "EEXIST") throw new Error("Another snapshot ingestion is already running.")
     throw error
   })
-  const encryptionKey = encryption ? key || await loadSnapshotKey() : null
+  const encryptionKey = encryption ? key || (await loadSnapshotKey()) : null
   const transaction = `${process.pid}-${Date.now()}`
   const writes = []
   try {

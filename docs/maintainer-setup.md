@@ -19,7 +19,7 @@ The dependency review workflow remains safely skipped until that variable is set
 After the first successful runs, protect `main`:
 
 - require a pull request before merging
-- require the CI validation job
+- require the CI `Quality gate` job
 - require CodeQL when available
 - require dependency review after enabling it
 - require conversation resolution

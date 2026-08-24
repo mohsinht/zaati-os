@@ -13,6 +13,8 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - Private data-repository workflow and local ignored snapshot mode.
 - Cloudflare Workers deployment with Access-first guidance and public preview routes disabled.
 - Validation, privacy scanning, tests, CI, CodeQL, Dependabot, release, and optional deployment workflows.
+- Type-aware ESLint, deterministic Prettier formatting, repository policy checks, and independently visible CI quality jobs.
+- Enforced core coverage floors of 90% lines, 78% branches, and 80% functions, backed by command-adapter and security edge-case tests.
 - Configurable palettes, display density, radius, brand label, locale, and timezone.
 - Three-step onboarding, an in-app tutorial, Make targets, and a credential-free mock provider.
 - Atomic multi-snapshot bundles, safe validation feedback, and bounded workflow retries.

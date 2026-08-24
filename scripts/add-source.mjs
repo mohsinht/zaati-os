@@ -3,7 +3,9 @@ import path from "node:path"
 import process from "node:process"
 
 const values = process.argv.slice(2)
-const options = Object.fromEntries(values.reduce((pairs, value, index) => value.startsWith("--") ? [...pairs, [value.slice(2), values[index + 1]]] : pairs, []))
+const options = Object.fromEntries(
+  values.reduce((pairs, value, index) => (value.startsWith("--") ? [...pairs, [value.slice(2), values[index + 1]]] : pairs), []),
+)
 if (options.help || values.length === 0) {
   console.log(`Usage:
   npm run source:add -- \\
@@ -25,18 +27,29 @@ const workerId = options["worker-id"] || `${options.domain}-${options.source}-da
 if (!slug.test(workerId)) throw new Error("Worker ID must be a lowercase slug.")
 const registryPath = path.resolve("config/sources.json")
 const registry = JSON.parse(await readFile(registryPath, "utf8"))
-if (registry.sources.some((item) => item.id === id || item.worker_id === workerId)) throw new Error("Source ID or worker ID already exists.")
+if (registry.sources.some((item) => item.id === id || item.worker_id === workerId))
+  throw new Error("Source ID or worker ID already exists.")
 const domainHasPrimary = registry.sources.some((item) => item.domain === options.domain && item.dashboard_role === "primary")
-const dependencies = options["depends-on"] ? options["depends-on"].split(",").map((item) => item.trim()).filter(Boolean) : []
-for (const dependency of dependencies) if (!registry.sources.some((item) => item.id === dependency)) throw new Error(`Unknown dependency ${dependency}`)
+const dependencies = options["depends-on"]
+  ? options["depends-on"]
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+  : []
+for (const dependency of dependencies)
+  if (!registry.sources.some((item) => item.id === dependency)) throw new Error(`Unknown dependency ${dependency}`)
 const promptPath = `prompts/${workerId}.md`
 const workflowPath = path.resolve("config/workflows.json")
 const workflows = JSON.parse(await readFile(workflowPath, "utf8"))
 const selectedWorkflow = options.workflow ? workflows.workflows.find((item) => item.id === options.workflow) : null
 if (options.workflow && !selectedWorkflow) throw new Error(`Unknown workflow ${options.workflow}.`)
-await access(path.resolve(promptPath)).then(() => { throw new Error(`${promptPath} already exists.`) }).catch((error) => {
-  if (error.code !== "ENOENT") throw error
-})
+await access(path.resolve(promptPath))
+  .then(() => {
+    throw new Error(`${promptPath} already exists.`)
+  })
+  .catch((error) => {
+    if (error.code !== "ENOENT") throw error
+  })
 const registration = {
   id,
   domain: options.domain,
@@ -90,4 +103,6 @@ Choose the smallest set of safe UI blocks that helps the user notice, decide, or
 await writeFile(promptPath, prompt, { flag: "wx" })
 await writeFile(registryPath, `${JSON.stringify(registry, null, 2)}\n`)
 if (selectedWorkflow) await writeFile(workflowPath, `${JSON.stringify(workflows, null, 2)}\n`)
-console.log(`Added ${id}, created ${promptPath}${selectedWorkflow ? `, and joined ${selectedWorkflow.id}` : ""}. Add one synthetic fixture, then run npm run check.`)
+console.log(
+  `Added ${id}, created ${promptPath}${selectedWorkflow ? `, and joined ${selectedWorkflow.id}` : ""}. Add one synthetic fixture, then run npm run check.`,
+)

@@ -7,7 +7,9 @@ import { generateSnapshotKey } from "./lib/snapshot-crypto.mjs"
 const target = path.resolve("config/instance.local.json")
 const force = process.argv.includes("--force")
 const defaults = JSON.parse(await readFile(path.resolve("config/instance.example.json"), "utf8"))
-const exists = await readFile(target).then(() => true).catch((error) => error.code === "ENOENT" ? false : Promise.reject(error))
+const exists = await readFile(target)
+  .then(() => true)
+  .catch((error) => (error.code === "ENOENT" ? false : Promise.reject(error)))
 if (exists && !force) throw new Error("Setup already exists. Use npm run setup -- --force to replace the ignored local configuration.")
 
 let config = defaults

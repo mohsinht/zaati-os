@@ -16,18 +16,18 @@ Users separately trust their selected source providers, LLM provider or local mo
 
 ## Primary threats and controls
 
-| Threat | Control |
-| --- | --- |
-| Personal data committed to a public fork | Separate private data repository, ignored paths, tracked-file privacy scan |
-| LLM writes outside its scope | One worker-owned deterministic path, source registry validation |
-| Prompt injection requests code or secrets | Allowlisted inputs, forbidden inputs, schemas, no arbitrary rendering |
-| Missing data produces a false conclusion | Explicit source status, partial and failed states, warnings, confidence |
-| Static bundle served publicly | `workers_dev` and preview URLs disabled, custom domain behind Access |
-| CI exposes data | No private build artifacts, no snapshot logging, secrets only on protected deployment events |
-| A broad Access rule lets anyone in | Deny by default, exact emails or constrained identity groups, unauthenticated preflight |
-| Credential committed accidentally | Common secret-shape scan, GitHub secret storage, scoped tokens |
-| Private snapshot repository is copied or leaked | Optional AES-256-GCM authenticated encryption with a separate deployment key |
-| One snapshot in a batch is invalid | Whole-bundle validation and rollback-safe persistence before publication |
+| Threat                                          | Control                                                                                      |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Personal data committed to a public fork        | Separate private data repository, ignored paths, tracked-file privacy scan                   |
+| LLM writes outside its scope                    | One worker-owned deterministic path, source registry validation                              |
+| Prompt injection requests code or secrets       | Allowlisted inputs, forbidden inputs, schemas, no arbitrary rendering                        |
+| Missing data produces a false conclusion        | Explicit source status, partial and failed states, warnings, confidence                      |
+| Static bundle served publicly                   | `workers_dev` and preview URLs disabled, custom domain behind Access                         |
+| CI exposes data                                 | No private build artifacts, no snapshot logging, secrets only on protected deployment events |
+| A broad Access rule lets anyone in              | Deny by default, exact emails or constrained identity groups, unauthenticated preflight      |
+| Credential committed accidentally               | Common secret-shape scan, GitHub secret storage, scoped tokens                               |
+| Private snapshot repository is copied or leaked | Optional AES-256-GCM authenticated encryption with a separate deployment key                 |
+| One snapshot in a batch is invalid              | Whole-bundle validation and rollback-safe persistence before publication                     |
 
 ## Data minimization
 

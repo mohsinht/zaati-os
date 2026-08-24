@@ -10,15 +10,15 @@
 
 ## Strong defaults
 
-| Concern | Recommendation |
-| --- | --- |
-| Scheduled workflow | One daily bundle task plus one weekly review task |
-| First sources | Agenda, work focus, and daily overview |
-| Publication | One validated Git commit per bundle |
-| Hosting | Cloudflare Worker static assets on a custom Access-protected hostname |
-| Repository | Public code fork plus separate private snapshot repository |
-| Theme | System font, comfortable density, system light or dark mode |
-| CI | Require validation and CodeQL before merging |
+| Concern            | Recommendation                                                        |
+| ------------------ | --------------------------------------------------------------------- |
+| Scheduled workflow | One daily bundle task plus one weekly review task                     |
+| First sources      | Agenda, work focus, and daily overview                                |
+| Publication        | One validated Git commit per bundle                                   |
+| Hosting            | Cloudflare Worker static assets on a custom Access-protected hostname |
+| Repository         | Public code fork plus separate private snapshot repository            |
+| Theme              | System font, comfortable density, system light or dark mode           |
+| CI                 | Require validation and CodeQL before merging                          |
 
 ## Optional hardening
 
