@@ -14,6 +14,8 @@ npm run tutorial
 
 The guided setup covers name, timezone, starter sources, visual style, and optional encryption. The tutorial proves validation and retry behavior with synthetic data, then opens the app.
 
+The Synthetic demo workflow always builds and checks public fixtures on pushes to `main`. Deployment is opt-in so a fresh fork stays green before GitHub Pages exists. To publish it, enable **Settings > Pages > GitHub Actions**, add the repository variable `ZAATI_ENABLE_DEMO_PAGES=true`, then run the workflow or push to `main`.
+
 When the demo feels right, generate the complete prompt for your real scheduled LLM task:
 
 ```bash
