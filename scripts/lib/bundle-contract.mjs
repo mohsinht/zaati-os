@@ -1,5 +1,6 @@
 import Ajv2020 from "ajv/dist/2020.js"
 import addFormats from "ajv-formats"
+import { createHash } from "node:crypto"
 import { lstat, mkdir, open, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { decryptSnapshotEnvelope, encryptSnapshot, loadSnapshotKey } from "./snapshot-crypto.mjs"
@@ -104,7 +105,8 @@ export async function persistBundle(bundle, { outputRoot = "data/snapshots", enc
   const resolvedRoot = await realpath(requestedRoot)
   const zaatiDir = path.resolve(".zaati")
   await mkdir(zaatiDir, { recursive: true, mode: 0o700 })
-  const lockPath = path.join(zaatiDir, "ingest.lock")
+  const lockId = createHash("sha256").update(resolvedRoot).digest("hex").slice(0, 16)
+  const lockPath = path.join(zaatiDir, `ingest-${lockId}.lock`)
   const lock = await open(lockPath, "wx", 0o600).catch((error) => {
     if (error.code === "EEXIST") throw new Error("Another snapshot ingestion is already running.")
     throw error
