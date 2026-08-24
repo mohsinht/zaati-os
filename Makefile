@@ -1,4 +1,4 @@
-.PHONY: setup tutorial dev check build
+.PHONY: setup tutorial prompt dev check build
 
 setup:
 	npm install
@@ -6,6 +6,9 @@ setup:
 
 tutorial:
 	npm run tutorial
+
+prompt:
+	npm run prompt:create
 
 dev:
 	npm run dev

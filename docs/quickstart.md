@@ -14,6 +14,14 @@ npm run tutorial
 
 The guided setup covers name, timezone, starter sources, visual style, and optional encryption. The tutorial proves validation and retry behavior with synthetic data, then opens the app.
 
+When the demo feels right, generate the complete prompt for your real scheduled LLM task:
+
+```bash
+npm run prompt:create
+```
+
+Choose sources, describe the result you need, name the approved tools, and select useful presentation blocks. Paste the private generated prompt into your LLM. Read [Prompt Studio](prompt-studio.md) for multi-source profiles and new-source setup.
+
 ## 2. Configure the instance
 
 The wizard writes `config/instance.local.json`. It is ignored by Git. You can rerun it with `npm run setup -- --force`.

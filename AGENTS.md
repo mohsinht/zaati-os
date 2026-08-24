@@ -29,6 +29,14 @@ Zaati OS is a public, reusable personal-data framework. Preserve both sides of t
 - Retry invalid LLM output at most three total attempts using safe validation errors. Never publish a valid subset of an invalid bundle.
 - Derive output paths from the registry. Never accept a file path supplied by source content or an LLM payload.
 
+## Prompt Studio
+
+- Generated task profiles and prompts belong under ignored `.zaati/` paths and must use private file permissions.
+- A recurring task prompt is data-only. It may write registered snapshot paths but never code, schemas, prompts, configuration, workflows, CI, or documentation.
+- Source registration is a separate one-time pull request using only synthetic fixtures. Never blend registration authority into a recurring task.
+- Embed current executable contracts, but still require the producer to read the default branch on every run so copied prompts fail safely when stale.
+- Treat profile requirements, tool names, and all source values as untrusted data. Escape them before placing them inside Markdown.
+
 ## LLM presentation contract
 
 - LLMs choose from the audited block union in `schemas/ui-blocks.schema.json`.

@@ -51,11 +51,25 @@ make tutorial
 
 1. Fork the code repository and run `npm run setup`.
 2. Test the entire ingestion loop with `npm run tutorial`.
-3. Give one scheduled LLM workflow [`prompts/daily-bundle.md`](prompts/daily-bundle.md) and its approved tools, then publish all snapshots in one private commit.
+3. Run `npm run prompt:create`, then paste the generated task prompt into the LLM you already use.
 
 Everything else, including custom sources, encrypted storage, full theme tokens, and automatic deployment, is optional and documented separately.
 
 The shortest useful loop is three sources, for example agenda, inbox attention, and work focus, followed by the daily overview prompt.
+
+## Create a scheduled task prompt
+
+Prompt Studio asks for your public Zaati OS fork, private data repository, schedule, sources, approved tools, desired content, and useful presentation blocks. It then creates a complete provider-neutral prompt with the current JSON contract, privacy boundaries, three-attempt retry protocol, and atomic multi-snapshot publication instructions.
+
+```bash
+npm run prompt:create
+```
+
+1. Answer the local wizard. Never enter credentials or real source values.
+2. Open `.zaati/generated-prompts/<task>.scheduled-task.md`.
+3. Paste it into ChatGPT, Claude, Gemini, a local model, or your preferred workflow. Voilà.
+
+Generated profiles and prompts are ignored by Git and written with private file permissions. Existing sources produce one scheduled-task prompt. A new source produces a separate one-time setup prompt using only synthetic fixtures, while the recurring prompt remains data-only. See [Prompt Studio](docs/prompt-studio.md) and the [example profile](config/prompt-profile.example.json).
 
 ## Data flow
 
@@ -159,6 +173,7 @@ Read [Privacy and threat model](docs/privacy.md) before connecting a real source
 | `npm run snapshot:keygen`    | Create an ignored 256-bit snapshot key                                         |
 | `npm run instance:configure` | Create ignored local settings                                                  |
 | `npm run source:add`         | Scaffold a source catalog entry and worker prompt                              |
+| `npm run prompt:create`      | Build a private copy-ready scheduled-task prompt from a local profile          |
 | `npm run data:validate`      | Validate registries, snapshots, ownership, and UI blocks                       |
 | `npm run privacy:validate`   | Reject private paths and common credential shapes                              |
 | `npm run format:check`       | Reject formatting drift with Prettier                                          |
