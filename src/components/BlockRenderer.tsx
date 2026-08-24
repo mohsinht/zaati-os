@@ -230,10 +230,15 @@ export function BlockRenderer({
     return (
       <Panel block={block} emphasized={emphasized} layout={layout}>
         {block.rows.length ? (
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div
+            aria-label={`${block.title} table`}
+            className="overflow-x-auto rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
+            role="region"
+            tabIndex={0}
+          >
             <table className="w-full min-w-[520px] border-collapse text-left text-sm">
               <caption className="sr-only">{block.title}</caption>
-              <thead className="bg-muted/70 text-xs text-muted-foreground">
+              <thead className="bg-muted/70 text-xs text-foreground">
                 <tr>
                   {block.columns.map((column) => (
                     <th className="px-3 py-2.5 font-medium" key={column.key}>
