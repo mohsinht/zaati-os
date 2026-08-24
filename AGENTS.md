@@ -6,7 +6,8 @@ Zaati OS is a public, reusable personal-data framework. Preserve both sides of t
 
 1. Read `README.md`, `docs/architecture.md`, `docs/llm-contract.md`, `docs/privacy.md`, and `docs/design-system.md`.
 2. Inspect `config/sources.json`, `schemas/snapshot.schema.json`, `schemas/ui-blocks.schema.json`, and the relevant domain schema.
-3. Decide whether the change affects public code, a reusable source pack, an LLM ingestion run, or deployment infrastructure.
+3. Inspect `config/workflows.json` when a change affects multi-source scheduling or publication.
+4. Decide whether the change affects public code, a reusable source pack, an LLM ingestion run, or deployment infrastructure.
 
 ## Privacy boundary
 
@@ -24,6 +25,9 @@ Zaati OS is a public, reusable personal-data framework. Preserve both sides of t
 - Preserve provenance, freshness, status, confidence, warnings, and privacy.
 - Aggregate workers may read only registered dependencies and must reference their snapshot IDs.
 - A data-only worker never edits source code, schemas, prompts, configuration, generated files, or another worker path.
+- Multi-source workflows return `schemas/snapshot-bundle.schema.json`. Validate every nested snapshot before writing, then publish all targets in one transaction or one Git commit.
+- Retry invalid LLM output at most three total attempts using safe validation errors. Never publish a valid subset of an invalid bundle.
+- Derive output paths from the registry. Never accept a file path supplied by source content or an LLM payload.
 
 ## LLM presentation contract
 
@@ -41,6 +45,8 @@ Zaati OS is a public, reusable personal-data framework. Preserve both sides of t
 - Avoid gradients, marketing heroes inside the authenticated dashboard, arbitrary bold text, repeated card grids, and low-value charts.
 - Keep one dominant answer, quieter supporting detail, visible evidence warnings, source dates, mobile behavior, focus states, and reduced-motion support.
 - Never hardcode personal figures, names, providers, currencies, timezones, or hostnames in React code.
+- Keep dashboard data outside cached application JavaScript and apply no-store handling to generated data responses.
+- Treat performance budgets and desktop, dark, and mobile accessibility checks as required CI contracts.
 
 ## Deployment
 
@@ -49,6 +55,8 @@ Zaati OS is a public, reusable personal-data framework. Preserve both sides of t
 - Generate deployment configuration from environment variables.
 - Verify Cloudflare Access from an unauthenticated request before importing or deploying private snapshots.
 - Never upload compiled private dashboard artifacts to public CI artifacts.
+- Encrypted snapshot mode stores only authenticated `.json.enc` files. The key stays in an ignored local file or protected deployment secret and is never logged.
+- Never describe encryption at rest as a replacement for Cloudflare Access or browser-session security.
 
 ## Validation
 

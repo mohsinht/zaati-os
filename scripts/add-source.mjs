@@ -12,7 +12,7 @@ if (options.help || values.length === 0) {
     --authorized-inputs "User-approved habit check-ins" \\
     --forbidden-inputs "Medical diagnoses, private journal text"
 
-Optional: --worker-id, --cadence, --freshness, --role, --depends-on`)
+Optional: --worker-id, --cadence, --freshness, --role, --depends-on, --workflow daily-core`)
   process.exit(0)
 }
 const required = ["domain", "source", "label", "description", "authorized-inputs", "forbidden-inputs"]
@@ -30,6 +30,10 @@ const domainHasPrimary = registry.sources.some((item) => item.domain === options
 const dependencies = options["depends-on"] ? options["depends-on"].split(",").map((item) => item.trim()).filter(Boolean) : []
 for (const dependency of dependencies) if (!registry.sources.some((item) => item.id === dependency)) throw new Error(`Unknown dependency ${dependency}`)
 const promptPath = `prompts/${workerId}.md`
+const workflowPath = path.resolve("config/workflows.json")
+const workflows = JSON.parse(await readFile(workflowPath, "utf8"))
+const selectedWorkflow = options.workflow ? workflows.workflows.find((item) => item.id === options.workflow) : null
+if (options.workflow && !selectedWorkflow) throw new Error(`Unknown workflow ${options.workflow}.`)
 await access(path.resolve(promptPath)).then(() => { throw new Error(`${promptPath} already exists.`) }).catch((error) => {
   if (error.code !== "ENOENT") throw error
 })
@@ -54,6 +58,7 @@ const registration = {
   },
 }
 registry.sources.push(registration)
+if (selectedWorkflow && !selectedWorkflow.source_ids.includes(id)) selectedWorkflow.source_ids.push(id)
 const prompt = `# ${options.label} worker
 
 Use this together with \`prompts/base-worker.md\`.
@@ -84,4 +89,5 @@ Choose the smallest set of safe UI blocks that helps the user notice, decide, or
 `
 await writeFile(promptPath, prompt, { flag: "wx" })
 await writeFile(registryPath, `${JSON.stringify(registry, null, 2)}\n`)
-console.log(`Added ${id} and created ${promptPath}. Add one synthetic fixture, then run npm run check.`)
+if (selectedWorkflow) await writeFile(workflowPath, `${JSON.stringify(workflows, null, 2)}\n`)
+console.log(`Added ${id}, created ${promptPath}${selectedWorkflow ? `, and joined ${selectedWorkflow.id}` : ""}. Add one synthetic fixture, then run npm run check.`)

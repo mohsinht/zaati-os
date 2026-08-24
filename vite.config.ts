@@ -8,6 +8,7 @@ export default defineConfig({
     alias: { "@": `${import.meta.dirname}/src` },
   },
   build: {
+    emptyOutDir: true,
     sourcemap: false,
     target: "es2022",
   },

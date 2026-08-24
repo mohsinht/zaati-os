@@ -14,4 +14,9 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - Cloudflare Workers deployment with Access-first guidance and public preview routes disabled.
 - Validation, privacy scanning, tests, CI, CodeQL, Dependabot, release, and optional deployment workflows.
 - Configurable palettes, display density, radius, brand label, locale, and timezone.
+- Three-step onboarding, an in-app tutorial, Make targets, and a credential-free mock provider.
+- Atomic multi-snapshot bundles, safe validation feedback, and bounded workflow retries.
+- Feature-flagged AES-256-GCM snapshot encryption with deployment-only key support.
+- Separate no-store dashboard payload, static security headers, performance budgets, and browser-based WCAG checks.
+- Configurable brand mark, local font stacks, heading styles, extended theme tokens, and a live theme studio.
 - Apache 2.0 license, governance, security, contribution, and domain-pack documentation.

@@ -4,9 +4,9 @@
 
 Snapshot contracts, adaptive rendering, synthetic demo, starter prompts, private deployment boundary, theming, CI, and contribution model.
 
-## 0.2, workflow ergonomics
+## 0.2, workflow ecosystem
 
-Provider-specific setup recipes, improved source scaffolding, migration helpers, retention tooling, and more failure-state fixtures.
+Community provider recipes, contract migration helpers, key rotation, retention tooling, more failure-state fixtures, and optional packaged CLI distribution.
 
 ## 0.3, domain ecosystem
 

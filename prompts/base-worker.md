@@ -67,5 +67,12 @@ Write behavior:
 - Prefer a branch named ingest/{{WORKER_ID}}/YYYY-MM-DD, one conventional data commit, and a pull request to the default branch.
 - Do not schedule this worker until its registration and schema are active and one manual run has passed validation.
 
+Validation and retry behavior:
+- Build the complete candidate in memory before writing anything.
+- Validate the envelope, domain payload, presentation blocks, identity, ownership, and target path.
+- If validation fails, use only the machine-readable validation errors to correct a complete replacement candidate.
+- Retry at most three total attempts. Never write a partial candidate or an invalid snapshot.
+- If all attempts fail, write nothing and report only safe error summaries. Never include private values in validation logs.
+
 Return a short run report with effective date, status, target path, source freshness, warnings, validation performed, and pull request or commit reference. Never repeat sensitive snapshot values in the report.
 ```

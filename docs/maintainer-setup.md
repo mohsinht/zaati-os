@@ -33,3 +33,5 @@ Do not require the deployment workflow for code pull requests. It intentionally 
 Create an environment named `production`. Add the variables and secrets from [Cloudflare deployment](deployment/cloudflare.md). Use required reviewers for this environment when available.
 
 Keep deployment secrets at the environment level so pull requests and routine CI cannot access them.
+
+If encrypted snapshots are enabled, add `ZAATI_SNAPSHOT_KEY` only to this protected environment. Do not add it as a repository-wide variable, workflow file, build artifact, or pull request secret.

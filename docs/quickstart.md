@@ -1,6 +1,6 @@
 # Quickstart
 
-This guide takes a new user from fork to a local synthetic demo, then to three real sources without placing personal data in the public fork.
+This guide takes a new user from fork to a working synthetic dashboard, then to one real multi-source workflow without placing personal data in the public fork.
 
 ## 1. Fork and run the demo
 
@@ -8,19 +8,15 @@ This guide takes a new user from fork to a local synthetic demo, then to three r
 git clone https://github.com/YOUR_GITHUB_USERNAME/zaati-os.git
 cd zaati-os
 npm install
-npm run dev
+npm run setup
+npm run tutorial
 ```
 
-The app uses `data/examples/` until at least one ignored private snapshot is available. Every example is synthetic and labeled in the interface.
+The guided setup covers name, timezone, starter sources, visual style, and optional encryption. The tutorial proves validation and retry behavior with synthetic data, then opens the app.
 
 ## 2. Configure the instance
 
-```bash
-npm run instance:configure
-npm run data:validate
-```
-
-The wizard writes `config/instance.local.json`. It is ignored by Git. Configure the label, tagline, IANA timezone, locale, ISO currency, palette, and enabled sources.
+The wizard writes `config/instance.local.json`. It is ignored by Git. You can rerun it with `npm run setup -- --force`.
 
 ## 3. Choose a data boundary
 
@@ -28,7 +24,7 @@ For experimentation, write snapshots under ignored `data/snapshots/`.
 
 For production, keep the public code fork clean and create a separate private data repository with the same `data/snapshots/<domain>/<source>/...` shape. Follow [Private data repository](deployment/data-repository.md).
 
-## 4. Start with three sources
+## 4. Connect one multi-source workflow
 
 A useful first set is:
 
@@ -36,18 +32,17 @@ A useful first set is:
 - `inbox:attention`
 - `work:focus`
 
-Open `prompts/base-worker.md` and the matching domain prompt. Replace the repository, worker, source, and timezone placeholders. Give the combined prompt to the LLM workflow that already has approved access.
+Open `prompts/daily-bundle.md` and `prompts/scheduled-github-bundle.md`. Replace their repository, source, and timezone placeholders. Give them to the LLM workflow that already has approved access.
 
-Run each prompt manually before scheduling it. Validate the resulting snapshot:
+Run the complete prompt manually before scheduling it. One run should validate and commit all selected dated files together. For a command adapter, pipe exact JSON into the local transaction:
 
 ```bash
-npm run data:validate
-npm run dev
+your-llm-command | npm run snapshot:ingest -- --output-dir data/snapshots
 ```
 
-## 5. Add the overview
+## 5. Add the overview in the same bundle
 
-After its registered dependencies exist, run `prompts/daily-overview.md`. It reads normalized snapshots only and becomes the main Today view.
+Build non-aggregate snapshots first in memory. The overview can then use those validated candidates in the same run and commit.
 
 ## 6. Deploy privately
 

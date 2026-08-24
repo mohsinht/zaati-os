@@ -34,3 +34,15 @@ Use semantic tokens such as `background`, `card`, `muted`, `primary`, `warning`,
 All controls need accessible names, keyboard focus, usable touch targets, and sufficient contrast. Color cannot be the only status signal. Charts need an accessible label and should have table or narrative evidence in the snapshot when exact values matter.
 
 Review every interface change at desktop and mobile widths in light and dark modes.
+
+`npm run accessibility:check` runs axe against the production build in desktop light, desktop dark, and mobile layouts. It is a floor, not a substitute for keyboard, screen-reader, zoom, reduced-motion, and real-device review.
+
+## Performance
+
+- keep the dashboard payload separate from cached application JavaScript
+- lazy-load charts and onboarding code
+- use local system font stacks with no third-party requests
+- keep navigation and empty states useful before charts load
+- enforce compressed JavaScript, CSS, and data budgets with `npm run performance:check`
+
+Responsiveness starts at 320 CSS pixels. Touch controls should be at least 40 pixels in the application shell and preserve a visible focus state.

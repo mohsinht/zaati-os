@@ -14,6 +14,7 @@ data/
         <YYYY>/
           <MM>/
             <YYYY-MM-DD>.json
+            <YYYY-MM-DD>.json.enc  # optional encrypted mode
 README.md
 ```
 
@@ -29,11 +30,15 @@ Use separate, least-privilege identities:
 
 Store the deployment read token as the `ZAATI_DATA_REPOSITORY_TOKEN` secret in the protected GitHub production environment.
 
-## Worker writes
+## Bundle writes
 
-A worker should create `ingest/<worker-id>/<YYYY-MM-DD>`, change one owned JSON file, and open a pull request. For a single-user repository, direct default-branch commits are possible, but pull requests preserve validation and audit history.
+A daily bundle worker validates every selected snapshot, creates one Git tree containing every current-date path, and publishes one commit. It must never publish a valid subset when another selected snapshot fails.
+
+Single-source workers remain supported for event-driven or independent cadences. For a single-user repository, direct default-branch commits are possible, but pull requests preserve validation and audit history.
 
 Same-day reruns replace the same file and preserve `snapshot_id`. Workers fetch the latest target branch before writing and never force-push.
+
+Encrypted mode stores only `.json.enc` envelopes. The private repository never receives the decryption key. Keep `ZAATI_SNAPSHOT_KEY` in the protected deployment environment.
 
 ## Retention
 

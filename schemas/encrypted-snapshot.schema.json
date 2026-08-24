@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/encrypted-snapshot.schema.json",
+  "title": "Zaati OS encrypted snapshot envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "algorithm", "key_id", "iv", "auth_tag", "ciphertext"],
+  "properties": {
+    "format": { "const": "zaati-encrypted-snapshot" },
+    "version": { "const": 1 },
+    "algorithm": { "const": "aes-256-gcm" },
+    "key_id": { "type": "string", "pattern": "^[a-f0-9]{12}$" },
+    "iv": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16}$" },
+    "auth_tag": { "type": "string", "pattern": "^[A-Za-z0-9_-]{22}$" },
+    "ciphertext": { "type": "string", "minLength": 1, "maxLength": 8000000, "pattern": "^[A-Za-z0-9_-]+$" }
+  }
+}

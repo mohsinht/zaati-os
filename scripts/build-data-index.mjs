@@ -1,13 +1,14 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { decryptSnapshotEnvelope, loadSnapshotKey } from "./lib/snapshot-crypto.mjs"
 
 const root = process.cwd()
-async function jsonFiles(directory) {
+async function snapshotFiles(directory) {
   try {
     const entries = await readdir(path.join(root, directory), { withFileTypes: true })
     return (await Promise.all(entries.map((entry) => {
       const relative = path.join(directory, entry.name)
-      return entry.isDirectory() ? jsonFiles(relative) : relative.endsWith(".json") ? [relative] : []
+      return entry.isDirectory() ? snapshotFiles(relative) : relative.endsWith(".json") || relative.endsWith(".json.enc") ? [relative] : []
     }))).flat()
   } catch (error) {
     if (error.code === "ENOENT") return []
@@ -15,12 +16,21 @@ async function jsonFiles(directory) {
   }
 }
 const readJson = async (file) => JSON.parse(await readFile(path.join(root, file), "utf8"))
-const privateFiles = await jsonFiles("data/snapshots")
-const demoMode = privateFiles.length === 0
-const files = demoMode ? await jsonFiles("data/examples") : privateFiles
-const snapshots = await Promise.all(files.map(readJson))
-const registry = await readJson("config/sources.json")
 const instance = await readJson(await readFile(path.join(root, "config/instance.local.json"), "utf8").then(() => "config/instance.local.json").catch(() => "config/instance.example.json"))
+const privateRoot = process.env.ZAATI_DATA_DIR || "data/snapshots"
+const tutorialMode = process.env.ZAATI_TUTORIAL_MODE === "true"
+const privateFiles = await snapshotFiles(privateRoot)
+const usingExamples = privateFiles.length === 0
+const files = usingExamples ? await snapshotFiles("data/examples") : privateFiles
+const encryptedFiles = files.filter((file) => file.endsWith(".enc"))
+if (!usingExamples && !tutorialMode && instance.storage.snapshot_encryption && files.some((file) => !file.endsWith(".enc"))) throw new Error("Snapshot encryption is enabled, but plaintext private snapshots were found.")
+if (!usingExamples && !tutorialMode && encryptedFiles.length && !instance.storage.snapshot_encryption) throw new Error("Encrypted snapshots were found. Enable storage.snapshot_encryption in the instance configuration.")
+const key = encryptedFiles.length ? await loadSnapshotKey() : null
+const snapshots = await Promise.all(files.map(async (file) => file.endsWith(".enc")
+  ? decryptSnapshotEnvelope(JSON.parse(await readFile(path.join(root, file), "utf8")), key)
+  : readJson(file)))
+const demoMode = usingExamples || snapshots.every((snapshot) => snapshot.privacy?.synthetic === true)
+const registry = await readJson("config/sources.json")
 const enabled = new Set(instance.enabled_sources)
 const sourceDefinitions = registry.sources.filter((source) => enabled.has(source.id))
 const bySource = Object.fromEntries(sourceDefinitions.map((source) => [source.id, []]))
@@ -37,6 +47,6 @@ const output = {
   sources: latest,
   historyBySource: Object.fromEntries(Object.entries(bySource).map(([id, values]) => [id, values.map((item) => ({ snapshot_id: item.snapshot_id, generated_at: item.generated_at, status: item.status }))])),
 }
-await mkdir(path.join(root, "src/generated"), { recursive: true })
-await writeFile(path.join(root, "src/generated/dashboard-data.json"), `${JSON.stringify(output, null, 2)}\n`)
+await mkdir(path.join(root, "public/data"), { recursive: true })
+await writeFile(path.join(root, "public/data/dashboard-data.json"), `${JSON.stringify(output)}\n`, { mode: 0o600 })
 console.log(`Built ${demoMode ? "synthetic demo" : "private"} dashboard index from ${files.length} snapshots.`)

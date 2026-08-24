@@ -4,10 +4,11 @@
   "title": "Zaati OS instance configuration",
   "type": "object",
   "additionalProperties": false,
-  "required": ["brand_name", "tagline", "timezone", "locale", "currency", "week_starts_on", "enabled_sources", "theme"],
+  "required": ["brand_name", "brand_mark", "tagline", "timezone", "locale", "currency", "week_starts_on", "enabled_sources", "theme", "storage"],
   "properties": {
     "$schema": { "type": "string" },
     "brand_name": { "type": "string", "minLength": 1, "maxLength": 40 },
+    "brand_mark": { "type": "string", "minLength": 1, "maxLength": 3 },
     "tagline": { "type": "string", "minLength": 1, "maxLength": 100 },
     "timezone": { "type": "string", "minLength": 1, "maxLength": 80 },
     "locale": { "type": "string", "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$" },
@@ -21,12 +22,14 @@
     "theme": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["preset", "default_mode", "density", "radius", "custom_tokens"],
+      "required": ["preset", "default_mode", "density", "radius", "font_family", "heading_style", "custom_tokens"],
       "properties": {
         "preset": { "enum": ["sage", "ocean", "plum", "sand", "custom"] },
         "default_mode": { "enum": ["system", "light", "dark"] },
         "density": { "enum": ["compact", "comfortable"] },
         "radius": { "type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+)?(?:px|rem)$" },
+        "font_family": { "enum": ["system", "humanist", "editorial", "rounded", "mono"] },
+        "heading_style": { "enum": ["plain", "compact", "expressive"] },
         "custom_tokens": {
           "type": "object",
           "additionalProperties": false,
@@ -34,9 +37,25 @@
             "primary": { "$ref": "#/$defs/color" },
             "primary_foreground": { "$ref": "#/$defs/color" },
             "accent": { "$ref": "#/$defs/color" },
-            "accent_foreground": { "$ref": "#/$defs/color" }
+            "accent_foreground": { "$ref": "#/$defs/color" },
+            "background": { "$ref": "#/$defs/color" },
+            "foreground": { "$ref": "#/$defs/color" },
+            "card": { "$ref": "#/$defs/color" },
+            "border": { "$ref": "#/$defs/color" },
+            "sidebar": { "$ref": "#/$defs/color" },
+            "chart_1": { "$ref": "#/$defs/color" },
+            "chart_2": { "$ref": "#/$defs/color" },
+            "chart_3": { "$ref": "#/$defs/color" }
           }
         }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot_encryption"],
+      "properties": {
+        "snapshot_encryption": { "type": "boolean", "default": false }
       }
     }
   },

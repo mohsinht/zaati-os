@@ -41,6 +41,8 @@
 :root {
   color-scheme: light;
   --radius: 0.9rem;
+  --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: var(--font-ui);
   --background: #f6f7f4;
   --foreground: #17201c;
   --card: #ffffff;
@@ -142,13 +144,23 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background: var(--background);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-ui);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   text-rendering: optimizeLegibility;
 }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 ::selection { background: color-mix(in srgb, var(--primary) 22%, transparent); }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--font-heading); }
+
+[data-font="humanist"] { --font-ui: "Trebuchet MS", Candara, Optima, ui-sans-serif, system-ui, sans-serif; }
+[data-font="editorial"] { --font-ui: Georgia, Cambria, "Times New Roman", ui-serif, serif; --font-heading: Georgia, Cambria, "Times New Roman", ui-serif, serif; }
+[data-font="rounded"] { --font-ui: ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif; }
+[data-font="mono"] { --font-ui: "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace; }
+[data-heading="compact"] h1, [data-heading="compact"] h2, [data-heading="compact"] h3 { letter-spacing: -0.045em; line-height: 1.05; }
+[data-heading="expressive"] { --font-heading: Georgia, Cambria, "Times New Roman", ui-serif, serif; }
+[data-heading="expressive"] h1 { letter-spacing: -0.025em; }
 
 [data-density="compact"] main { --radius: 0.65rem; }
 [data-density="compact"] main .p-5 { padding: 1rem; }
@@ -159,6 +171,7 @@ button { cursor: pointer; }
 .palette-ocean { background: #226f9a; }
 .palette-plum { background: #765486; }
 .palette-sand { background: #8a6239; }
+.palette-custom { background: #6f7782; box-shadow: inset 0 0 0 3px #d9dde2; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }

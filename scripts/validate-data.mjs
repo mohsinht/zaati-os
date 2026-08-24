@@ -3,17 +3,18 @@ import path from "node:path"
 import process from "node:process"
 import Ajv2020 from "ajv/dist/2020.js"
 import addFormats from "ajv-formats"
+import { decryptSnapshotEnvelope, loadSnapshotKey } from "./lib/snapshot-crypto.mjs"
 
 const root = process.cwd()
 const errors = []
 const readJson = async (file) => JSON.parse(await readFile(path.join(root, file), "utf8"))
 
-async function jsonFiles(directory) {
+async function discoverSnapshots(directory) {
   try {
     const entries = await readdir(path.join(root, directory), { withFileTypes: true })
     const nested = await Promise.all(entries.map((entry) => {
       const relative = path.join(directory, entry.name)
-      return entry.isDirectory() ? jsonFiles(relative) : relative.endsWith(".json") ? [relative] : []
+      return entry.isDirectory() ? discoverSnapshots(relative) : relative.endsWith(".json") || relative.endsWith(".json.enc") ? [relative] : []
     }))
     return nested.flat()
   } catch (error) {
@@ -50,8 +51,11 @@ function findCycle(id, byId, visiting = new Set(), visited = new Set()) {
 const schemaPaths = [
   "schemas/ui-blocks.schema.json",
   "schemas/snapshot.schema.json",
+  "schemas/snapshot-bundle.schema.json",
+  "schemas/encrypted-snapshot.schema.json",
   "schemas/source-registry.schema.json",
   "schemas/instance.schema.json",
+  "schemas/workflow-registry.schema.json",
   "schemas/domains/generic.schema.json",
 ]
 const schemas = await Promise.all(schemaPaths.map(readJson))
@@ -85,22 +89,42 @@ for (const id of ids) {
   if (cycle) { errors.push(`config/sources.json: dependency cycle ${cycle.join(" -> ")}`); break }
 }
 
+const workflowRegistry = await readJson("config/workflows.json")
+const validateWorkflows = ajv.getSchema("https://zaati-os.dev/schemas/workflow-registry.schema.json")
+if (!validateWorkflows(workflowRegistry)) errors.push(...formatAjvErrors("config/workflows.json", validateWorkflows.errors))
+const workflowIds = new Set()
+for (const workflow of workflowRegistry.workflows || []) {
+  if (workflowIds.has(workflow.id)) errors.push(`config/workflows.json: duplicate workflow ID ${workflow.id}`)
+  workflowIds.add(workflow.id)
+  for (const sourceId of workflow.source_ids) if (!byId.has(sourceId)) errors.push(`config/workflows.json: ${workflow.id} contains unknown source ${sourceId}`)
+  try { await access(path.join(root, workflow.prompt)) } catch { errors.push(`config/workflows.json: ${workflow.id} references missing prompt ${workflow.prompt}`) }
+}
+
 const instancePath = await access(path.join(root, "config/instance.local.json")).then(() => "config/instance.local.json").catch(() => "config/instance.example.json")
 const instance = await readJson(instancePath)
 const validateInstance = ajv.getSchema("https://zaati-os.dev/schemas/instance.schema.json")
 if (!validateInstance(instance)) errors.push(...formatAjvErrors(instancePath, validateInstance.errors))
 for (const sourceId of instance.enabled_sources || []) if (!byId.has(sourceId)) errors.push(`${instancePath}: unknown enabled source ${sourceId}`)
 
-const privateFiles = await jsonFiles("data/snapshots")
-const exampleFiles = await jsonFiles("data/examples")
+const privateRoot = process.env.ZAATI_DATA_DIR || "data/snapshots"
+const tutorialMode = process.env.ZAATI_TUTORIAL_MODE === "true"
+const privateFiles = await discoverSnapshots(privateRoot)
+const exampleFiles = await discoverSnapshots("data/examples")
 const snapshotFiles = [...exampleFiles, ...privateFiles]
+const encryptedFiles = privateFiles.filter((file) => file.endsWith(".enc"))
+if (!tutorialMode && instance.storage?.snapshot_encryption && privateFiles.some((file) => !file.endsWith(".enc"))) errors.push(`${privateRoot}: encryption is enabled but plaintext snapshots were found`)
+if (!tutorialMode && !instance.storage?.snapshot_encryption && encryptedFiles.length) errors.push(`${privateRoot}: encrypted snapshots require storage.snapshot_encryption`)
+const snapshotKey = encryptedFiles.length && instance.storage?.snapshot_encryption ? await loadSnapshotKey().catch((error) => { errors.push(error.message); return null }) : null
 const validateSnapshot = ajv.getSchema("https://zaati-os.dev/schemas/snapshot.schema.json")
 const unsafeKey = /(?:^|[_-])(password|passwd|secret|cookie|authorization|access[_-]?token|refresh[_-]?token|api[_-]?key|private[_-]?key)(?:$|[_-])/i
 const unsafeText = /<script\b|javascript:|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i
 
 for (const file of snapshotFiles) {
   let snapshot
-  try { snapshot = await readJson(file) } catch (error) { errors.push(`${file}: invalid JSON, ${error.message}`); continue }
+  try {
+    const payload = await readJson(file)
+    snapshot = file.endsWith(".enc") ? decryptSnapshotEnvelope(payload, snapshotKey) : payload
+  } catch (error) { errors.push(`${file}: invalid or unreadable snapshot, ${error.message}`); continue }
   if (!validateSnapshot(snapshot)) errors.push(...formatAjvErrors(file, validateSnapshot.errors))
   const registration = byId.get(snapshot.source_id)
   if (!registration) { errors.push(`${file}: unregistered source ${snapshot.source_id}`); continue }
@@ -110,20 +134,21 @@ for (const file of snapshotFiles) {
   for (const dependency of registration.depends_on) {
     if (!snapshot.sources?.some((source) => source.reference === dependency || source.reference?.startsWith(`${dependency}:`))) errors.push(`${file}: aggregate must record dependency ${dependency} in sources`)
   }
-  const expectedDate = path.basename(file, ".json")
+  const expectedDate = path.basename(file, file.endsWith(".enc") ? ".json.enc" : ".json")
   if (snapshot.snapshot_id !== `${snapshot.source_id}:${expectedDate}`) errors.push(`${file}: snapshot_id must end with the file date`)
   if (file.startsWith("data/examples/") && (!snapshot.privacy?.synthetic || snapshot.privacy?.contains_personal_data || snapshot.privacy?.classification !== "public")) {
     errors.push(`${file}: examples must be public, synthetic, and contain no personal data`)
   }
-  if (file.startsWith("data/snapshots/")) {
-    const expected = registration.target_path
+  if (privateFiles.includes(file)) {
+    const logicalExpected = registration.target_path
       .replace("{YYYY}", expectedDate.slice(0, 4))
       .replace("{MM}", expectedDate.slice(5, 7))
       .replace("{YYYY-MM-DD}", expectedDate)
+    const expected = logicalExpected.replace(/^data[/\\]snapshots/, privateRoot) + (file.endsWith(".enc") ? ".enc" : "")
     if (file !== expected) errors.push(`${file}: worker ${registration.worker_id} owns ${expected}`)
-    if (snapshot.privacy?.synthetic) errors.push(`${file}: real snapshot paths cannot claim synthetic data`)
+    if (snapshot.privacy?.synthetic && process.env.ZAATI_TUTORIAL_MODE !== "true") errors.push(`${file}: real snapshot paths cannot claim synthetic data`)
     const privacyRank = { public: 0, private: 1, sensitive: 2 }
-    if ((privacyRank[snapshot.privacy?.classification] ?? -1) < privacyRank[registration.privacy.expected_classification]) errors.push(`${file}: privacy classification is weaker than ${registration.privacy.expected_classification}`)
+    if (!snapshot.privacy?.synthetic && (privacyRank[snapshot.privacy?.classification] ?? -1) < privacyRank[registration.privacy.expected_classification]) errors.push(`${file}: privacy classification is weaker than ${registration.privacy.expected_classification}`)
   }
   if (Date.parse(snapshot.effective_period?.start) > Date.parse(snapshot.effective_period?.end)) errors.push(`${file}: effective period starts after it ends`)
   if (Date.parse(snapshot.generated_at) >= Date.parse(snapshot.freshness?.expires_at)) errors.push(`${file}: freshness expiration must be after generation`)

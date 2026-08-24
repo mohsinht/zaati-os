@@ -25,6 +25,7 @@ Add these environment secrets:
 | `CLOUDFLARE_API_TOKEN` | Scoped Workers edit token |
 | `ZAATI_INSTANCE_CONFIG_JSON` | Complete instance JSON, optional |
 | `ZAATI_DATA_REPOSITORY_TOKEN` | Read-only access to one private data repository, optional |
+| `ZAATI_SNAPSHOT_KEY` | Optional 256-bit encrypted-snapshot key |
 
 Cloudflare's [GitHub Actions guide](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) recommends storing the API token and account ID as CI secrets and scoping the token to the target account.
 
@@ -64,6 +65,8 @@ The command expects an unauthenticated Access redirect or denial. It never sends
 
 Set `ZAATI_ACCESS_VERIFIED=true`, the private repository variables, and its read-only token. Run the deployment again. The workflow verifies Access before checking out snapshots, validates locally, builds without uploading an artifact, and deploys the static bundle.
 
+If encrypted snapshots are enabled, also set `ZAATI_SNAPSHOT_KEY` in the protected environment and set `storage.snapshot_encryption` to `true` in `ZAATI_INSTANCE_CONFIG_JSON`. The key is available only to the validation and build step.
+
 ### 5. Enable automatic deployment
 
 Set `ZAATI_AUTO_DEPLOY=true` only after the manual private deployment passes. Protect the `production` environment with required reviewers if the account supports it.
@@ -78,6 +81,10 @@ npm run deploy
 ```
 
 Wrangler creates an ignored generated configuration. Do not commit it.
+
+## Security and cache headers
+
+`public/_headers` adds a restrictive content security policy, disables framing and unnecessary browser capabilities, prevents indexing, and applies no-store caching to HTML and dashboard data. Hashed application assets use private immutable caching for fast repeat loads. Cloudflare documents `_headers` support for Worker static assets in [Static asset headers](https://developers.cloudflare.com/workers/static-assets/headers/).
 
 ## Rollback
 

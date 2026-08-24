@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/snapshot-bundle.schema.json",
+  "title": "Zaati OS atomic snapshot bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bundle_version", "run_id", "generated_at", "snapshots"],
+  "properties": {
+    "bundle_version": { "const": "0.1.1" },
+    "run_id": { "type": "string", "pattern": "^[a-zA-Z0-9._:-]{1,120}$" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "snapshots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": { "$ref": "https://zaati-os.dev/schemas/snapshot.schema.json" }
+    }
+  }
+}

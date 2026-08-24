@@ -29,6 +29,7 @@ if (fromEnvironment) {
   config = {
     ...defaults,
     brand_name: await ask("Dashboard name", defaults.brand_name),
+    brand_mark: await ask("Short brand mark", defaults.brand_mark),
     tagline: await ask("Short tagline", defaults.tagline),
     timezone: await ask("IANA timezone", defaults.timezone),
     locale: await ask("Locale", defaults.locale),
@@ -38,6 +39,8 @@ if (fromEnvironment) {
       preset: await ask("Palette: sage, ocean, plum, sand", defaults.theme.preset),
       default_mode: await ask("Mode: system, light, dark", defaults.theme.default_mode),
       density: await ask("Density: comfortable, compact", defaults.theme.density),
+      font_family: await ask("Font: system, humanist, editorial, rounded, mono", defaults.theme.font_family),
+      heading_style: await ask("Headers: plain, compact, expressive", defaults.theme.heading_style),
     },
   }
   prompt.close()

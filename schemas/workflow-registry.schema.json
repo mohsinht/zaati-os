@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/workflow-registry.schema.json",
+  "title": "Zaati OS workflow registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_version", "workflows"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "registry_version": { "const": "0.1.1" },
+    "workflows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "description", "prompt", "source_ids", "max_attempts", "publication"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "description": { "type": "string", "minLength": 1, "maxLength": 240 },
+          "prompt": { "type": "string", "pattern": "^prompts/[a-z0-9-]+\\.md$" },
+          "source_ids": { "type": "array", "minItems": 1, "maxItems": 20, "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" } },
+          "max_attempts": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "publication": { "enum": ["single-commit", "local-transaction"] }
+        }
+      }
+    }
+  }
+}

@@ -31,13 +31,23 @@ export type Snapshot = {
 export type SourceDefinition = { id: string; domain: string; source: string; label: string; description: string; freshness_sla_hours: number; dashboard_role: "primary" | "supporting" }
 export type InstanceConfig = {
   brand_name: string
+  brand_mark: string
   tagline: string
   timezone: string
   locale: string
   currency: string
   week_starts_on: "monday" | "sunday"
   enabled_sources: string[]
-  theme: { preset: "sage" | "ocean" | "plum" | "sand" | "custom"; default_mode: "system" | "light" | "dark"; density: "compact" | "comfortable"; radius: string; custom_tokens: Partial<Record<"primary" | "primary_foreground" | "accent" | "accent_foreground", string>> }
+  theme: {
+    preset: "sage" | "ocean" | "plum" | "sand" | "custom"
+    default_mode: "system" | "light" | "dark"
+    density: "compact" | "comfortable"
+    radius: string
+    font_family: "system" | "humanist" | "editorial" | "rounded" | "mono"
+    heading_style: "plain" | "compact" | "expressive"
+    custom_tokens: Partial<Record<"primary" | "primary_foreground" | "accent" | "accent_foreground" | "background" | "foreground" | "card" | "border" | "sidebar" | "chart_1" | "chart_2" | "chart_3", string>>
+  }
+  storage: { snapshot_encryption: boolean }
 }
 export type DashboardData = {
   generatedAt: string

@@ -57,7 +57,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
           {block.metrics.map((metric) => (
             <div className="min-w-0 py-4 first:pt-0 sm:px-5 sm:py-1 sm:first:pl-0 sm:last:pr-0" key={metric.label}>
               <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <span className={cn("size-1.5 rounded-full", toneDot[metric.tone || "neutral"])} />
+                <span aria-hidden="true" className={cn("size-1.5 rounded-full", toneDot[metric.tone || "neutral"])} />
                 {metric.label}
               </div>
               <div className="flex items-end gap-2">
@@ -75,7 +75,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
     return (
       <Panel block={block}>
         {block.items.length ? <div className="divide-y divide-border">{block.items.map((item) => {
-          const content = <><span className={cn("mt-2 size-1.5 shrink-0 rounded-full", toneDot[item.tone || "neutral"])} /><span className="min-w-0 flex-1"><span className="flex flex-wrap items-start justify-between gap-2"><span className="font-medium leading-6">{item.title}</span>{item.status ? <Badge variant={toneBadge[item.tone || "neutral"]}>{item.status}</Badge> : null}</span>{item.description ? <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{item.description}</span> : null}{item.meta ? <span className="mt-2 block text-xs font-medium text-muted-foreground">{item.meta}</span> : null}</span>{item.href ? <ArrowUpRight className="mt-1 size-4 shrink-0 text-muted-foreground" /> : null}</>
+          const content = <><span aria-hidden="true" className={cn("mt-2 size-1.5 shrink-0 rounded-full", toneDot[item.tone || "neutral"])} /><span className="min-w-0 flex-1"><span className="flex flex-wrap items-start justify-between gap-2"><span className="font-medium leading-6">{item.title}</span>{item.status ? <Badge variant={toneBadge[item.tone || "neutral"]}>{item.status}</Badge> : null}</span>{item.description ? <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{item.description}</span> : null}{item.meta ? <span className="mt-2 block text-xs font-medium text-muted-foreground">{item.meta}</span> : null}</span>{item.href ? <ArrowUpRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-muted-foreground" /> : null}</>
           return item.href ? <a className="flex gap-3 py-3 first:pt-0 last:pb-0 hover:text-primary" href={item.href} key={item.id} rel="noreferrer" target="_blank">{content}</a> : <div className="flex gap-3 py-3 first:pt-0 last:pb-0" key={item.id}>{content}</div>
         })}</div> : <EmptyState label="Nothing needs attention here." />}
       </Panel>
@@ -102,7 +102,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
     const time = (value: string) => new Intl.DateTimeFormat(instance.locale, { hour: "numeric", minute: "2-digit", timeZone: instance.timezone }).format(new Date(value))
     return (
       <Panel block={block}>
-        <div className="mb-4 flex items-center gap-2 rounded-lg bg-muted/70 px-3 py-2 text-xs font-medium text-muted-foreground"><CalendarDays className="size-4" />{new Intl.DateTimeFormat(instance.locale, { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" }).format(new Date(`${block.date}T12:00:00Z`))}</div>
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-muted/70 px-3 py-2 text-xs font-medium text-foreground"><CalendarDays className="size-4" />{new Intl.DateTimeFormat(instance.locale, { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" }).format(new Date(`${block.date}T12:00:00Z`))}</div>
         {block.events.length ? <div className="space-y-1">{block.events.map((event) => <div className="group flex gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/60" key={event.id}><div className="w-16 shrink-0 pt-0.5 text-xs font-medium text-muted-foreground">{time(event.start)}</div><span className={cn("mt-1.5 h-8 w-0.5 rounded-full", toneDot[event.tone || "neutral"])} /><div className="min-w-0"><p className="text-sm font-medium leading-5">{event.title}</p><p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Clock3 className="size-3" />{event.end ? `${time(event.start)} to ${time(event.end)}` : time(event.start)}{event.location ? `, ${event.location}` : ""}</p></div></div>)}</div> : <EmptyState label="No timed events." />}
       </Panel>
     )
@@ -113,6 +113,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
       <Panel block={block}>
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+            <caption className="sr-only">{block.title}</caption>
             <thead className="bg-muted/70 text-xs text-muted-foreground"><tr>{block.columns.map((column) => <th className="px-3 py-2.5 font-medium" key={column.key}>{column.label}</th>)}</tr></thead>
             <tbody className="divide-y divide-border">{block.rows.map((row, index) => <tr className="hover:bg-muted/40" key={index}>{block.columns.map((column) => <td className="max-w-64 px-3 py-3 align-top" key={column.key}>{formatValue(row[column.key] ?? null, column.format, instance)}</td>)}</tr>)}</tbody>
           </table>
@@ -124,7 +125,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
   if (block.kind === "progress") {
     return (
       <Panel block={block}>
-        <div className="space-y-5">{block.items.map((item) => { const percent = (item.value / item.max) * 100; return <div key={item.label}><div className="mb-2 flex items-center justify-between gap-4"><span className="text-sm font-medium">{item.label}</span><span className="text-xs font-medium text-muted-foreground">{item.value_label || `${Math.round(percent)}%`}</span></div><Progress indicatorClassName={cn(item.tone === "warning" && "bg-warning", item.tone === "danger" && "bg-destructive", item.tone === "info" && "bg-info", item.tone === "positive" && "bg-positive")} value={percent} /></div> })}</div>
+        <div className="space-y-5">{block.items.map((item) => { const percent = (item.value / item.max) * 100; return <div key={item.label}><div className="mb-2 flex items-center justify-between gap-4"><span className="text-sm font-medium">{item.label}</span><span className="text-xs font-medium text-muted-foreground">{item.value_label || `${Math.round(percent)}%`}</span></div><Progress indicatorClassName={cn(item.tone === "warning" && "bg-warning", item.tone === "danger" && "bg-destructive", item.tone === "info" && "bg-info", item.tone === "positive" && "bg-positive")} label={item.label} value={percent} /></div> })}</div>
       </Panel>
     )
   }
@@ -133,7 +134,7 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
     const Icon = block.tone === "warning" || block.tone === "danger" ? TriangleAlert : block.tone === "positive" ? CheckCircle2 : Info
     return (
       <div className={cn("rounded-xl border p-5", spanClass[block.span || "one"], block.tone === "warning" && "border-warning/30 bg-warning/10", block.tone === "danger" && "border-destructive/30 bg-destructive/10", block.tone === "positive" && "border-positive/25 bg-positive/10", (block.tone === "neutral" || block.tone === "info") && "border-info/25 bg-info/10")}>
-        <div className="flex items-start gap-3"><div className="rounded-full bg-background p-2 shadow-sm"><Icon className="size-4" /></div><div className="min-w-0"><h3 className="text-sm font-semibold">{block.title}</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{block.body}</p>{block.action ? <a className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline" href={block.action.href} rel="noreferrer" target="_blank">{block.action.label}<ArrowUpRight className="size-3.5" /></a> : null}</div></div>
+        <div className="flex items-start gap-3"><div className="rounded-full bg-background p-2 shadow-sm"><Icon className="size-4" /></div><div className="min-w-0"><h3 className="text-sm font-semibold">{block.title}</h3><p className="mt-1 text-sm leading-relaxed text-foreground/80">{block.body}</p>{block.action ? <a className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline" href={block.action.href} rel="noreferrer" target="_blank">{block.action.label}<ArrowUpRight className="size-3.5" /></a> : null}</div></div>
       </div>
     )
   }
@@ -152,4 +153,4 @@ export function BlockRenderer({ block, instance }: { block: DashboardBlock; inst
 function EmptyState({ label }: { label: string }) {
   return <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{label}</div>
 }
-function ChartLoading() { return <div className="h-64 animate-pulse rounded-lg bg-muted" aria-label="Loading chart" /> }
+function ChartLoading() { return <div className="h-64 animate-pulse rounded-lg bg-muted" aria-label="Loading chart" role="status" /> }

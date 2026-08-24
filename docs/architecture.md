@@ -20,6 +20,8 @@ Zaati OS does not run a hosted ingestion service. The public project never needs
 
 `config/sources.json` defines stable IDs, worker ownership, prompts, schemas, cadence, freshness, dependencies, target paths, authorized inputs, and forbidden inputs. It describes reusable source capabilities, not one person's connections.
 
+`config/workflows.json` groups registered source IDs into maintainable runs. It defines the prompt, bounded attempts, and atomic publication style without storing provider credentials or personal configuration.
+
 ### Snapshot envelope
 
 `schemas/snapshot.schema.json` carries identity, effective period, producer, evidence sources, status, freshness, quality, privacy, and a domain payload. One file represents one source for one effective date.
@@ -34,11 +36,19 @@ Snapshots use deterministic paths. Source workers write independently, so one un
 
 ### Build index
 
-`scripts/build-data-index.mjs` discovers snapshots, selects the latest enabled source, and writes an ignored frontend index. When private snapshots are absent it uses the synthetic examples. The browser never receives repository credentials.
+`scripts/build-data-index.mjs` discovers snapshots, decrypts encrypted files in memory when enabled, selects the latest enabled source, and writes an ignored `public/data/dashboard-data.json`. When private snapshots are absent it uses the synthetic examples. The browser never receives repository credentials or the decryption key.
 
 ### Static interface
 
-Vite builds a client-only bundle. This keeps hosting simple, but the bundle contains displayed facts and is therefore private. Authentication belongs in front of the assets, not in client-side JavaScript.
+Vite builds a client-only shell and a separate no-store dashboard payload. Hashed application assets can be cached without baking personal facts into the JavaScript chunk. The data response is still plaintext for an authorized browser and remains private. Authentication belongs in front of every asset, not in client-side JavaScript.
+
+### Bundle transaction
+
+One LLM run may return a versioned bundle containing several snapshots. Zaati OS validates all identities, schemas, source ownership, and domain payloads before writing. Local persistence uses per-file atomic renames plus rollback backups. Git-backed workflows create one tree and one commit. A partial refresh is never considered success.
+
+### Optional encrypted storage
+
+When `storage.snapshot_encryption` is enabled, snapshot paths use `.json.enc` authenticated envelopes. AES-256-GCM detects tampering and keeps plaintext out of the repository and local snapshot directory. Decryption happens in process memory during validation and build. The generated dashboard payload and authorized browser view are not encrypted at rest by this feature.
 
 ## Aggregates
 

@@ -19,7 +19,7 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
 - **Useful failure states:** Freshness, provenance, confidence, missing sources, and warnings remain visible.
 - **Forkable foundation:** The app, schemas, prompts, tests, CI, deployment recipes, theming, and synthetic examples ship together.
 
-## Five-minute local demo
+## Three steps, then voila
 
 Requires Node.js 22 or newer.
 
@@ -27,18 +27,26 @@ Requires Node.js 22 or newer.
 git clone https://github.com/YOUR_GITHUB_USERNAME/zaati-os.git
 cd zaati-os
 npm install
-npm run dev
+npm run setup
+npm run tutorial
 ```
 
-With no private snapshots configured, Zaati OS automatically opens in clearly labeled synthetic demo mode.
+The setup assistant creates ignored local preferences. The tutorial runs a credential-free mock LLM that deliberately fails its first contract attempt, retries safely, creates six synthetic snapshots in one transaction, and opens the dashboard.
+
+Prefer Make?
+
+```bash
+make setup
+make tutorial
+```
 
 ## Make it yours
 
-1. Fork the code repository. Keep it free of personal snapshots.
-2. Run `npm run instance:configure` to create an ignored local instance configuration.
-3. Create a separate private data repository using [the data-repository guide](docs/deployment/data-repository.md).
-4. Give your LLM workflow [the contract](docs/llm-contract.md), one prompt from [`prompts/`](prompts/), and write access only to its owned snapshot path.
-5. Deploy the built dashboard and put [Cloudflare Access](docs/deployment/cloudflare.md) in front of every hostname.
+1. Fork the code repository and run `npm run setup`.
+2. Test the entire ingestion loop with `npm run tutorial`.
+3. Give one scheduled LLM workflow [`prompts/daily-bundle.md`](prompts/daily-bundle.md) and its approved tools, then publish all snapshots in one private commit.
+
+Everything else, including custom sources, encrypted storage, full theme tokens, and automatic deployment, is optional and documented separately.
 
 The shortest useful loop is three sources, for example agenda, inbox attention, and work focus, followed by the daily overview prompt.
 
@@ -54,6 +62,12 @@ flowchart TD
 ```
 
 No upstream Zaati OS service participates in this flow.
+
+## One run, many snapshots
+
+`schemas/snapshot-bundle.schema.json` lets one LLM run produce up to 20 registered snapshots. Zaati OS validates the entire bundle, sends concise contract errors back for up to three attempts, and writes nothing until every nested snapshot passes. Valid bundles are persisted as one rollback-safe local transaction or one Git commit.
+
+This is especially useful for scheduled AI products where active task capacity is limited. One daily task can refresh agenda, inbox, work, money, news, and the overview instead of consuming one task per source. Start with the [one-task tutorial](docs/tutorials/one-task-daily-bundle.md).
 
 ## Snapshot contract
 
@@ -105,11 +119,12 @@ These are provider-neutral templates. Copy one into any tool that can read appro
 ## Repository map
 
 ```text
-config/               Source catalog and local instance template
+config/               Source, workflow, and local instance configuration
 data/examples/         Synthetic snapshots used by demo mode
 data/snapshots/        Ignored local private snapshots
 docs/                  Architecture, privacy, setup, extension, deployment
 prompts/               Provider-neutral LLM workflow templates
+public/data/            Ignored build-time dashboard payload
 schemas/               Executable registry, envelope, domain, and UI contracts
 scripts/               Validation, indexing, setup, and source scaffolding
 src/                   React, shadcn, Tailwind, and safe block renderer
@@ -121,6 +136,8 @@ deployments/           Optional infrastructure recipes
 
 A public fork is code, not a diary. Real snapshots, instance configuration, connector exports, secrets, and generated dashboard data are ignored. CI rejects committed private snapshot paths and common secret shapes. Synthetic examples are visibly marked and schema-validated.
 
+Optional AES-256-GCM snapshot encryption protects files at rest with a key supplied only through an ignored local key file or protected deployment secret. It is feature flagged and off by default. Encryption does not replace Access because authorized builds and browsers must eventually decrypt displayed facts.
+
 The dashboard is a static bundle. That bundle contains the snapshot facts needed for display, so it must be treated as private even if the source repository is public. The recommended deployment disables public `workers.dev` and preview URLs, then requires Cloudflare Access on a custom hostname before data deployment.
 
 Read [Privacy and threat model](docs/privacy.md) before connecting a real source.
@@ -130,11 +147,16 @@ Read [Privacy and threat model](docs/privacy.md) before connecting a real source
 | Command | Result |
 | --- | --- |
 | `npm run dev` | Build the data index and start Vite |
+| `npm run setup` | Complete the guided three-step local setup |
+| `npm run tutorial` | Run the retrying mock LLM bundle and open it locally |
+| `npm run workflow:run` | Connect any command-based LLM adapter |
+| `npm run snapshot:ingest` | Atomically validate and persist one multi-snapshot bundle |
+| `npm run snapshot:keygen` | Create an ignored 256-bit snapshot key |
 | `npm run instance:configure` | Create ignored local settings |
 | `npm run source:add` | Scaffold a source catalog entry and worker prompt |
 | `npm run data:validate` | Validate registries, snapshots, ownership, and UI blocks |
 | `npm run privacy:validate` | Reject private paths and common credential shapes |
-| `npm run check` | Run validation, type checking, production build, and tests |
+| `npm run check` | Run contracts, security, build, retry, encryption, performance, and WCAG tests |
 | `npm run deploy` | Validate, build, and deploy with Wrangler |
 
 ## Deployment choices
@@ -149,7 +171,7 @@ Zaati OS charges no platform fee and can be deployed using free or already-owned
 
 Current version: **v0.1.1**
 
-This release establishes the portable data contract, adaptive component renderer, starter prompts, synthetic demo, privacy boundaries, Cloudflare recipe, CI, and contribution model. See [CHANGELOG.md](CHANGELOG.md).
+This release establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider adapters, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

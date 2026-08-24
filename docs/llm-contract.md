@@ -15,6 +15,16 @@ A producer must:
 7. make same-day reruns idempotent
 8. report the run without repeating sensitive values
 
+## Multi-snapshot bundles
+
+One workflow may publish several registered sources through `schemas/snapshot-bundle.schema.json`. The bundle contains snapshots, never file paths. Zaati OS derives every target from the source registry, rejects duplicate source IDs, validates all nested contracts, and persists nothing until the complete set passes.
+
+Use `prompts/daily-bundle.md` for one daily LLM run. Build direct-source candidates before aggregates so an overview can depend on valid snapshots from the same run.
+
+## Retry protocol
+
+The orchestration layer should attempt a complete candidate at most three times. After a rejection, return only concise validation errors to the model and request a complete replacement, not a patch. Do not leak input facts in error logs. After the final failure, write nothing and preserve the previous successful snapshots.
+
 ## Presentation is a request, not code
 
 The LLM chooses the information shape. The application keeps control of rendering, colors, accessibility, responsive behavior, links, and executable code.

@@ -16,7 +16,7 @@ jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch' || vars.ZAATI_AUTO_DEPLOY == 'true'
     environment: production
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       ZAATI_HOSTNAME: ${{ vars.ZAATI_HOSTNAME }}
@@ -52,6 +52,8 @@ jobs:
         if: ${{ vars.ZAATI_DATA_REPOSITORY != '' }}
         run: node scripts/import-private-data.mjs .private-data/data/snapshots
       - run: npm run check
+        env:
+          ZAATI_SNAPSHOT_KEY: ${{ secrets.ZAATI_SNAPSHOT_KEY }}
       - run: npm run deployment:configure
       - name: Deploy Worker static assets
         uses: cloudflare/wrangler-action@v3
