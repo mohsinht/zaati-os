@@ -93,6 +93,13 @@ async function capture(client, name) {
   await writeFile(path.resolve("docs/assets", name), Buffer.from(result.data, "base64"))
 }
 
+async function stop(child) {
+  if (!child || child.exitCode !== null) return
+  const exited = new Promise((resolve) => child.once("exit", resolve))
+  child.kill("SIGTERM")
+  await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 3000))])
+}
+
 const profile = await mkdtemp(path.join(tmpdir(), "zaati-a11y-"))
 const vite = path.resolve("node_modules/.bin", process.platform === "win32" ? "vite.cmd" : "vite")
 const preview = process.env.ZAATI_A11Y_URL ? null : spawn(vite, ["preview", "--host", host, "--port", String(appPort)], { stdio: "ignore", shell: process.platform === "win32" })
@@ -137,7 +144,7 @@ try {
   await capture(client, "dashboard-mobile.png")
   client.close()
 } finally {
-  chrome?.kill("SIGTERM")
-  preview?.kill("SIGTERM")
-  await rm(profile, { recursive: true, force: true })
+  await stop(chrome)
+  await stop(preview)
+  await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
 }
