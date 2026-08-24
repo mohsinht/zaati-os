@@ -253,9 +253,12 @@ function DashboardApp({ data }: { data: DashboardData }) {
           </div>
           <div className="flex items-center gap-2">
             {data.demoMode ? (
-              <Badge aria-label="Synthetic demo" variant="info">
+              <Badge variant="info">
                 <Sparkles className="size-3 min-[360px]:mr-1" />
-                <span className="hidden min-[360px]:inline">Synthetic demo</span>
+                <span aria-hidden="true" className="hidden min-[360px]:inline">
+                  Synthetic demo
+                </span>
+                <span className="sr-only">Synthetic demo</span>
               </Badge>
             ) : (
               <Badge className="hidden sm:inline-flex" variant="positive">
