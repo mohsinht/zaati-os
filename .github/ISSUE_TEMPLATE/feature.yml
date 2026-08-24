@@ -1,0 +1,26 @@
+name: Feature proposal
+description: Propose a reusable capability or domain pack.
+title: "proposal: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: decision
+    attributes:
+      label: User decision improved
+      description: What should a user notice, decide, or act on?
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Proposed contract
+      description: Describe source, schema, prompt, blocks, and failure states.
+    validations:
+      required: true
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy and permissions
+      description: List authorized inputs, forbidden inputs, and required access.
+    validations:
+      required: true

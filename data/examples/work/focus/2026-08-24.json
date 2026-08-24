@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1.1",
+  "schema_ref": "schemas/domains/generic.schema.json",
+  "snapshot_id": "work:focus:2026-08-24",
+  "source_id": "work:focus",
+  "domain": "work",
+  "source": "focus",
+  "generated_at": "2026-08-24T07:10:00Z",
+  "effective_period": { "start": "2026-08-24T00:00:00Z", "end": "2026-08-24T23:59:59Z", "timezone": "UTC" },
+  "status": "success",
+  "producer": { "worker_id": "work-focus-daily", "workflow": "example", "version": "0.1.1" },
+  "sources": [{ "label": "Synthetic task tracker", "status": "ok", "as_of": "2026-08-24T07:10:00Z", "reference": "synthetic://tasks" }],
+  "freshness": { "expires_at": "2026-08-25T19:10:00Z" },
+  "quality": { "confidence": "high", "warnings": [] },
+  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "data": {
+    "title": "Ship the smallest complete slice",
+    "summary": "One item is ready to build, one awaits a decision, and one is blocked outside your control.",
+    "attention": "medium",
+    "presentation": {
+      "layout": "dashboard",
+      "blocks": [
+        { "id": "work-counts", "kind": "metric-group", "title": "Current work", "span": "full", "metrics": [{ "label": "In progress", "value": 1, "tone": "positive" }, { "label": "Ready", "value": 2, "tone": "info" }, { "label": "Blocked", "value": 1, "tone": "warning" }] },
+        {
+          "id": "owned-work",
+          "kind": "table",
+          "title": "Owned work",
+          "span": "two",
+          "columns": [{ "key": "item", "label": "Item" }, { "key": "state", "label": "State" }, { "key": "next", "label": "Next action" }],
+          "rows": [
+            { "item": "Adaptive block renderer", "state": "In progress", "next": "Complete the table component" },
+            { "item": "Private deployment recipe", "state": "Ready", "next": "Verify Access checklist" },
+            { "item": "Connector example", "state": "Blocked", "next": "Wait for source permission" }
+          ]
+        },
+        { "id": "work-next", "kind": "list", "title": "Best next moves", "span": "one", "items": [{ "id": "w1", "title": "Finish one end-to-end path", "description": "Prefer a complete thin slice over three half-started components.", "meta": "90 minutes", "tone": "positive" }, { "id": "w2", "title": "Write the open decision", "description": "Make the blocker answerable in one message.", "meta": "10 minutes", "tone": "info" }] }
+      ]
+    }
+  }
+}

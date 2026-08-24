@@ -1,0 +1,31 @@
+{
+  "$schema": "../schemas/instance.schema.json",
+  "brand_name": "Zaati OS",
+  "brand_mark": "Z",
+  "tagline": "Your day, with context.",
+  "timezone": "UTC",
+  "locale": "en-US",
+  "currency": "USD",
+  "week_starts_on": "monday",
+  "enabled_sources": [
+    "overview:daily",
+    "agenda:primary",
+    "inbox:attention",
+    "work:focus",
+    "money:pulse",
+    "news:briefing",
+    "review:weekly"
+  ],
+  "theme": {
+    "preset": "sage",
+    "default_mode": "system",
+    "density": "comfortable",
+    "radius": "0.9rem",
+    "font_family": "system",
+    "heading_style": "plain",
+    "custom_tokens": {}
+  },
+  "storage": {
+    "snapshot_encryption": false
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/source-registry.schema.json",
+  "title": "Zaati OS source catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_version", "sources"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "registry_version": { "const": "0.1.1" },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/source" }
+    }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "domain", "source", "label", "description", "worker_id", "prompt", "schema_ref", "cadence", "freshness_sla_hours", "dashboard_role", "depends_on", "target_path", "privacy"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" },
+        "domain": { "$ref": "#/$defs/slug" },
+        "source": { "$ref": "#/$defs/slug" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "worker_id": { "$ref": "#/$defs/slug" },
+        "prompt": { "type": "string", "pattern": "^prompts/[a-z0-9-]+\\.md$" },
+        "schema_ref": { "type": "string", "pattern": "^schemas/domains/[a-z0-9-]+\\.schema\\.json$" },
+        "cadence": { "enum": ["hourly", "daily", "weekdays", "weekly", "monthly", "manual", "event"] },
+        "freshness_sla_hours": { "type": "integer", "minimum": 1, "maximum": 8760 },
+        "dashboard_role": { "enum": ["primary", "supporting"] },
+        "depends_on": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" }
+        },
+        "target_path": { "type": "string", "pattern": "^data/snapshots/[a-z0-9-]+/[a-z0-9-]+/\\{YYYY\\}/\\{MM\\}/\\{YYYY-MM-DD\\}\\.json$" },
+        "privacy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["expected_classification", "authorized_inputs", "forbidden_inputs"],
+          "properties": {
+            "expected_classification": { "enum": ["private", "sensitive"] },
+            "authorized_inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "forbidden_inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    }
+  }
+}

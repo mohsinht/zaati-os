@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/domains/generic.schema.json",
+  "title": "Zaati OS generic domain payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "summary", "presentation"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "attention": { "enum": ["none", "low", "medium", "high"] },
+    "presentation": { "$ref": "https://zaati-os.dev/schemas/ui-blocks.schema.json#/$defs/presentation" }
+  }
+}
