@@ -1,6 +1,8 @@
 export const credentialPatterns = [
   ["private key", /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
   ["GitHub token", /\bgh[pousr]_[A-Za-z0-9]{24,}\b/],
+  ["GitHub fine-grained token", /\bgithub_pat_[A-Za-z0-9_]{20,}\b/],
+  ["npm access token", /\bnpm_[A-Za-z0-9]{20,}\b/],
   ["OpenAI-style key", /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/],
   ["AWS access key", /\bAKIA[0-9A-Z]{16}\b/],
   ["Slack token", /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/],

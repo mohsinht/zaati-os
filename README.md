@@ -24,13 +24,14 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
   &nbsp;&nbsp;·&nbsp;&nbsp;
   <a href="docs/quickstart.md">Quickstart</a>
   &nbsp;&nbsp;·&nbsp;&nbsp;
-  <a href="https://mohsinht.github.io/zaati-os/">Live synthetic demo</a>
-  &nbsp;&nbsp;·&nbsp;&nbsp;
   <a href="docs/privacy.md">Privacy model</a>
 </p>
 
 > [!IMPORTANT]
 > Zaati OS supplies contracts, prompts, validators, storage, rendering, and deployment infrastructure. It does not ship built-in Gmail, Jira, calendar, or financial connectors. Your chosen LLM or workflow must already have approved, read-only access to each source.
+
+> [!NOTE]
+> The Zaati dashboard is read-only. It displays validated snapshots and safe external links. It does not reply to messages, change calendars or tasks, send notifications, trade, or write back to source systems. The maintained production recipe is for developers and technical AI power users.
 
 ## What makes it different
 
@@ -74,7 +75,7 @@ make tutorial
 
 Everything else, including custom sources, encrypted storage, full theme tokens, and automatic deployment, is optional and documented separately.
 
-The shortest useful loop is three sources, for example agenda, inbox attention, and work focus, followed by the daily overview prompt.
+The canonical daily bundle contains agenda, inbox attention, work focus, money, news, and the dependency-backed daily overview. Prompt Studio can also create smaller independent bundles, and now generates the matching private-repository setup command.
 
 ## Create a scheduled task prompt
 
@@ -107,7 +108,7 @@ No upstream Zaati OS service participates in this flow.
 
 ## One run, many snapshots
 
-`schemas/snapshot-bundle.schema.json` lets one LLM run produce up to 20 registered snapshots. Zaati OS compares the returned sources with the workflow's authoritative source set, sends concise contract errors back for up to three attempts, and writes nothing until every nested snapshot passes. Git publication uses one pull request whose independent validator must pass before a human or trusted merge policy accepts it.
+`schemas/snapshot-bundle.schema.json` lets one LLM run produce up to 20 registered snapshots. Zaati OS compares the returned sources with the workflow's authoritative source set, applies one shared privacy and temporal policy, sends concise contract errors back for up to three attempts, and writes nothing to its local snapshot store until every nested snapshot passes. Git publication creates candidate files on a private branch before CI; the independent validator prevents invalid candidates from merging into the protected data branch.
 
 This is especially useful for scheduled AI products where active task capacity is limited. One daily task can refresh agenda, inbox, work, money, news, and the overview instead of consuming one task per source. Start with the [one-task tutorial](docs/tutorials/one-task-daily-bundle.md).
 
@@ -154,7 +155,7 @@ See [LLM contract](docs/llm-contract.md) and [`schemas/`](schemas/) for the exec
 | `daily-overview.md`  | Combine registered source snapshots                  | Adaptive dashboard            |
 | `weekly-review.md`   | Find patterns and produce an evidence-based review   | Progress, timeline, decisions |
 
-These are provider-neutral templates, not connectors. The ChatGPT scheduled-task recipe is the maintained first path. Other providers are contract-compatible but are not claimed as end-to-end certified until their documented release gate passes.
+These are provider-neutral templates, not connectors. ChatGPT scheduled tasks are the target first real path, but the release evidence is not complete yet. Other providers are contract-compatible and are not claimed as end-to-end certified until their documented release gate passes.
 
 ## Repository map
 
@@ -174,7 +175,7 @@ deployments/           Optional infrastructure recipes
 
 ## Privacy model
 
-A public fork is code, not a diary. Real snapshots, instance configuration, connector exports, secrets, and generated dashboard data are ignored. CI rejects committed private snapshot paths and common secret shapes. Synthetic examples are visibly marked and schema-validated.
+A public fork is code, not a diary. Real snapshots, instance configuration, connector exports, secrets, and generated dashboard data are ignored. CI rejects committed private snapshot paths and common credential shapes. This scanner is defense in depth, not a promise to recognize every secret or unnecessary personal detail. Synthetic examples are visibly marked and schema-validated.
 
 Optional AES-256-GCM snapshot encryption protects files at rest with a key supplied only through an ignored local key file or protected CI secret. It is feature flagged and off by default. Use it only with a trusted ingestion process that can receive the key. Never paste the key into an LLM prompt. Encryption does not replace Access because authorized builds and browsers must eventually decrypt displayed facts.
 
@@ -226,16 +227,16 @@ Pull requests expose each gate as a separate job and finish with one `Quality ga
 ![Animated terminal showing Cloudflare Access verification](docs/assets/onboarding/deploy.gif)
 
 - **Recommended:** Cloudflare Workers static assets on a custom domain protected by Cloudflare Access.
-- **Supported:** Any private static host that provides real authentication before serving assets.
+- **Portable, community-operated:** Any private static host that provides real authentication before serving assets. Cloudflare is the only maintained security-complete recipe in v0.1.1.
 - **Not recommended for real data:** Public GitHub Pages, unauthenticated preview URLs, or relying on an obscure URL.
 
 Zaati OS charges no platform fee and can be deployed using free or already-owned tools, depending on provider, connector, model, storage, and hosting choices.
 
 ## Release
 
-Current version: **v0.1.1**
+Code version: **v0.1.1**
 
-This release establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. See [CHANGELOG.md](CHANGELOG.md).
+No immutable GitHub Release is published yet. Until the recorded provider and hosted-demo release gates pass, pin private validators to a reviewed full commit SHA. This code version establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. See [CHANGELOG.md](CHANGELOG.md).
 
 Before storing real data, read [Data lifecycle and key recovery](docs/data-lifecycle.md). Fork maintainers can follow [Upgrade and fork sync](docs/upgrading.md).
 

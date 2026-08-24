@@ -79,14 +79,14 @@ test("persistence rejects path escapes, mixed storage, and target identity confl
   assert.throws(() => targetForSnapshot(registration, snapshot, workspace), /escaped the configured output directory/)
 
   try {
-    const files = await persistBundle(bundle, { outputRoot: workspace })
+    const files = await persistBundle(bundle, { outputRoot: workspace, allowSynthetic: true })
     const current = JSON.parse(await readFile(files[0], "utf8"))
     current.snapshot_id = "agenda:primary:1999-01-01"
     await writeFile(files[0], JSON.stringify(current))
-    await assert.rejects(persistBundle(bundle, { outputRoot: workspace }), /identity does not match/)
+    await assert.rejects(persistBundle(bundle, { outputRoot: workspace, allowSynthetic: true }), /identity does not match/)
     await writeFile(files[0], JSON.stringify(snapshot))
     await assert.rejects(
-      persistBundle(bundle, { outputRoot: workspace, encryption: true, key: Buffer.alloc(32) }),
+      persistBundle(bundle, { outputRoot: workspace, encryption: true, key: Buffer.alloc(32), allowSynthetic: true }),
       /mixed encrypted and plaintext/,
     )
   } finally {

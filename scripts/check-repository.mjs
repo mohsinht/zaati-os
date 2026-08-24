@@ -21,7 +21,7 @@ for (const [group, dependencies] of Object.entries({
   }
 }
 
-if (!readme.includes(`Current version: **v${version}**`)) errors.push("README current version must match package.json")
+if (!readme.includes(`Code version: **v${version}**`)) errors.push("README code version must match package.json")
 if (!readme.includes("actions/workflows/ci.yml/badge.svg")) errors.push("README must expose the live CI badge")
 if (!readme.includes("actions/workflows/codeql.yml/badge.svg")) errors.push("README must expose the live CodeQL badge")
 

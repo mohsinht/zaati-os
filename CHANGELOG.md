@@ -2,7 +2,7 @@
 
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and semantic versioning.
 
-## [0.1.1] - 2026-08-24
+## [0.1.1] - Unreleased
 
 ### Added
 

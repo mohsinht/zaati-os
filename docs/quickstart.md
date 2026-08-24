@@ -42,11 +42,14 @@ Require the `Validate Zaati snapshots` check on the private repository's default
 
 ## 4. Connect one multi-source workflow
 
-A useful first set is:
+A complete daily overview set is:
 
 - `agenda:primary`
 - `inbox:attention`
 - `work:focus`
+- `money:pulse`
+- `news:briefing`
+- `overview:daily`
 
 Open `prompts/daily-bundle.md` and `prompts/scheduled-github-bundle.md`. Replace their repository, source, and timezone placeholders. Give them to the LLM workflow that already has approved access.
 
@@ -56,9 +59,9 @@ Run the complete prompt manually before scheduling it. One run should open one p
 your-llm-command | npm run snapshot:ingest -- --output-dir data/snapshots
 ```
 
-## 5. Add the overview in the same bundle
+## 5. Build aggregates last
 
-Build non-aggregate snapshots first in memory. The overview can then use those validated candidates in the same run and commit.
+Build all five non-aggregate snapshots first in memory. The overview can then use those validated candidates in the same run and commit. For a smaller independent bundle, omit the overview rather than silently omitting its dependencies.
 
 ## 6. Deploy privately
 

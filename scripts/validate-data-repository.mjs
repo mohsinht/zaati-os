@@ -33,6 +33,24 @@ if (snapshotPaths.some((relative) => config.snapshot_encryption !== relative.end
   throw new Error("Snapshot encryption mode does not match zaati.data.json.")
 
 const contracts = await loadContracts(codeRoot)
+const workflows = JSON.parse(await readFile(path.join(codeRoot, "config/workflows.json"), "utf8"))
+const registeredWorkflow = workflows.workflows.find((workflow) => workflow.id === config.workflow_id)
+if (config.workflow_id !== "custom" && !registeredWorkflow) throw new Error(`Unknown configured workflow ${config.workflow_id}.`)
+if (
+  registeredWorkflow &&
+  (registeredWorkflow.source_ids.length !== config.expected_source_ids.length ||
+    registeredWorkflow.source_ids.some((id, index) => id !== config.expected_source_ids[index]))
+)
+  throw new Error(`Configured sources do not match immutable workflow ${config.workflow_id}.`)
+const registeredIds = new Set(contracts.registry.sources.map((source) => source.id))
+const unknownExpected = config.expected_source_ids.filter((id) => !registeredIds.has(id))
+if (unknownExpected.length) throw new Error(`Configured source set contains unknown sources: ${unknownExpected.join(", ")}.`)
+for (const sourceId of config.expected_source_ids) {
+  const registration = contracts.registry.sources.find((source) => source.id === sourceId)
+  const missingDependencies = registration.depends_on.filter((dependency) => !config.expected_source_ids.includes(dependency))
+  if (missingDependencies.length)
+    throw new Error(`Configured source ${sourceId} is missing dependencies: ${missingDependencies.join(", ")}.`)
+}
 const key = config.snapshot_encryption ? await loadSnapshotKey() : null
 const snapshots = []
 for (const relative of snapshotPaths) {
@@ -47,6 +65,7 @@ for (const relative of snapshotPaths) {
   if (relative !== expectedRelative.split(path.sep).join("/")) throw new Error(`${relative}: path does not match registered ownership.`)
   snapshots.push(snapshot)
 }
+snapshots.sort((left, right) => config.expected_source_ids.indexOf(left.source_id) - config.expected_source_ids.indexOf(right.source_id))
 
 const generatedAt = snapshots
   .map((snapshot) => snapshot.generated_at)
