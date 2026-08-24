@@ -81,6 +81,19 @@
           "body": "The latest movement remains provisional because one approved source is stale. Missing data is not converted to zero.",
           "tone": "warning",
           "span": "full"
+        },
+        {
+          "id": "allocation-comparison",
+          "kind": "bar-chart",
+          "title": "Synthetic allocation comparison",
+          "description": "Illustrative categories used to verify the complete renderer contract.",
+          "span": "full",
+          "value_format": "percent",
+          "bars": [
+            { "label": "Reserve", "value": 35, "tone": "positive" },
+            { "label": "Long-term goals", "value": 45, "tone": "info" },
+            { "label": "Near-term plans", "value": 20, "tone": "neutral" }
+          ]
         }
       ]
     }

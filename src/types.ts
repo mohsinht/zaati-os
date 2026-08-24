@@ -109,19 +109,24 @@ export type InstanceConfig = {
     heading_style: "plain" | "compact" | "expressive"
     custom_tokens: Partial<
       Record<
-        | "primary"
-        | "primary_foreground"
-        | "accent"
-        | "accent_foreground"
-        | "background"
-        | "foreground"
-        | "card"
-        | "border"
-        | "sidebar"
-        | "chart_1"
-        | "chart_2"
-        | "chart_3",
-        string
+        "light" | "dark",
+        Record<
+          | "primary"
+          | "primary_foreground"
+          | "accent"
+          | "accent_foreground"
+          | "background"
+          | "foreground"
+          | "card"
+          | "card_foreground"
+          | "border"
+          | "sidebar"
+          | "sidebar_foreground"
+          | "chart_1"
+          | "chart_2"
+          | "chart_3",
+          string
+        >
       >
     >
   }

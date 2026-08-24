@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { InstanceConfig } from "@/types"
 
 const paths = {
@@ -44,8 +44,6 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
       })
       .catch(() => setCopied(null))
   }
-  const selected = paths[path]
-
   return (
     <section aria-labelledby="welcome-title" className="pb-12">
       <div className="flex flex-col gap-6 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between">
@@ -107,39 +105,34 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 sm:grid-cols-3" role="tablist" aria-label="LLM connection path">
-              {(Object.entries(paths) as Array<[keyof typeof paths, (typeof paths)[keyof typeof paths]]>).map(([id, item]) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    aria-selected={path === id}
-                    className={cn(
-                      "flex min-h-12 items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm font-medium",
-                      path === id ? "border-primary bg-accent text-accent-foreground" : "border-border hover:bg-muted",
-                    )}
-                    key={id}
-                    onClick={() => setPath(id)}
-                    role="tab"
-                  >
-                    <Icon className="size-4" />
-                    {item.label}
-                  </button>
-                )
-              })}
-            </div>
-            <div className="mt-4 rounded-xl border border-border bg-muted/55 p-4" role="tabpanel">
-              <div className="flex items-start justify-between gap-3">
-                <code className="min-w-0 whitespace-pre-wrap break-words text-xs leading-6">{selected.command}</code>
-                <Button
-                  aria-label={`Copy ${selected.label} setup`}
-                  onClick={() => copy(selected.command, "provider")}
-                  size="icon"
-                  variant="ghost"
-                >
-                  {copied === "provider" ? <Check className="size-4 text-positive" /> : <Clipboard className="size-4" />}
-                </Button>
-              </div>
-            </div>
+            <Tabs onValueChange={(value) => setPath(value as keyof typeof paths)} value={path}>
+              <TabsList aria-label="LLM connection path" className="sm:grid-cols-3">
+                {(Object.entries(paths) as Array<[keyof typeof paths, (typeof paths)[keyof typeof paths]]>).map(([id, item]) => {
+                  const Icon = item.icon
+                  return (
+                    <TabsTrigger className="flex min-h-12 items-center gap-2 text-sm" key={id} value={id}>
+                      <Icon className="size-4" />
+                      {item.label}
+                    </TabsTrigger>
+                  )
+                })}
+              </TabsList>
+              {(Object.entries(paths) as Array<[keyof typeof paths, (typeof paths)[keyof typeof paths]]>).map(([id, item]) => (
+                <TabsContent className="mt-4 rounded-xl border border-border bg-muted/55 p-4" key={id} value={id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <code className="min-w-0 whitespace-pre-wrap break-words text-xs leading-6">{item.command}</code>
+                    <Button
+                      aria-label={`Copy ${item.label} setup`}
+                      onClick={() => copy(item.command, "provider")}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      {copied === "provider" ? <Check className="size-4 text-positive" /> : <Clipboard className="size-4" />}
+                    </Button>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
             <p className="mt-3 text-xs leading-5 text-muted-foreground">
               Prompt Studio writes ignored private files under .zaati. Paste the scheduled-task prompt into your provider, then approve only
               the GitHub and source connections it needs.

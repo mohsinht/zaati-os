@@ -5,6 +5,7 @@ import Ajv2020 from "ajv/dist/2020.js"
 import addFormats from "ajv-formats"
 import { decryptSnapshotEnvelope, loadSnapshotKey } from "./lib/snapshot-crypto.mjs"
 import { validateSnapshotPolicy } from "./lib/snapshot-policy.mjs"
+import { validateCustomTheme } from "./lib/theme-contrast.mjs"
 
 const root = process.cwd()
 const errors = []
@@ -126,6 +127,7 @@ const instancePath = await access(path.join(root, "config/instance.local.json"))
 const instance = await readJson(instancePath)
 const validateInstance = ajv.getSchema("https://zaati-os.dev/schemas/instance.schema.json")
 if (!validateInstance(instance)) errors.push(...formatAjvErrors(instancePath, validateInstance.errors))
+else errors.push(...validateCustomTheme(instance, instancePath))
 for (const sourceId of instance.enabled_sources || [])
   if (!byId.has(sourceId)) errors.push(`${instancePath}: unknown enabled source ${sourceId}`)
 

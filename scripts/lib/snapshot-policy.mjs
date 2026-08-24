@@ -88,6 +88,25 @@ export function validateSnapshotPolicy(snapshot, registration, { allowSynthetic 
   }
   const blockIds = snapshot.data?.presentation?.blocks?.map((block) => block.id) || []
   if (new Set(blockIds).size !== blockIds.length) errors.push("#/data/presentation/blocks: block IDs must be unique")
+  for (const [blockIndex, block] of (snapshot.data?.presentation?.blocks || []).entries()) {
+    const blockPath = `#/data/presentation/blocks/${blockIndex}`
+    if (block.kind === "line-chart") {
+      const seriesKeys = block.series.map((series) => series.key)
+      if (new Set(seriesKeys).size !== seriesKeys.length) errors.push(`${blockPath}/series: series keys must be unique`)
+      const xLabels = block.points.map((point) => point.x)
+      if (new Set(xLabels).size !== xLabels.length) errors.push(`${blockPath}/points: x labels must be unique`)
+      for (const [pointIndex, point] of block.points.entries()) {
+        const valueKeys = Object.keys(point.values).sort()
+        const expectedKeys = [...seriesKeys].sort()
+        if (valueKeys.length !== expectedKeys.length || valueKeys.some((key, index) => key !== expectedKeys[index]))
+          errors.push(`${blockPath}/points/${pointIndex}/values: keys must exactly match the declared series keys`)
+      }
+    }
+    if (block.kind === "table") {
+      const columnKeys = block.columns.map((column) => column.key)
+      if (new Set(columnKeys).size !== columnKeys.length) errors.push(`${blockPath}/columns: column keys must be unique`)
+    }
+  }
   walk(snapshot, (key, value, trail) => {
     if (unsafeKey.test(key)) errors.push(`#/${trail.join("/")}: secret-shaped keys are forbidden`)
     if (typeof value === "string" && unsafeText.test(value))

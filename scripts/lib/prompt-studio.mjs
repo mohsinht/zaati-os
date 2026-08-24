@@ -82,11 +82,23 @@ export function validatePromptProfile(profile, contracts) {
       if (!registered.has(dependency) && !selected) throw new Error(`Source ${source.id} depends on unknown source ${dependency}.`)
     }
   }
-  return normalized
+  return {
+    ...normalized,
+    sources: normalized.sources.map((source) => {
+      const registration = registered.get(source.id)
+      return registration ? { ...source, preferred_blocks: registration.presentation.preferred_blocks } : source
+    }),
+  }
 }
 
 function selectedBlockSummary(uiSchema, kinds) {
   return kinds.map((kind) => ({ kind, required_fields: uiSchema.$defs[kind].required, extra_fields_rejected: true }))
+}
+
+function selectedBlockSummaryText(uiSchema, kinds) {
+  return selectedBlockSummary(uiSchema, kinds)
+    .map((block) => JSON.stringify(block))
+    .join("\n")
 }
 
 function sourceRegistration(source, contracts) {
@@ -105,6 +117,7 @@ function sourceRegistration(source, contracts) {
     cadence: source.registration.cadence,
     freshness_sla_hours: source.registration.freshness_sla_hours,
     dashboard_role: source.registration.dashboard_role,
+    presentation: { preferred_blocks: source.preferred_blocks },
     depends_on: source.registration.depends_on || [],
     target_path: `data/snapshots/${domain}/${name}/{YYYY}/{MM}/{YYYY-MM-DD}.json`,
     privacy: {
@@ -221,7 +234,7 @@ Choose the smallest useful set from only the preferred blocks in the source inte
 Selected block summary. Read schemas/ui-blocks.schema.json for the exact nested fields and limits:
 
 \`\`\`json
-${json(selectedBlockSummary(contracts.uiSchema, selectedKinds))}
+${selectedBlockSummaryText(contracts.uiSchema, selectedKinds)}
 \`\`\`
 
 ### Validate, retry, publish
