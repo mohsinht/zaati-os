@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/logo.png" alt="Zaati OS" width="220" />
+</p>
+
 # Zaati OS
 
 [![CI](../../actions/workflows/ci.yml/badge.svg?branch=main)](../../actions/workflows/ci.yml)
