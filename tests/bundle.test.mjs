@@ -35,7 +35,9 @@ test("encrypted snapshots authenticate round trips and reject tampering", () => 
   const snapshot = { snapshot_id: "example:daily:2026-08-24", data: { value: 42 } }
   const envelope = encryptSnapshot(snapshot, key)
   assert.deepEqual(decryptSnapshotEnvelope(envelope, key), snapshot)
-  const tampered = { ...envelope, ciphertext: `${envelope.ciphertext.slice(0, -1)}A` }
+  const ciphertext = Buffer.from(envelope.ciphertext, "base64url")
+  ciphertext[0] ^= 0x01
+  const tampered = { ...envelope, ciphertext: ciphertext.toString("base64url") }
   assert.throws(() => decryptSnapshotEnvelope(tampered, key), /authentication failed/)
   assert.throws(() => decryptSnapshotEnvelope(envelope, randomBytes(32)), /does not match/)
 })
