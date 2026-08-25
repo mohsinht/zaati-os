@@ -672,11 +672,28 @@ function DashboardPage({
 }
 
 function PromptDrawer({ prompt, sourceLabel }: { prompt: string; sourceLabel: string }) {
-  const [copied, setCopied] = useState(false)
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle")
   const copyPrompt = async () => {
-    await navigator.clipboard.writeText(prompt)
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1800)
+    try {
+      await Promise.race([
+        navigator.clipboard.writeText(prompt),
+        new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("Clipboard permission timed out.")), 600)),
+      ])
+      setCopyState("copied")
+    } catch {
+      const field = document.createElement("textarea")
+      field.value = prompt
+      field.setAttribute("readonly", "")
+      field.style.position = "fixed"
+      field.style.opacity = "0"
+      document.body.append(field)
+      field.focus()
+      field.select()
+      const copied = document.execCommand("copy")
+      field.remove()
+      setCopyState(copied ? "copied" : "failed")
+    }
+    window.setTimeout(() => setCopyState("idle"), 2400)
   }
   return (
     <Dialog>
@@ -691,12 +708,13 @@ function PromptDrawer({ prompt, sourceLabel }: { prompt: string; sourceLabel: st
           <div>
             <DialogTitle className="text-base font-semibold">{sourceLabel} scheduled-task prompt</DialogTitle>
             <DialogDescription className="mt-1 text-sm leading-6 text-muted-foreground">
-              Replace every placeholder, review the permission boundary, then paste this Markdown into your LLM workflow.
+              One standalone Markdown prompt with the worker, source registration, permissions, and current schemas included. Replace the
+              three environment placeholders, review it, then paste the complete document into your LLM workflow.
             </DialogDescription>
           </div>
           <Button aria-live="polite" onClick={() => void copyPrompt()} size="sm" variant="secondary">
-            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-            {copied ? "Copied" : "Copy"}
+            {copyState === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+            {copyState === "copied" ? "Complete prompt copied" : copyState === "failed" ? "Select and copy below" : "Copy complete prompt"}
           </Button>
         </div>
         <div className="min-h-0 flex-1 overflow-auto bg-muted/35 p-4 sm:p-5">

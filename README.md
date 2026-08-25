@@ -82,7 +82,7 @@ make tutorial
 
 Everything else, including custom sources, encrypted storage, full theme tokens, and automatic deployment, is optional and documented separately.
 
-Synthetic demo mode includes a **Component lab** with the JSON contract beside each rendered block. Every demo source also includes a **Recreate this page** drawer containing the current base worker and source-specific Markdown prompt, ready for placeholder review and use in a scheduled LLM workflow.
+Synthetic demo mode includes a **Component lab** with the JSON contract beside each rendered block. Every demo source also includes a **Recreate this page** drawer containing one standalone scheduled-task prompt. It includes the resolved worker and source, permission boundary, and current executable schemas; the user only replaces the code repository, private data repository, and timezone placeholders before review and use.
 
 The canonical daily bundle contains agenda, inbox attention, work focus, money, news, and the dependency-backed daily overview. Prompt Studio can also create smaller independent bundles, and now generates the matching private-repository setup command.
 

@@ -1,6 +1,7 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { decryptSnapshotEnvelope, loadSnapshotKey } from "./lib/snapshot-crypto.mjs"
+import { assembleStandaloneDemoPrompt } from "./lib/demo-prompt.mjs"
 import { snapshotFreshness } from "./lib/freshness.mjs"
 import { resolvedExperience } from "./lib/setup-options.mjs"
 
@@ -68,15 +69,37 @@ const latest = sourceDefinitions.map((definition) => ({
   snapshot: bySource[definition.id]?.at(-1) || null,
   freshnessState: snapshotFreshness(bySource[definition.id]?.at(-1) || null),
 }))
+const demoContract = demoMode
+  ? await Promise.all([
+      readFile(path.join(root, "prompts/base-worker.md"), "utf8"),
+      readJson("schemas/snapshot.schema.json"),
+      readJson("schemas/ui-blocks.schema.json"),
+      readFile(path.join(root, "docs/llm-contract.md"), "utf8"),
+      readFile(path.join(root, "docs/privacy.md"), "utf8"),
+    ])
+  : null
 const demoPromptsBySource = demoMode
   ? Object.fromEntries(
       await Promise.all(
         sourceDefinitions.map(async (definition) => {
-          const [basePrompt, domainPrompt] = await Promise.all([
-            readFile(path.join(root, "prompts/base-worker.md"), "utf8"),
+          const [domainPrompt, domainSchema] = await Promise.all([
             readFile(path.join(root, definition.prompt), "utf8"),
+            readJson(definition.schema_ref),
           ])
-          return [definition.id, `${basePrompt.trim()}\n\n---\n\n${domainPrompt.trim()}\n`]
+          const [basePrompt, snapshotSchema, uiBlocksSchema, llmContract, privacyContract] = demoContract
+          return [
+            definition.id,
+            assembleStandaloneDemoPrompt({
+              basePrompt,
+              domainPrompt,
+              definition,
+              snapshotSchema,
+              uiBlocksSchema,
+              domainSchema,
+              llmContract,
+              privacyContract,
+            }),
+          ]
         }),
       ),
     )
