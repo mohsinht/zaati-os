@@ -717,7 +717,12 @@ function PromptDrawer({ prompt, sourceLabel }: { prompt: string; sourceLabel: st
             {copyState === "copied" ? "Complete prompt copied" : copyState === "failed" ? "Select and copy below" : "Copy complete prompt"}
           </Button>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto bg-muted/35 p-4 sm:p-5">
+        <div
+          aria-label="Complete scheduled-task prompt"
+          className="min-h-0 flex-1 overflow-auto bg-muted/35 p-4 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:p-5"
+          role="region"
+          tabIndex={0}
+        >
           <pre className="whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-xs leading-6 text-card-foreground">
             {prompt}
           </pre>
