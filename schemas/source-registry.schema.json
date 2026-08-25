@@ -31,6 +31,7 @@
         "cadence",
         "freshness_sla_hours",
         "dashboard_role",
+        "presentation",
         "depends_on",
         "target_path",
         "privacy"
@@ -47,6 +48,33 @@
         "cadence": { "enum": ["hourly", "daily", "weekdays", "weekly", "monthly", "manual", "event"] },
         "freshness_sla_hours": { "type": "integer", "minimum": 1, "maximum": 8760 },
         "dashboard_role": { "enum": ["primary", "supporting"] },
+        "presentation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["preferred_blocks"],
+          "properties": {
+            "preferred_blocks": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "metric-group",
+                  "list",
+                  "line-chart",
+                  "bar-chart",
+                  "donut-chart",
+                  "calendar",
+                  "table",
+                  "progress",
+                  "notice",
+                  "timeline",
+                  "text"
+                ]
+              }
+            }
+          }
+        },
         "depends_on": {
           "type": "array",
           "uniqueItems": true,
@@ -59,11 +87,18 @@
         "privacy": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["expected_classification", "authorized_inputs", "forbidden_inputs"],
+          "required": ["expected_classification", "authorized_inputs", "forbidden_inputs", "content_guards"],
           "properties": {
             "expected_classification": { "enum": ["private", "sensitive"] },
             "authorized_inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
-            "forbidden_inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+            "forbidden_inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "content_guards": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": ["account-number", "authentication-link", "one-time-code", "raw-email", "encoded-blob"]
+              }
+            }
           }
         }
       }

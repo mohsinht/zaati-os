@@ -4,7 +4,11 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   ChevronDown,
+  Clock3,
   CircleDollarSign,
+  Braces,
+  Check,
+  Copy,
   Inbox,
   LayoutDashboard,
   Menu,
@@ -23,11 +27,14 @@ import {
 import { BlockRenderer } from "@/components/BlockRenderer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { snapshotFreshness, type FreshnessState } from "@/lib/freshness"
 import type { DashboardData, InstanceConfig, Snapshot, SourceDefinition } from "@/types"
 
 const Onboarding = lazy(() => import("@/components/Onboarding"))
+const DemoTour = lazy(() => import("@/components/DemoTour"))
 const domainIcons = {
   overview: LayoutDashboard,
   agenda: CalendarDays,
@@ -38,6 +45,16 @@ const domainIcons = {
   review: Activity,
 } as const
 const START_ID = "__start"
+const COMPONENTS_ID = "__components"
+const publicAsset = (file: string) => `${import.meta.env.BASE_URL}${file.replace(/^\//, "")}`
+const health = {
+  fresh: { label: "Fresh and complete", dot: "bg-positive" },
+  aging: { label: "Refresh expected soon", dot: "bg-info" },
+  stale: { label: "Expired snapshot", dot: "bg-warning" },
+  partial: { label: "Some evidence limited", dot: "bg-warning" },
+  failed: { label: "Source unavailable", dot: "bg-destructive" },
+  missing: { label: "No snapshot yet", dot: "bg-muted-foreground" },
+} satisfies Record<FreshnessState, { label: string; dot: string }>
 type ThemeMode = "light" | "dark"
 type Density = "compact" | "comfortable"
 type FontFamily = InstanceConfig["theme"]["font_family"]
@@ -50,12 +67,26 @@ function initialMode(data: DashboardData): ThemeMode {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
+function initialView(data: DashboardData, fallback: string) {
+  const requested = new URL(window.location.href).searchParams.get("view")
+  if (requested === "start") return START_ID
+  if (requested === "components" && data.demoMode) return COMPONENTS_ID
+  if (data.sources.some((item) => item.definition.id === requested)) return requested as string
+  return data.demoMode || data.sources.every((item) => !item.snapshot) ? START_ID : fallback
+}
+
+function initialNow(data: DashboardData) {
+  const injected = data.demoMode ? new URL(window.location.href).searchParams.get("at") : null
+  const parsed = injected ? Date.parse(injected) : Number.NaN
+  return Number.isFinite(parsed) ? parsed : Date.now()
+}
+
 export function App() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     const controller = new AbortController()
-    fetch("/data/dashboard-data.json", { cache: "no-store", credentials: "same-origin", signal: controller.signal })
+    fetch(publicAsset("data/dashboard-data.json"), { cache: "no-store", credentials: "same-origin", signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`Dashboard data returned ${response.status}.`)
         return response.json() as Promise<DashboardData>
@@ -75,7 +106,7 @@ export function App() {
 function DashboardApp({ data }: { data: DashboardData }) {
   const overviewId =
     data.sources.find((item) => item.definition.id === "overview:daily")?.definition.id || data.sources[0]?.definition.id || ""
-  const [selectedId, setSelectedId] = useState(data.demoMode ? START_ID : overviewId)
+  const [selectedId, setSelectedId] = useState(() => initialView(data, overviewId))
   const [mode, setMode] = useState<ThemeMode>(() => initialMode(data))
   const [palette, setPalette] = useState(() => localStorage.getItem("zaati-palette") || data.instance.theme.preset)
   const [density, setDensity] = useState<Density>(() => (localStorage.getItem("zaati-density") as Density) || data.instance.theme.density)
@@ -89,8 +120,22 @@ function DashboardApp({ data }: { data: DashboardData }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [sidebarCompact, setSidebarCompact] = useState(false)
+  const [now, setNow] = useState(() => initialNow(data))
+  const [historySnapshotId, setHistorySnapshotId] = useState("")
+  const [tourOpen, setTourOpen] = useState(
+    () =>
+      data.demoMode &&
+      data.instance.experience.show_tour &&
+      initialView(data, overviewId) === START_ID &&
+      localStorage.getItem("zaati-demo-tour") !== "complete",
+  )
   const selected = data.sources.find((item) => item.definition.id === selectedId)
-  const selectedLabel = selectedId === START_ID ? "Start here" : selected?.definition.label || "Dashboard"
+  const history = data.historyBySource[selectedId] || []
+  const activeSnapshot = historySnapshotId
+    ? history.find((snapshot) => snapshot.snapshot_id === historySnapshotId) || selected?.snapshot
+    : selected?.snapshot
+  const selectedLabel =
+    selectedId === START_ID ? "Start here" : selectedId === COMPONENTS_ID ? "Component lab" : selected?.definition.label || "Dashboard"
 
   useEffect(() => {
     const root = document.documentElement
@@ -108,27 +153,46 @@ function DashboardApp({ data }: { data: DashboardData }) {
       background: "--background",
       foreground: "--foreground",
       card: "--card",
+      card_foreground: "--card-foreground",
       border: "--border",
       sidebar: "--sidebar",
+      sidebar_foreground: "--sidebar-foreground",
       chart_1: "--chart-1",
       chart_2: "--chart-2",
       chart_3: "--chart-3",
     } as const
     for (const token of Object.values(tokenMap)) root.style.removeProperty(token)
     if (palette === "custom") {
-      for (const [key, value] of Object.entries(data.instance.theme.custom_tokens)) {
+      for (const [key, value] of Object.entries(data.instance.theme.custom_tokens[mode] || {})) {
         if (key in tokenMap && /^#[0-9a-f]{6}$/i.test(value)) root.style.setProperty(tokenMap[key as keyof typeof tokenMap], value)
       }
     }
     document.title = data.instance.brand_name
-    document.documentElement.lang = data.instance.locale.split("-")[0]
-    localStorage.setItem("zaati-theme", mode)
+    document.documentElement.lang = data.instance.locale
+    try {
+      const locale = new Intl.Locale(data.instance.locale) as Intl.Locale & {
+        getTextInfo?: () => { direction: "ltr" | "rtl" }
+        textInfo?: { direction: "ltr" | "rtl" }
+      }
+      document.documentElement.dir = locale.getTextInfo?.().direction || locale.textInfo?.direction || "ltr"
+    } catch {
+      document.documentElement.dir = "ltr"
+    }
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", mode === "dark" ? "#111512" : "#f6f7f4")
     localStorage.setItem("zaati-palette", palette)
     localStorage.setItem("zaati-density", density)
     localStorage.setItem("zaati-font", fontFamily)
     localStorage.setItem("zaati-headings", headingStyle)
     localStorage.setItem("zaati-radius", radius)
   }, [data.instance, density, fontFamily, headingStyle, mode, palette, radius])
+
+  useEffect(() => {
+    if (localStorage.getItem("zaati-theme") || data.instance.theme.default_mode !== "system") return
+    const media = window.matchMedia("(prefers-color-scheme: dark)")
+    const sync = () => setMode(media.matches ? "dark" : "light")
+    media.addEventListener("change", sync)
+    return () => media.removeEventListener("change", sync)
+  }, [data.instance.theme.default_mode, mode])
 
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
@@ -141,12 +205,45 @@ function DashboardApp({ data }: { data: DashboardData }) {
     return () => document.removeEventListener("keydown", close)
   }, [])
 
+  useEffect(() => {
+    const onPopState = () => setSelectedId(initialView(data, overviewId))
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [data, overviewId])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const select = (id: string) => {
     setSelectedId(id)
+    setHistorySnapshotId("")
     setMobileOpen(false)
+    const url = new URL(window.location.href)
+    url.searchParams.set("view", id === START_ID ? "start" : id === COMPONENTS_ID ? "components" : id)
+    window.history.pushState({}, "", url)
+  }
+  const chooseMode = (value: ThemeMode) => {
+    localStorage.setItem("zaati-theme", value)
+    setMode(value)
+  }
+  const completeTour = () => {
+    localStorage.setItem("zaati-demo-tour", "complete")
+    setTourOpen(false)
   }
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {data.demoMode && tourOpen ? (
+        <Suspense fallback={null}>
+          <DemoTour
+            onComplete={completeTour}
+            onOpenComponentLab={() => select(COMPONENTS_ID)}
+            open={tourOpen}
+            sources={data.sources.map((item) => item.definition)}
+          />
+        </Suspense>
+      ) : null}
       <a
         className="fixed left-3 top-3 z-[70] -translate-y-20 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-lg transition-transform focus:translate-y-0"
         href="#main-content"
@@ -156,6 +253,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
       <Sidebar
         compact={sidebarCompact}
         data={data}
+        now={now}
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
         onCompact={() => setSidebarCompact((value) => !value)}
@@ -182,10 +280,13 @@ function DashboardApp({ data }: { data: DashboardData }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {data.demoMode ? (
+            {data.demoMode || data.syntheticData ? (
               <Badge variant="info">
-                <Sparkles className="mr-1 size-3" />
-                Synthetic demo
+                <Sparkles className="size-3 min-[360px]:mr-1" />
+                <span aria-hidden="true" className="hidden min-[360px]:inline">
+                  {data.demoMode ? "Synthetic demo" : "Synthetic test data"}
+                </span>
+                <span className="sr-only">{data.demoMode ? "Synthetic demo" : "Synthetic test data"}</span>
               </Badge>
             ) : (
               <Badge className="hidden sm:inline-flex" variant="positive">
@@ -194,51 +295,62 @@ function DashboardApp({ data }: { data: DashboardData }) {
               </Badge>
             )}
             <Button
-              onClick={() => setMode((value) => (value === "light" ? "dark" : "light"))}
+              onClick={() => chooseMode(mode === "light" ? "dark" : "light")}
               size="icon"
               variant="ghost"
               aria-label={`Use ${mode === "light" ? "dark" : "light"} mode`}
             >
               {mode === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
             </Button>
-            <div className="relative">
-              <Button
-                onClick={() => setSettingsOpen((value) => !value)}
-                size="icon"
-                variant="outline"
-                aria-controls="theme-studio"
-                aria-expanded={settingsOpen}
-                aria-label="Open theme studio"
-              >
-                <Settings2 className="size-4" />
-              </Button>
+            <Dialog onOpenChange={setSettingsOpen} open={settingsOpen}>
+              <DialogTrigger asChild>
+                <Button size="icon" variant="outline" aria-label="Open theme studio">
+                  <Settings2 className="size-4" />
+                </Button>
+              </DialogTrigger>
               {settingsOpen ? (
                 <ThemeMenu
                   density={density}
                   fontFamily={fontFamily}
+                  hasCustomTheme={Boolean(data.instance.theme.custom_tokens.light && data.instance.theme.custom_tokens.dark)}
                   headingStyle={headingStyle}
                   mode={mode}
-                  onClose={() => setSettingsOpen(false)}
                   onDensity={setDensity}
                   onFont={setFontFamily}
                   onHeading={setHeadingStyle}
-                  onMode={setMode}
+                  onMode={chooseMode}
                   onPalette={setPalette}
                   onRadius={setRadius}
                   palette={palette}
                   radius={radius}
                 />
               ) : null}
-            </div>
+            </Dialog>
           </div>
         </header>
         <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
           {selectedId === START_ID ? (
             <Suspense fallback={<InlineLoading />}>
-              <Onboarding instance={data.instance} onOpenDashboard={() => select(overviewId)} />
+              <Onboarding
+                demoMode={data.demoMode}
+                hasSnapshots={data.sources.some((item) => item.snapshot)}
+                instance={data.instance}
+                onOpenDashboard={() => select(overviewId)}
+                onStartTour={() => setTourOpen(true)}
+              />
             </Suspense>
+          ) : selectedId === COMPONENTS_ID ? (
+            <ComponentLab data={data} />
           ) : selected ? (
-            <DashboardPage definition={selected.definition} instance={data.instance} snapshot={selected.snapshot} />
+            <DashboardPage
+              definition={selected.definition}
+              history={history}
+              instance={data.instance}
+              now={now}
+              onHistory={setHistorySnapshotId}
+              prompt={data.demoPromptsBySource[selected.definition.id]}
+              snapshot={activeSnapshot || null}
+            />
           ) : (
             <EmptyDashboard />
           )}
@@ -252,6 +364,7 @@ function Sidebar({
   compact,
   data,
   mobileOpen,
+  now,
   onClose,
   onCompact,
   onSelect,
@@ -260,6 +373,7 @@ function Sidebar({
   compact: boolean
   data: DashboardData
   mobileOpen: boolean
+  now: number
   onClose: () => void
   onCompact: () => void
   onSelect: (id: string) => void
@@ -267,118 +381,164 @@ function Sidebar({
 }) {
   return (
     <>
-      {mobileOpen ? (
-        <button className="fixed inset-0 z-40 bg-foreground/25 md:hidden" onClick={onClose} aria-label="Close navigation backdrop" />
-      ) : null}
+      <Dialog onOpenChange={(open) => !open && onClose()} open={mobileOpen}>
+        <DialogContent
+          className="md:hidden"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            document.querySelector<HTMLButtonElement>('button[aria-label="Open navigation"]')?.focus()
+          }}
+          side="left"
+        >
+          <DialogTitle className="sr-only">Dashboard navigation</DialogTitle>
+          <DialogDescription className="sr-only">Choose a Zaati OS section.</DialogDescription>
+          <SidebarPanel
+            compact={false}
+            data={data}
+            now={now}
+            onClose={onClose}
+            onCompact={onCompact}
+            onSelect={onSelect}
+            selectedId={selectedId}
+          />
+        </DialogContent>
+      </Dialog>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200 md:translate-x-0",
-          mobileOpen && "translate-x-0",
+          "fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex",
           compact && "md:w-[76px]",
         )}
         id="primary-navigation"
       >
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
+        <SidebarPanel
+          compact={compact}
+          data={data}
+          now={now}
+          onClose={onClose}
+          onCompact={onCompact}
+          onSelect={onSelect}
+          selectedId={selectedId}
+        />
+      </aside>
+    </>
+  )
+}
+
+function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, selectedId }: Omit<Parameters<typeof Sidebar>[0], "mobileOpen">) {
+  return (
+    <>
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
+        {data.instance.brand_name === "Zaati OS" ? (
+          <div className="grid size-9 shrink-0 overflow-hidden rounded-xl border border-sidebar-border bg-white shadow-sm">
+            <img alt="" aria-hidden="true" className="size-full object-cover" src={publicAsset("logo-mark.png")} />
+          </div>
+        ) : (
           <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
             <span className="text-base font-black tracking-tight">{data.instance.brand_mark}</span>
           </div>
-          <div className={cn("min-w-0 flex-1", compact && "md:hidden")}>
-            <p className="truncate text-sm font-semibold">{data.instance.brand_name}</p>
-            <p className="truncate text-[11px] text-sidebar-foreground/75">Private by default</p>
-          </div>
-          <Button aria-label="Close navigation" className="md:hidden" onClick={onClose} size="icon" variant="ghost">
-            <X className="size-4" />
-          </Button>
+        )}
+        <div className={cn("min-w-0 flex-1", compact && "md:hidden")}>
+          <p className="truncate text-sm font-semibold">{data.instance.brand_name}</p>
+          <p className="truncate text-[11px] text-sidebar-foreground/75">Private by default</p>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Dashboard sections">
+        <Button aria-label="Close navigation" className="md:hidden" onClick={onClose} size="icon" variant="ghost">
+          <X className="size-4" />
+        </Button>
+      </div>
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Dashboard sections">
+        <button
+          aria-current={selectedId === START_ID ? "page" : undefined}
+          className={cn(
+            "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            selectedId === START_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+            compact && "md:justify-center md:px-2",
+          )}
+          onClick={() => onSelect(START_ID)}
+          title={compact ? "Start here" : undefined}
+        >
+          <Rocket className={cn("size-4 shrink-0 text-sidebar-foreground/55", selectedId === START_ID && "text-sidebar-primary")} />
+          <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>Start here</span>
+        </button>
+        <p
+          className={cn(
+            "px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/70",
+            compact && "md:hidden",
+          )}
+        >
+          Your system
+        </p>
+        {data.demoMode ? (
           <button
-            aria-current={selectedId === START_ID ? "page" : undefined}
+            aria-current={selectedId === COMPONENTS_ID ? "page" : undefined}
             className={cn(
               "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              selectedId === START_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+              selectedId === COMPONENTS_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
               compact && "md:justify-center md:px-2",
             )}
-            onClick={() => onSelect(START_ID)}
-            title={compact ? "Start here" : undefined}
+            onClick={() => onSelect(COMPONENTS_ID)}
+            title={compact ? "Component lab" : undefined}
           >
-            <Rocket className={cn("size-4 shrink-0 text-sidebar-foreground/55", selectedId === START_ID && "text-sidebar-primary")} />
-            <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>Start here</span>
+            <Braces className={cn("size-4 shrink-0 text-sidebar-foreground/55", selectedId === COMPONENTS_ID && "text-sidebar-primary")} />
+            <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>Component lab</span>
           </button>
-          <p
-            className={cn(
-              "px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/70",
-              compact && "md:hidden",
-            )}
-          >
-            Your system
-          </p>
-          {data.sources.map(({ definition, snapshot }) => {
-            const Icon = Object.hasOwn(domainIcons, definition.domain)
-              ? domainIcons[definition.domain as keyof typeof domainIcons]
-              : Activity
-            const active = definition.id === selectedId
-            const status = snapshot ? snapshot.status : "missing"
-            return (
-              <button
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
-                  compact && "md:justify-center md:px-2",
-                )}
-                key={definition.id}
-                onClick={() => onSelect(definition.id)}
-                title={compact ? `${definition.label}, ${status}` : undefined}
-              >
-                <Icon className={cn("size-4 shrink-0 text-sidebar-foreground/55", active && "text-sidebar-primary")} />
-                <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>{definition.label}</span>
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "size-1.5 rounded-full",
-                    snapshot
-                      ? snapshot.status === "success"
-                        ? "bg-positive"
-                        : snapshot.status === "partial"
-                          ? "bg-warning"
-                          : "bg-destructive"
-                      : "bg-muted-foreground",
-                    compact && "md:hidden",
-                  )}
-                />
-                <span className="sr-only">{status}</span>
-              </button>
-            )
-          })}
-        </nav>
-        <div className="border-t border-sidebar-border p-3">
-          <button
-            aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
-            className={cn(
-              "flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-xs text-sidebar-foreground/75 hover:bg-sidebar-accent",
-              compact && "md:justify-center md:px-2",
-            )}
-            onClick={onCompact}
-          >
-            <span className="hidden md:block">
-              {compact ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-            </span>
-            <ShieldCheck className="size-4 md:hidden" />
-            <span className={cn(compact && "md:hidden")}>{compact ? "Expand" : "Collapse sidebar"}</span>
-          </button>
-        </div>
-      </aside>
+        ) : null}
+        {data.sources.map(({ definition, snapshot }) => {
+          const Icon = Object.hasOwn(domainIcons, definition.domain) ? domainIcons[definition.domain as keyof typeof domainIcons] : Activity
+          const active = definition.id === selectedId
+          const status = snapshotFreshness(snapshot, now)
+          return (
+            <button
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+                compact && "md:justify-center md:px-2",
+              )}
+              key={definition.id}
+              onClick={() => onSelect(definition.id)}
+              title={compact ? `${definition.label}, ${status}` : undefined}
+            >
+              <Icon className={cn("size-4 shrink-0 text-sidebar-foreground/55", active && "text-sidebar-primary")} />
+              <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>{definition.label}</span>
+              <span aria-hidden="true" className={cn("size-1.5 rounded-full", health[status].dot, compact && "md:hidden")} />
+              <span className="sr-only">{health[status].label}</span>
+            </button>
+          )
+        })}
+      </nav>
+      <div className="hidden border-t border-sidebar-border p-3 md:block">
+        <button
+          aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-xs text-sidebar-foreground/75 hover:bg-sidebar-accent",
+            compact && "md:justify-center md:px-2",
+          )}
+          onClick={onCompact}
+        >
+          <span className="hidden md:block">{compact ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}</span>
+          <ShieldCheck className="size-4 md:hidden" />
+          <span className={cn(compact && "md:hidden")}>{compact ? "Expand" : "Collapse sidebar"}</span>
+        </button>
+      </div>
     </>
   )
 }
 
 function DashboardPage({
   definition,
+  history,
   instance,
+  now,
+  onHistory,
+  prompt,
   snapshot,
 }: {
   definition: SourceDefinition
+  history: Snapshot[]
   instance: InstanceConfig
+  now: number
+  onHistory: (snapshotId: string) => void
+  prompt?: string
   snapshot: Snapshot | null
 }) {
   if (!snapshot)
@@ -395,31 +555,90 @@ function DashboardPage({
         </div>
       </section>
     )
+  const freshness = snapshotFreshness(snapshot, now)
+  const layout = snapshot.data.presentation.layout
+  const blockGrid = {
+    dashboard: "lg:grid-cols-3",
+    focus: "mx-auto max-w-5xl lg:grid-cols-2",
+    timeline: "mx-auto max-w-3xl lg:grid-cols-1",
+  }[layout]
   return (
     <section>
-      <PageEyebrow definition={definition} instance={instance} snapshot={snapshot} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PageEyebrow definition={definition} instance={instance} snapshot={snapshot} />
+        <div className="flex flex-wrap items-center gap-2">
+          {history.length > 1 ? (
+            <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              Snapshot
+              <select
+                className="min-h-9 rounded-md border border-input bg-background px-2 text-foreground"
+                onChange={(event) => onHistory(event.target.value)}
+                value={snapshot.snapshot_id === history.at(-1)?.snapshot_id ? "" : snapshot.snapshot_id}
+              >
+                <option value="">Latest</option>
+                {[...history]
+                  .reverse()
+                  .slice(1)
+                  .map((item) => (
+                    <option key={item.snapshot_id} value={item.snapshot_id}>
+                      {formatTimestamp(item.generated_at, instance)}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          ) : null}
+          {prompt ? <PromptDrawer prompt={prompt} sourceLabel={definition.label} /> : null}
+        </div>
+      </div>
       <div className="mt-5 flex flex-col justify-between gap-5 border-b border-border pb-7 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
           <h1 className="text-pretty text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{snapshot.data.title}</h1>
           <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">{snapshot.data.summary}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-          <span
-            aria-hidden="true"
-            className={cn(
-              "size-2 rounded-full",
-              snapshot.status === "success" ? "bg-positive" : snapshot.status === "partial" ? "bg-warning" : "bg-destructive",
-            )}
-          />
-          <span>
-            {snapshot.status === "success"
-              ? "All expected inputs"
-              : snapshot.status === "partial"
-                ? "Some evidence limited"
-                : "Source unavailable"}
-          </span>
-          <ChevronDown aria-hidden="true" className="size-3.5 opacity-50" />
-        </div>
+        <details className="group shrink-0 rounded-lg border border-border bg-card text-xs text-muted-foreground lg:max-w-md">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-3 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span aria-hidden="true" className={cn("size-2 rounded-full", health[freshness].dot)} />
+            <span>{health[freshness].label}</span>
+            <ChevronDown aria-hidden="true" className="size-3.5 opacity-50 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-border px-3 py-3">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
+              <dt>Generated</dt>
+              <dd className="text-foreground">{formatTimestamp(snapshot.generated_at, instance)}</dd>
+              <dt>Expires</dt>
+              <dd className="text-foreground">{formatTimestamp(snapshot.freshness.expires_at, instance)}</dd>
+              {snapshot.freshness.next_expected_at ? (
+                <>
+                  <dt>Next run</dt>
+                  <dd className="text-foreground">{formatTimestamp(snapshot.freshness.next_expected_at, instance)}</dd>
+                </>
+              ) : null}
+            </dl>
+            <p className="mt-3 font-medium text-foreground">Evidence consulted</p>
+            <ul className="mt-2 space-y-2">
+              {snapshot.sources.map((source, index) => (
+                <li className="flex items-start justify-between gap-4" key={`${source.label}-${source.as_of}-${index}`}>
+                  <span>
+                    <span className="text-foreground">{source.label}</span>
+                    <span className="block">As of {formatTimestamp(source.as_of, instance)}</span>
+                    {source.reference ? (
+                      /^https:\/\//.test(source.reference) ? (
+                        <a className="block underline underline-offset-2" href={source.reference} rel="noreferrer" target="_blank">
+                          Open evidence
+                        </a>
+                      ) : (
+                        <span className="block break-all">Reference: {source.reference}</span>
+                      )
+                    ) : null}
+                  </span>
+                  <Badge variant={source.status === "ok" ? "positive" : source.status === "unavailable" ? "danger" : "warning"}>
+                    {source.status}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </details>
       </div>
       {snapshot.quality.warnings.length ? (
         <div className="mt-5 flex gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4">
@@ -434,18 +653,157 @@ function DashboardPage({
           </div>
         </div>
       ) : null}
-      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {snapshot.data.presentation.blocks.map((block) => (
-          <BlockRenderer block={block} instance={instance} key={block.id} />
+      <div className={cn("mt-5 grid grid-cols-1 gap-4", blockGrid)} data-layout={layout}>
+        {snapshot.data.presentation.blocks.map((block, index) => (
+          <BlockRenderer block={block} emphasized={layout === "focus" && index === 0} instance={instance} key={block.id} layout={layout} />
         ))}
       </div>
       <footer className="mt-8 flex flex-col justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground sm:flex-row">
-        <span>Snapshot {snapshot.snapshot_id}</span>
+        <span className="inline-flex items-center gap-1.5">
+          <Clock3 className="size-3.5" /> Last successful update {formatTimestamp(snapshot.generated_at, instance)}
+        </span>
         <span>
           {snapshot.quality.confidence} confidence, {snapshot.sources.length} source{snapshot.sources.length === 1 ? "" : "s"}, expires{" "}
           {formatTimestamp(snapshot.freshness.expires_at, instance)}
         </span>
       </footer>
+    </section>
+  )
+}
+
+function PromptDrawer({ prompt, sourceLabel }: { prompt: string; sourceLabel: string }) {
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle")
+  const copyPrompt = async () => {
+    try {
+      await Promise.race([
+        navigator.clipboard.writeText(prompt),
+        new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("Clipboard permission timed out.")), 600)),
+      ])
+      setCopyState("copied")
+    } catch {
+      const field = document.createElement("textarea")
+      field.value = prompt
+      field.setAttribute("readonly", "")
+      field.style.position = "fixed"
+      field.style.opacity = "0"
+      document.body.append(field)
+      field.focus()
+      field.select()
+      const copied = document.execCommand("copy")
+      field.remove()
+      setCopyState(copied ? "copied" : "failed")
+    }
+    window.setTimeout(() => setCopyState("idle"), 2400)
+  }
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Braces className="size-3.5" />
+          Recreate this page
+        </Button>
+      </DialogTrigger>
+      <DialogContent side="right">
+        <div className="flex items-start justify-between gap-4 border-b border-border p-5 pr-14">
+          <div>
+            <DialogTitle className="text-base font-semibold">{sourceLabel} scheduled-task prompt</DialogTitle>
+            <DialogDescription className="mt-1 text-sm leading-6 text-muted-foreground">
+              One standalone Markdown prompt with the worker, source registration, permissions, and current schemas included. Replace the
+              three environment placeholders, review it, then paste the complete document into your LLM workflow.
+            </DialogDescription>
+          </div>
+          <Button aria-live="polite" onClick={() => void copyPrompt()} size="sm" variant="secondary">
+            {copyState === "copied" ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+            {copyState === "copied" ? "Complete prompt copied" : copyState === "failed" ? "Select and copy below" : "Copy complete prompt"}
+          </Button>
+        </div>
+        <div
+          aria-label="Complete scheduled-task prompt"
+          className="min-h-0 flex-1 overflow-auto bg-muted/35 p-4 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:p-5"
+          role="region"
+          tabIndex={0}
+        >
+          <pre className="whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-xs leading-6 text-card-foreground">
+            {prompt}
+          </pre>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ComponentLab({ data }: { data: DashboardData }) {
+  const [copiedId, setCopiedId] = useState("")
+  const copyContract = async (id: string, value: string) => {
+    await navigator.clipboard.writeText(value)
+    setCopiedId(id)
+    window.setTimeout(() => setCopiedId(""), 1800)
+  }
+  return (
+    <section>
+      <div className="max-w-3xl border-b border-border pb-7">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Safe presentation contract / Synthetic</p>
+        <h1 className="mt-4 text-pretty text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+          Build richer pages without shipping UI code
+        </h1>
+        <p className="mt-3 text-base leading-7 text-muted-foreground">
+          Your LLM chooses an audited block, a semantic page layout, and a span. Zaati OS owns rendering, responsive behavior, theme tokens,
+          focus handling, and accessibility.
+        </p>
+      </div>
+      <div className="mt-5 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
+        {[
+          ["dashboard", "Three-column canvas", "Use one dominant two-column block with supporting evidence."],
+          ["focus", "Focused decision", "The first block leads; supporting blocks stay quieter."],
+          ["timeline", "Linear narrative", "Sequence and review pages remain deliberately narrow."],
+        ].map(([name, label, description]) => (
+          <div className="bg-card p-4" key={name}>
+            <code className="text-xs font-semibold text-primary">{name}</code>
+            <p className="mt-2 text-sm font-medium">{label}</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-10 space-y-10">
+        {data.componentExamples.map(({ sourceId, block }) => {
+          const contract = JSON.stringify(block, null, 2)
+          return (
+            <article className="border-t border-border pt-5" id={`component-${block.kind}`} key={block.kind}>
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{sourceId}</p>
+                  <h2 className="mt-1 text-xl font-semibold">{block.kind}</h2>
+                </div>
+                <Badge variant="outline">Audited JSON only</Badge>
+              </div>
+              <div className="grid overflow-hidden rounded-xl border border-border xl:grid-cols-2">
+                <div className="min-w-0 border-b border-border bg-muted/35 xl:border-b-0 xl:border-r">
+                  <div className="flex min-h-11 items-center justify-between border-b border-border px-3">
+                    <span className="text-xs font-medium text-foreground">JSON contract</span>
+                    <Button aria-live="polite" onClick={() => void copyContract(block.id, contract)} size="sm" variant="ghost">
+                      {copiedId === block.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                      {copiedId === block.id ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                  <pre
+                    aria-label={`${block.kind} JSON contract`}
+                    className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-6 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    tabIndex={0}
+                  >
+                    {contract}
+                  </pre>
+                </div>
+                <div className="min-w-0 bg-background p-4 sm:p-5">
+                  <p className="mb-3 text-xs font-medium text-muted-foreground">Rendered result</p>
+                  <div className="grid grid-cols-1">
+                    <BlockRenderer block={block} instance={data.instance} />
+                  </div>
+                </div>
+              </div>
+            </article>
+          )
+        })}
+      </div>
     </section>
   )
 }
@@ -482,9 +840,9 @@ function PageEyebrow({
 function ThemeMenu({
   density,
   fontFamily,
+  hasCustomTheme,
   headingStyle,
   mode,
-  onClose,
   onDensity,
   onFont,
   onHeading,
@@ -496,9 +854,9 @@ function ThemeMenu({
 }: {
   density: Density
   fontFamily: FontFamily
+  hasCustomTheme: boolean
   headingStyle: HeadingStyle
   mode: ThemeMode
-  onClose: () => void
   onDensity: (value: Density) => void
   onFont: (value: FontFamily) => void
   onHeading: (value: HeadingStyle) => void
@@ -509,21 +867,11 @@ function ThemeMenu({
   radius: string
 }) {
   return (
-    <div
-      aria-label="Theme studio"
-      className="absolute right-0 top-11 z-50 max-h-[calc(100vh-5rem)] w-[min(21rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-xl"
-      id="theme-studio"
-      role="dialog"
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold">Theme studio</p>
-        <Button aria-label="Close theme studio" onClick={onClose} size="icon" variant="ghost">
-          <X className="size-4" />
-        </Button>
-      </div>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+    <DialogContent id="theme-studio">
+      <DialogTitle className="pr-10 text-sm font-semibold">Theme studio</DialogTitle>
+      <DialogDescription className="mt-1 text-xs leading-5 text-muted-foreground">
         Preview freely. Deployment defaults live in your ignored instance configuration.
-      </p>
+      </DialogDescription>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Button
           onClick={() => onMode("light")}
@@ -551,8 +899,10 @@ function ThemeMenu({
                 "grid min-h-14 place-items-center rounded-lg border p-2 capitalize",
                 palette === item ? "border-primary bg-accent" : "border-border",
               )}
+              disabled={item === "custom" && !hasCustomTheme}
               key={item}
               onClick={() => onPalette(item)}
+              title={item === "custom" && !hasCustomTheme ? "Configure accessible light and dark tokens first" : undefined}
             >
               <span className={cn("palette-dot", `palette-${item}`)} />
               <span className="mt-1 text-[10px]">{item}</span>
@@ -560,6 +910,11 @@ function ThemeMenu({
           ))}
         </div>
       </fieldset>
+      {!hasCustomTheme ? (
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          Custom palettes unlock after both validated light and dark token sets are configured.
+        </p>
+      ) : null}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <label className="text-xs font-semibold">
           Font
@@ -623,7 +978,7 @@ function ThemeMenu({
           ))}
         </div>
       </fieldset>
-    </div>
+    </DialogContent>
   )
 }
 
@@ -631,8 +986,8 @@ function AppLoading() {
   return (
     <div className="grid min-h-screen place-items-center bg-background text-foreground" role="status">
       <div className="text-center">
-        <div className="mx-auto grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-          <span className="font-black">Z</span>
+        <div className="mx-auto size-10 overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+          <img alt="" aria-hidden="true" className="size-full object-cover" src={publicAsset("logo-mark.png")} />
         </div>
         <p className="mt-4 text-sm font-medium">Preparing your dashboard</p>
         <p className="mt-1 text-xs text-muted-foreground">Loading the private data index</p>

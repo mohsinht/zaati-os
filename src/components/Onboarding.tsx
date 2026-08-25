@@ -15,14 +15,14 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { InstanceConfig } from "@/types"
 
 const paths = {
   chatgpt: {
-    label: "ChatGPT task",
+    label: "Prompt Studio",
     icon: Sparkles,
-    command: "Use prompts/scheduled-github-bundle.md with GitHub and your connected sources.",
+    command: "npm run prompt:create",
   },
   command: {
     label: "LLM command",
@@ -32,7 +32,19 @@ const paths = {
   workflow: { label: "Any workflow", icon: PlugZap, command: "your-flow | npm run snapshot:ingest -- --output-dir data/snapshots" },
 } as const
 
-export default function Onboarding({ instance, onOpenDashboard }: { instance: InstanceConfig; onOpenDashboard: () => void }) {
+export default function Onboarding({
+  demoMode,
+  hasSnapshots,
+  instance,
+  onOpenDashboard,
+  onStartTour,
+}: {
+  demoMode: boolean
+  hasSnapshots: boolean
+  instance: InstanceConfig
+  onOpenDashboard: () => void
+  onStartTour: () => void
+}) {
   const [path, setPath] = useState<keyof typeof paths>("chatgpt")
   const [copied, setCopied] = useState<string | null>(null)
   const copy = (value: string, id: string) => {
@@ -44,8 +56,6 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
       })
       .catch(() => setCopied(null))
   }
-  const selected = paths[path]
-
   return (
     <section aria-labelledby="welcome-title" className="pb-12">
       <div className="flex flex-col gap-6 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between">
@@ -55,91 +65,134 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
             Start here
           </Badge>
           <h1 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-5xl" id="welcome-title">
-            Three small steps. Then your dashboard wakes up.
+            {demoMode ? "See how it works. Then make it private." : "Your private workspace is ready."}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-            Personalize the shell, test one complete LLM loop, then connect your preferred workflow. Zaati OS handles contracts, validation,
-            retries, storage, rendering, and deployment plumbing.
+            {demoMode
+              ? "Take the guided tour, inspect the synthetic source pages, and compare JSON contracts with their rendered components. When you run setup, Zaati OS creates an ignored private workspace and removes every demo-only surface."
+              : "Synthetic example pages, Component Lab, copy-prompt guides, and the automatic demo tour are disabled. Connect your preferred workflow, validate one manual snapshot, then deploy behind Access. The dashboard remains read-only."}
           </p>
         </div>
-        <Button onClick={onOpenDashboard} variant="outline">
-          Explore the demo <ArrowRight className="size-4" />
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {demoMode ? (
+            <>
+              <Button onClick={onStartTour}>Take the guided tour</Button>
+              <Button onClick={onOpenDashboard} variant="outline">
+                Explore the demo <ArrowRight className="size-4" />
+              </Button>
+            </>
+          ) : hasSnapshots ? (
+            <Button onClick={onOpenDashboard} variant="outline">
+              Open dashboard <ArrowRight className="size-4" />
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <ol className="mt-7 grid gap-4 lg:grid-cols-3" aria-label="Quick setup">
-        <SetupStep
-          command={"npm install\nnpm run setup"}
-          description="Choose a name, source pack, visual style, and optional encryption. The generated settings stay ignored."
-          number="1"
-          onCopy={copy}
-          copied={copied === "setup"}
-          copyId="setup"
-          title="Make it yours"
-        />
-        <SetupStep
-          command="npm run tutorial"
-          description="A mock LLM intentionally fails once, receives contract feedback, retries, and atomically creates six synthetic snapshots."
-          number="2"
-          onCopy={copy}
-          copied={copied === "tutorial"}
-          copyId="tutorial"
-          title="Take a test drive"
-        />
-        <SetupStep
-          command="npm run dev"
-          description="Open the local dashboard. When you are ready, replace the mock adapter with one scheduled task or your own command."
-          number="3"
-          onCopy={copy}
-          copied={copied === "dev"}
-          copyId="dev"
-          title="Voila"
-        />
+        {demoMode ? (
+          <>
+            <SetupStep
+              command={"npm install\nnpm run setup"}
+              description="Create ignored local settings and switch to private mode. Demo pages, guides, and the tour disappear together."
+              number="1"
+              onCopy={copy}
+              copied={copied === "setup"}
+              copyId="setup"
+              title="Create your workspace"
+            />
+            <SetupStep
+              command="npm run tutorial"
+              description="Test validation, retries, and atomic storage with synthetic inputs. The private shell labels the result as test data without restoring demo UI."
+              number="2"
+              onCopy={copy}
+              copied={copied === "tutorial"}
+              copyId="tutorial"
+              title="Verify the loop"
+            />
+            <SetupStep
+              command="npm run prompt:create"
+              description="Generate one private, copy-ready scheduled-task prompt for your selected source pack and approved tools."
+              number="3"
+              onCopy={copy}
+              copied={copied === "prompt"}
+              copyId="prompt"
+              title="Connect your LLM"
+            />
+          </>
+        ) : (
+          <>
+            <SetupStep
+              command="npm run prompt:create"
+              description="Generate the permission receipt and complete scheduled-task prompt for your selected registered sources."
+              number="1"
+              onCopy={copy}
+              copied={copied === "prompt"}
+              copyId="prompt"
+              title="Connect your LLM"
+            />
+            <SetupStep
+              command="npm run tutorial"
+              description="Optionally test the complete ingestion loop. Synthetic output remains clearly labeled and never enables demo-only UI."
+              number="2"
+              onCopy={copy}
+              copied={copied === "tutorial"}
+              copyId="tutorial"
+              title="Verify before real data"
+            />
+            <SetupStep
+              command={"npm run data:validate\nnpm run dev"}
+              description="Validate one manual result, inspect freshness and evidence locally, then follow the Access-first deployment guide."
+              number="3"
+              onCopy={copy}
+              copied={copied === "dev"}
+              copyId="dev"
+              title="Review and deploy"
+            />
+          </>
+        )}
       </ol>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Connect the AI you already use</CardTitle>
-            <CardDescription>One daily run can collect several approved sources and publish every snapshot in one commit.</CardDescription>
+            <CardDescription>
+              Generate one copy-ready prompt with your repositories, sources, tools, contract, and schedule.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 sm:grid-cols-3" role="tablist" aria-label="LLM connection path">
-              {(Object.entries(paths) as Array<[keyof typeof paths, (typeof paths)[keyof typeof paths]]>).map(([id, item]) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    aria-selected={path === id}
-                    className={cn(
-                      "flex min-h-12 items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm font-medium",
-                      path === id ? "border-primary bg-accent text-accent-foreground" : "border-border hover:bg-muted",
-                    )}
-                    key={id}
-                    onClick={() => setPath(id)}
-                    role="tab"
-                  >
-                    <Icon className="size-4" />
-                    {item.label}
-                  </button>
-                )
-              })}
-            </div>
-            <div className="mt-4 rounded-xl border border-border bg-muted/55 p-4" role="tabpanel">
-              <div className="flex items-start justify-between gap-3">
-                <code className="min-w-0 whitespace-pre-wrap break-words text-xs leading-6">{selected.command}</code>
-                <Button
-                  aria-label={`Copy ${selected.label} setup`}
-                  onClick={() => copy(selected.command, "provider")}
-                  size="icon"
-                  variant="ghost"
-                >
-                  {copied === "provider" ? <Check className="size-4 text-positive" /> : <Clipboard className="size-4" />}
-                </Button>
-              </div>
-            </div>
+            <Tabs onValueChange={(value) => setPath(value as keyof typeof paths)} value={path}>
+              <TabsList aria-label="LLM connection path" className="sm:grid-cols-3">
+                {(Object.entries(paths) as Array<[keyof typeof paths, (typeof paths)[keyof typeof paths]]>).map(([id, item]) => {
+                  const Icon = item.icon
+                  return (
+                    <TabsTrigger className="flex min-h-12 items-center gap-2 text-sm" key={id} value={id}>
+                      <Icon className="size-4" />
+                      {item.label}
+                    </TabsTrigger>
+                  )
+                })}
+              </TabsList>
+              {(Object.entries(paths) as Array<[keyof typeof paths, (typeof paths)[keyof typeof paths]]>).map(([id, item]) => (
+                <TabsContent className="mt-4 rounded-xl border border-border bg-muted/55 p-4" key={id} value={id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <code className="min-w-0 whitespace-pre-wrap break-words text-xs leading-6">{item.command}</code>
+                    <Button
+                      aria-label={`Copy ${item.label} setup`}
+                      onClick={() => copy(item.command, "provider")}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      {copied === "provider" ? <Check className="size-4 text-positive" /> : <Clipboard className="size-4" />}
+                    </Button>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
             <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              The provider only needs to return the public bundle contract. Credentials, tool permissions, and source access remain inside
-              your workflow.
+              Prompt Studio writes ignored private files under .zaati. Paste the scheduled-task prompt into your provider, then approve only
+              the GitHub and source connections it needs.
             </p>
           </CardContent>
         </Card>
@@ -150,7 +203,10 @@ export default function Onboarding({ instance, onOpenDashboard }: { instance: In
               <ShieldCheck className="size-4 text-positive-foreground" />
             </div>
             <CardTitle className="text-base">Secure from the first real snapshot</CardTitle>
-            <CardDescription>Public code and private memory stay separate. Invalid bundles never reach storage.</CardDescription>
+            <CardDescription>
+              Public code and private memory stay separate. Invalid bundles cannot enter the local store or merge into the protected data
+              branch.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <SecurityItem icon={GitCommitHorizontal} text="One atomic commit, no half-refreshed dashboard" />

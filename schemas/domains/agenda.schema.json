@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/domains/agenda.schema.json",
+  "title": "Zaati OS agenda facts",
+  "allOf": [
+    { "$ref": "https://zaati-os.dev/schemas/domains/domain-base.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "facts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["events", "actions"],
+          "properties": {
+            "events": {
+              "type": "array",
+              "maxItems": 50,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "title", "start", "status"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "maxLength": 80 },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 140 },
+                  "start": { "type": "string", "format": "date-time" },
+                  "end": { "type": "string", "format": "date-time" },
+                  "status": { "enum": ["scheduled", "tentative", "cancelled"] }
+                }
+              }
+            },
+            "actions": {
+              "type": "array",
+              "maxItems": 30,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "title", "status"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "maxLength": 80 },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 140 },
+                  "due_at": { "type": "string", "format": "date-time" },
+                  "status": { "enum": ["open", "done", "blocked"] }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

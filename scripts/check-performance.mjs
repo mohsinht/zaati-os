@@ -20,7 +20,14 @@ await stat(dist).catch(() => {
 })
 const output = await files(dist)
 const index = await readFile(path.join(dist, "index.html"), "utf8")
-const referenced = new Set([...index.matchAll(/(?:src|href)="\/?([^"]+\.(?:js|css))"/g)].map((match) => match[1]))
+const outputPaths = output.map((file) => path.relative(dist, file).replaceAll(path.sep, "/"))
+const referenced = new Set(
+  [...index.matchAll(/(?:src|href)="([^"]+\.(?:js|css))(?:[?#][^"]*)?"/g)].flatMap((match) => {
+    const reference = match[1].replace(/^\.\//, "").replace(/^\//, "")
+    const outputPath = outputPaths.find((file) => reference === file || reference.endsWith(`/${file}`))
+    return outputPath ? [outputPath] : []
+  }),
+)
 const queue = [...referenced].filter((file) => file.endsWith(".js"))
 while (queue.length) {
   const current = queue.shift()

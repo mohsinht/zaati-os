@@ -271,6 +271,136 @@ h3 {
   box-shadow: inset 0 0 0 3px #d9dde2;
 }
 
+@keyframes zaati-block-enter {
+  from {
+    transform: translateY(8px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes zaati-chart-reveal {
+  from {
+    opacity: 0;
+    transform: scaleX(0.08);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes zaati-bar-grow {
+  from {
+    opacity: 0.25;
+    transform: scaleY(0.04);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes zaati-point-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zaati-tooltip-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.zaati-block {
+  animation: zaati-block-enter 320ms ease-out both;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+@media (hover: hover) {
+  .zaati-block:hover {
+    border-color: color-mix(in srgb, var(--primary) 24%, var(--border));
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--foreground) 7%, transparent);
+    transform: translateY(-2px);
+  }
+}
+
+.chart-series-reveal {
+  animation: zaati-chart-reveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+.chart-bar {
+  animation: zaati-bar-grow 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  transition:
+    opacity 180ms ease,
+    filter 180ms ease,
+    transform 180ms ease;
+}
+
+.chart-data-target:hover .chart-bar,
+.chart-data-target:focus .chart-bar {
+  filter: brightness(1.06);
+  transform: translateY(-2px) scaleY(1.015);
+}
+
+.chart-point {
+  animation: zaati-point-enter 300ms ease-out both;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    r 160ms ease,
+    stroke-width 160ms ease;
+}
+
+.chart-data-target:focus {
+  outline: none;
+}
+
+.chart-data-target:focus .chart-point {
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--ring) 48%, transparent));
+}
+
+.chart-donut-segment {
+  animation: zaati-point-enter 360ms ease-out both;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 180ms ease,
+    stroke-width 180ms ease;
+}
+
+.chart-guide {
+  stroke: color-mix(in srgb, var(--foreground) 28%, transparent);
+  stroke-dasharray: 3 4;
+}
+
+.chart-tooltip {
+  animation: zaati-tooltip-enter 140ms ease-out both;
+  filter: drop-shadow(0 5px 10px color-mix(in srgb, var(--foreground) 12%, transparent));
+}
+
+.progress-indicator {
+  animation: zaati-chart-reveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: left center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

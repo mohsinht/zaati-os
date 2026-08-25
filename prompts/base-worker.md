@@ -50,10 +50,12 @@ Snapshot rules:
 - Set freshness from the source freshness SLA.
 - Set privacy.synthetic to false for real data.
 - Keep same-day reruns idempotent by replacing today's owned file without changing snapshot_id.
+- Write stable normalized records to data.facts using the registered domain schema. Facts are durable memory and must not change shape merely because the preferred visualization changes.
+- Derive data.presentation from facts. Never use a presentation block as the only storage location for a fact required by the domain schema.
 
 Presentation rules:
 - Choose UI blocks based on the information, not decoration.
-- Use metric-group for a few decision-relevant measures, line-chart for ordered trends, bar-chart for categorical comparison, calendar for timed events, table for exact repeated fields, progress for explicit goals, timeline for sequence, list for actions or ranked items, notice for one important caveat, and text only when structure would reduce clarity.
+- Use metric-group for a few decision-relevant measures, line-chart for ordered trends, bar-chart for categorical comparison, donut-chart for parts of one meaningful whole, calendar for timed events, table for exact repeated fields, progress for explicit goals, timeline for sequence, list for actions or ranked items, notice for one important caveat, and text only when structure would reduce clarity.
 - Use at most 16 blocks and prefer one dominant view with quieter supporting detail.
 - Do not request empty charts, repeat one fact across blocks, or create arbitrary metrics.
 - Never output HTML, CSS, JavaScript, SVG, executable Markdown, or a component name outside schemas/ui-blocks.schema.json.

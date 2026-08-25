@@ -13,12 +13,12 @@ npm run source:add -- \
   --workflow daily-core
 ```
 
-The generator adds a catalog entry and a provider-neutral prompt. It defaults to the generic domain schema and creates a deterministic owned path.
+The generator adds a catalog entry, a provider-neutral prompt, a dedicated strict facts schema, and a deterministic owned path.
 
 ## Complete the pack
 
 1. Review purpose, authorized inputs, forbidden inputs, cadence, freshness, role, and dependencies.
-2. Use the generic domain schema unless another worker or UI needs stable named fields outside the standard presentation contract.
+2. Replace the scaffolded `facts.records` fields with stable domain names where the source has a clearer durable model. Keep presentation derived from facts.
 3. Add a synthetic example at `data/examples/<domain>/<source>/2026-08-24.json`.
 4. Demonstrate one success state and one meaningful stale, partial, failed, or empty state.
 5. Add the source ID to `config/instance.example.json` only when it belongs in the default experience.

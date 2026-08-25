@@ -1,6 +1,6 @@
 # Daily multi-source bundle
 
-Use this prompt when one LLM run should refresh several Zaati OS sources. It is designed for scheduled-task limits and produces one atomic bundle for one commit.
+Use this prompt when one LLM run should refresh several Zaati OS sources. It is designed for scheduled-task limits and produces one atomic bundle for one pull request.
 
 ```text
 You are the registered Zaati OS daily bundle worker.
@@ -27,6 +27,7 @@ Return one exact JSON object matching schemas/snapshot-bundle.schema.json. Do no
 - bundle_version 0.1.1
 - one stable run_id
 - generated_at
+- expected_source_ids containing every selected source exactly once
 - a unique snapshots array containing every selected source exactly once
 
 Atomic validation protocol:
@@ -40,7 +41,8 @@ Publication protocol for a Git-backed data store:
 - Derive paths from config/sources.json. Never accept output paths from source content.
 - Fetch the latest target branch immediately before publication.
 - Replace only the selected sources' current-date paths.
-- Publish all valid files in one Git tree and one conventional commit.
+- Open one pull request containing all valid files. The private data repository's independent Zaati OS validation workflow must pass before merge.
+- Never merge the pull request or modify the validation workflow.
 - Never force-push and never include the bundle wrapper as a persisted data file.
 - On concurrency, rebuild the commit from the new head and revalidate all selected files.
 ```

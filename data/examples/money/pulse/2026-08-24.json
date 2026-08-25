@@ -1,73 +1,341 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/money.schema.json",
   "snapshot_id": "money:pulse:2026-08-24",
   "source_id": "money:pulse",
   "domain": "money",
   "source": "pulse",
-  "generated_at": "2026-08-23T18:00:00Z",
-  "effective_period": { "start": "2026-08-23T00:00:00Z", "end": "2026-08-23T23:59:59Z", "timezone": "UTC" },
+  "generated_at": "2026-08-24T07:00:00Z",
+  "effective_period": { "start": "2026-08-23T07:00:00Z", "end": "2026-08-24T07:00:00Z", "timezone": "UTC" },
   "status": "partial",
   "producer": { "worker_id": "money-pulse-daily", "workflow": "example", "version": "0.1.1" },
   "sources": [
-    { "label": "Synthetic account summary", "status": "stale", "as_of": "2026-08-23T18:00:00Z", "reference": "synthetic://money" }
+    { "label": "Demo banking connection", "status": "ok", "as_of": "2026-08-24T06:40:00Z", "reference": "synthetic://banking" },
+    { "label": "Demo brokerage summary", "status": "ok", "as_of": "2026-08-24T06:35:00Z", "reference": "synthetic://brokerage" },
+    { "label": "Demo crypto summary", "status": "stale", "as_of": "2026-08-23T18:00:00Z", "reference": "synthetic://crypto" }
   ],
-  "freshness": { "expires_at": "2026-08-25T06:00:00Z" },
+  "freshness": { "expires_at": "2026-08-25T19:00:00Z" },
   "quality": { "confidence": "medium", "warnings": ["One synthetic source has not refreshed today."] },
   "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
   "data": {
-    "title": "Goals are on pace",
-    "summary": "The synthetic savings rate remains ahead of target. One source is stale, so today's change is not treated as final.",
+    "title": "The plan is funded, with one price still provisional",
+    "summary": "Cash covers 11 months, contributions are ahead of plan, and the baseline five-year scenario reaches 178,000 synthetic dollars. Crypto pricing is stale, so allocation and daily movement remain provisional.",
     "attention": "low",
+    "facts": {
+      "measures": [
+        {
+          "id": "tracked-value",
+          "label": "Tracked value",
+          "kind": "money",
+          "value": 104800,
+          "currency": "USD",
+          "as_of": "2026-08-24T06:40:00Z"
+        },
+        {
+          "id": "invested-value",
+          "label": "Invested value",
+          "kind": "money",
+          "value": 82200,
+          "currency": "USD",
+          "as_of": "2026-08-24T06:35:00Z"
+        },
+        { "id": "savings-rate", "label": "Savings rate", "kind": "percent", "value": 31, "as_of": "2026-08-24T06:40:00Z" },
+        { "id": "runway", "label": "Cash runway", "kind": "duration", "value": 11, "unit": "months", "as_of": "2026-08-24T06:40:00Z" },
+        {
+          "id": "contribution-rate",
+          "label": "Monthly contribution",
+          "kind": "money",
+          "value": 1800,
+          "currency": "USD",
+          "as_of": "2026-08-24T06:40:00Z"
+        }
+      ],
+      "goals": [
+        { "id": "reserve", "label": "Emergency reserve", "current": 11, "target": 12, "unit": "months" },
+        { "id": "investing", "label": "Annual investing target", "current": 14400, "target": 21600, "unit": "USD" }
+      ],
+      "accounts": [
+        {
+          "id": "daily-cash",
+          "label": "Daily cash",
+          "type": "cash",
+          "status": "connected",
+          "balance": 6800,
+          "currency": "USD",
+          "as_of": "2026-08-24T06:40:00Z"
+        },
+        {
+          "id": "reserve-cash",
+          "label": "Emergency reserve",
+          "type": "cash",
+          "status": "connected",
+          "balance": 15800,
+          "currency": "USD",
+          "as_of": "2026-08-24T06:40:00Z"
+        },
+        {
+          "id": "long-term",
+          "label": "Long-term portfolio",
+          "type": "investment",
+          "status": "connected",
+          "balance": 77100,
+          "currency": "USD",
+          "as_of": "2026-08-24T06:35:00Z"
+        },
+        {
+          "id": "digital-assets",
+          "label": "Digital assets",
+          "type": "investment",
+          "status": "stale",
+          "balance": 5100,
+          "currency": "USD",
+          "as_of": "2026-08-23T18:00:00Z"
+        }
+      ],
+      "holdings": [
+        {
+          "id": "global-equity",
+          "label": "Global equity fund",
+          "symbol": "WORLD",
+          "asset_type": "fund",
+          "units": 420,
+          "unit_price": 118.5,
+          "market_value": 49770,
+          "currency": "USD",
+          "weight_percent": 47.5,
+          "day_change_percent": 0.6,
+          "as_of": "2026-08-24T06:35:00Z"
+        },
+        {
+          "id": "quality-stock",
+          "label": "Quality companies basket",
+          "symbol": "QUAL",
+          "asset_type": "stock",
+          "units": 160,
+          "unit_price": 121.25,
+          "market_value": 19400,
+          "currency": "USD",
+          "weight_percent": 18.5,
+          "day_change_percent": -0.2,
+          "as_of": "2026-08-24T06:35:00Z"
+        },
+        {
+          "id": "bond-fund",
+          "label": "Short bond fund",
+          "symbol": "BOND",
+          "asset_type": "bond",
+          "units": 155,
+          "unit_price": 51.16,
+          "market_value": 7930,
+          "currency": "USD",
+          "weight_percent": 7.6,
+          "day_change_percent": 0.1,
+          "as_of": "2026-08-24T06:35:00Z"
+        },
+        {
+          "id": "bitcoin",
+          "label": "Bitcoin",
+          "symbol": "BTC",
+          "asset_type": "crypto",
+          "units": 0.062,
+          "unit_price": 65000,
+          "market_value": 4030,
+          "currency": "USD",
+          "weight_percent": 3.8,
+          "day_change_percent": 1.4,
+          "as_of": "2026-08-23T18:00:00Z"
+        },
+        {
+          "id": "ethereum",
+          "label": "Ethereum",
+          "symbol": "ETH",
+          "asset_type": "crypto",
+          "units": 0.42,
+          "unit_price": 2548,
+          "market_value": 1070,
+          "currency": "USD",
+          "weight_percent": 1,
+          "day_change_percent": -0.8,
+          "as_of": "2026-08-23T18:00:00Z"
+        }
+      ],
+      "projections": [
+        { "year": 2026, "scenario": "conservative", "value": 104800, "currency": "USD" },
+        { "year": 2026, "scenario": "baseline", "value": 104800, "currency": "USD" },
+        { "year": 2026, "scenario": "stretch", "value": 104800, "currency": "USD" },
+        { "year": 2027, "scenario": "conservative", "value": 124000, "currency": "USD" },
+        { "year": 2027, "scenario": "baseline", "value": 128000, "currency": "USD" },
+        { "year": 2027, "scenario": "stretch", "value": 132000, "currency": "USD" },
+        { "year": 2028, "scenario": "conservative", "value": 142000, "currency": "USD" },
+        { "year": 2028, "scenario": "baseline", "value": 150000, "currency": "USD" },
+        { "year": 2028, "scenario": "stretch", "value": 160000, "currency": "USD" },
+        { "year": 2029, "scenario": "conservative", "value": 158000, "currency": "USD" },
+        { "year": 2029, "scenario": "baseline", "value": 166000, "currency": "USD" },
+        { "year": 2029, "scenario": "stretch", "value": 181000, "currency": "USD" },
+        { "year": 2030, "scenario": "conservative", "value": 171000, "currency": "USD" },
+        { "year": 2030, "scenario": "baseline", "value": 178000, "currency": "USD" },
+        { "year": 2030, "scenario": "stretch", "value": 205000, "currency": "USD" }
+      ]
+    },
     "presentation": {
       "layout": "dashboard",
       "blocks": [
         {
           "id": "money-metrics",
           "kind": "metric-group",
-          "title": "Synthetic money pulse",
+          "title": "Current setup",
+          "description": "Illustrative values from synthetic connected sources.",
           "span": "full",
           "metrics": [
-            { "label": "Goal funded", "value": 64, "format": "percent", "change": 2.4, "change_label": "this month", "tone": "positive" },
+            {
+              "label": "Tracked value",
+              "value": 104800,
+              "format": "currency",
+              "change": 2100,
+              "change_label": "this month",
+              "tone": "positive"
+            },
+            { "label": "Invested", "value": 82200, "format": "currency", "tone": "info" },
+            { "label": "Cash", "value": 22600, "format": "currency", "tone": "neutral" },
             { "label": "Savings rate", "value": 31, "format": "percent", "tone": "positive" },
-            { "label": "Runway", "value": 11, "unit": "months", "tone": "info" }
+            { "label": "Runway", "value": 11, "unit": "months", "tone": "positive" },
+            { "label": "Monthly contribution", "value": 1800, "format": "currency", "tone": "info" }
           ]
         },
         {
-          "id": "goal-trend",
+          "id": "five-year-projection",
           "kind": "line-chart",
-          "title": "Goal trajectory",
-          "description": "Synthetic index, not real money.",
+          "title": "Five-year projection",
+          "description": "Three illustrative scenarios based on a fixed monthly contribution; not a forecast or financial advice.",
           "span": "two",
-          "y_format": "percent",
+          "y_format": "currency",
           "series": [
-            { "key": "actual", "label": "Actual" },
-            { "key": "plan", "label": "Plan" }
+            { "key": "conservative", "label": "Conservative" },
+            { "key": "baseline", "label": "Baseline" },
+            { "key": "stretch", "label": "Stretch" }
           ],
           "points": [
-            { "x": "Mar", "values": { "actual": 48, "plan": 47 } },
-            { "x": "Apr", "values": { "actual": 51, "plan": 50 } },
-            { "x": "May", "values": { "actual": 55, "plan": 53 } },
-            { "x": "Jun", "values": { "actual": 58, "plan": 56 } },
-            { "x": "Jul", "values": { "actual": 61, "plan": 59 } },
-            { "x": "Aug", "values": { "actual": 64, "plan": 62 } }
+            { "x": "2026", "values": { "conservative": 104800, "baseline": 104800, "stretch": 104800 } },
+            { "x": "2027", "values": { "conservative": 124000, "baseline": 128000, "stretch": 132000 } },
+            { "x": "2028", "values": { "conservative": 142000, "baseline": 150000, "stretch": 160000 } },
+            { "x": "2029", "values": { "conservative": 158000, "baseline": 166000, "stretch": 181000 } },
+            { "x": "2030", "values": { "conservative": 171000, "baseline": 178000, "stretch": 205000 } }
+          ]
+        },
+        {
+          "id": "allocation",
+          "kind": "donut-chart",
+          "title": "Portfolio allocation",
+          "description": "Cash is included so the chart reconciles to the tracked total.",
+          "span": "one",
+          "value_format": "currency",
+          "center_label": "Tracked total",
+          "segments": [
+            { "label": "Global equity fund", "value": 49770 },
+            { "label": "Quality stocks", "value": 19400 },
+            { "label": "Bonds", "value": 7930 },
+            { "label": "Crypto", "value": 5100 },
+            { "label": "Cash", "value": 22600 }
+          ]
+        },
+        {
+          "id": "holdings",
+          "kind": "table",
+          "title": "Invested holdings",
+          "description": "Exact synthetic positions and the price time used for each value.",
+          "span": "full",
+          "columns": [
+            { "key": "asset", "label": "Asset" },
+            { "key": "type", "label": "Type" },
+            { "key": "units", "label": "Units", "format": "number" },
+            { "key": "price", "label": "Price", "format": "currency" },
+            { "key": "value", "label": "Value", "format": "currency" },
+            { "key": "weight", "label": "Weight", "format": "percent" },
+            { "key": "day", "label": "Day", "format": "percent" }
+          ],
+          "rows": [
+            {
+              "asset": "WORLD · Global equity fund",
+              "type": "Fund",
+              "units": 420,
+              "price": 118.5,
+              "value": 49770,
+              "weight": 47.5,
+              "day": 0.6
+            },
+            {
+              "asset": "QUAL · Quality companies",
+              "type": "Stock basket",
+              "units": 160,
+              "price": 121.25,
+              "value": 19400,
+              "weight": 18.5,
+              "day": -0.2
+            },
+            { "asset": "BOND · Short bond fund", "type": "Bond", "units": 155, "price": 51.16, "value": 7930, "weight": 7.6, "day": 0.1 },
+            { "asset": "BTC · Bitcoin", "type": "Crypto", "units": 0.062, "price": 65000, "value": 4030, "weight": 3.8, "day": 1.4 },
+            { "asset": "ETH · Ethereum", "type": "Crypto", "units": 0.42, "price": 2548, "value": 1070, "weight": 1, "day": -0.8 }
+          ]
+        },
+        {
+          "id": "account-connections",
+          "kind": "list",
+          "title": "Connections",
+          "description": "Only normalized totals are retained—never account numbers or statements.",
+          "span": "one",
+          "items": [
+            {
+              "id": "bank",
+              "title": "Banking summary",
+              "description": "Daily cash and emergency reserve refreshed at 06:40 UTC.",
+              "status": "Connected",
+              "tone": "positive"
+            },
+            {
+              "id": "brokerage",
+              "title": "Brokerage summary",
+              "description": "Three long-term positions refreshed at 06:35 UTC.",
+              "status": "Connected",
+              "tone": "positive"
+            },
+            {
+              "id": "crypto",
+              "title": "Crypto summary",
+              "description": "Two positions last priced yesterday at 18:00 UTC.",
+              "status": "Stale",
+              "tone": "warning"
+            }
+          ]
+        },
+        {
+          "id": "monthly-flow",
+          "kind": "bar-chart",
+          "title": "Monthly plan",
+          "description": "Where the illustrative take-home amount is assigned this month.",
+          "span": "one",
+          "value_format": "currency",
+          "bars": [
+            { "label": "Living", "value": 3100, "tone": "neutral" },
+            { "label": "Investing", "value": 1800, "tone": "positive" },
+            { "label": "Reserve", "value": 700, "tone": "info" },
+            { "label": "Flexible", "value": 900, "tone": "neutral" }
           ]
         },
         {
           "id": "money-goals",
           "kind": "progress",
-          "title": "Goal progress",
+          "title": "Explicit goals",
           "span": "one",
           "items": [
             { "label": "Emergency reserve", "value": 11, "max": 12, "value_label": "11 of 12 months", "tone": "positive" },
-            { "label": "Annual investing target", "value": 7.4, "max": 12, "value_label": "7.4 of 12 units", "tone": "info" }
+            { "label": "Annual investing", "value": 14400, "max": 21600, "value_label": "$14.4k of $21.6k", "tone": "info" }
           ]
         },
         {
           "id": "money-warning",
           "kind": "notice",
-          "title": "Wait for the refresh",
-          "body": "The latest movement remains provisional because one approved source is stale. Missing data is not converted to zero.",
+          "title": "Projection, not promise",
+          "body": "These scenarios assume a fixed monthly contribution and illustrative returns. Crypto prices are stale, taxes and fees are excluded, and the page is context—not financial advice or an automated decision.",
           "tone": "warning",
           "span": "full"
         }

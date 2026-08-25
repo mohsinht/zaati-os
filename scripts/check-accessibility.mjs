@@ -151,47 +151,75 @@ try {
   const client = cdp(page.webSocketDebuggerUrl)
   await client.send("Runtime.enable")
   await client.send("Page.enable")
-  await client.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
-  await client.send("Page.reload", { ignoreCache: true })
-  await audit(client, "Desktop light tutorial")
-  await capture(client, "onboarding-light.png")
-  await client.send("Runtime.evaluate", {
-    expression:
-      "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()",
-  })
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  await audit(client, "Desktop light dashboard")
-  await capture(client, "dashboard-light.png")
-  await client.send("Runtime.evaluate", {
-    expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Start here')?.click()",
-  })
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  await client.send("Runtime.evaluate", { expression: "document.querySelector('button[aria-label=\"Use dark mode\"]')?.click()" })
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  await audit(client, "Desktop dark tutorial")
-  await capture(client, "onboarding-dark.png")
-  await client.send("Runtime.evaluate", {
-    expression:
-      "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()",
-  })
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  await audit(client, "Desktop dark dashboard")
-  await capture(client, "dashboard-dark.png")
+  const dashboard = await waitForJson(`${appUrl}/data/dashboard-data.json`)
+  const views = ["start", ...(dashboard.demoMode ? ["components"] : []), ...dashboard.sources.map((source) => source.definition.id)]
+  const viewUrl = (view) => `${appUrl}?view=${encodeURIComponent(view)}&at=${encodeURIComponent(dashboard.generatedAt)}`
+  const viewports = [320, 390, 768, 1024, 1440]
+  for (const width of viewports) {
+    await client.send("Emulation.setDeviceMetricsOverride", {
+      width,
+      height: width < 768 ? 844 : 1000,
+      deviceScaleFactor: 1,
+      mobile: width < 768,
+    })
+    for (const mode of ["light", "dark"]) {
+      await client.send("Runtime.evaluate", {
+        expression: `localStorage.setItem("zaati-theme", "${mode}"); localStorage.setItem("zaati-demo-tour", "complete")`,
+      })
+      for (const view of views) {
+        await client.send("Page.navigate", { url: viewUrl(view) })
+        await audit(client, `${width}px ${mode} ${view}`)
+      }
+    }
+  }
+
   await client.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
-  await client.send("Page.reload", { ignoreCache: true })
+  await client.send("Runtime.evaluate", { expression: `localStorage.setItem("zaati-theme", "light")` })
+  await client.send("Page.navigate", { url: viewUrl("start") })
+  await waitForApp(client)
+  await client.send("Runtime.evaluate", { expression: `document.querySelector('button[aria-label="Open navigation"]')?.click()` })
+  await audit(client, "Mobile navigation open")
+
+  await client.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
+  await client.send("Runtime.evaluate", { expression: `localStorage.removeItem("zaati-demo-tour")` })
+  await client.send("Page.navigate", { url: viewUrl("start") })
+  await audit(client, "Desktop first-run demo tour")
+  await client.send("Runtime.evaluate", {
+    expression: `Array.from(document.querySelectorAll("button")).find((button) => button.textContent?.includes("Skip tour"))?.click()`,
+  })
+  await client.send("Runtime.evaluate", { expression: `localStorage.setItem("zaati-demo-tour", "complete")` })
+
+  await client.send("Page.navigate", { url: viewUrl("overview:daily") })
+  await waitForApp(client)
+  await client.send("Runtime.evaluate", { expression: `document.querySelector('button[aria-label="Open theme studio"]')?.click()` })
+  await audit(client, "Desktop theme studio open")
+
+  await client.send("Page.navigate", { url: viewUrl("money:pulse") })
   await waitForApp(client)
   await client.send("Runtime.evaluate", {
-    expression: "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Start here')?.click()",
+    expression: `Array.from(document.querySelectorAll("button")).find((button) => button.textContent?.includes("Recreate this page"))?.click()`,
   })
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  await audit(client, "Mobile tutorial")
+  await audit(client, "Desktop scheduled-task prompt open")
+
+  await client.send("Page.navigate", { url: viewUrl("start") })
+  await audit(client, "Desktop tutorial screenshot")
+  await capture(client, "onboarding-light.png")
+  await client.send("Page.navigate", { url: viewUrl("overview:daily") })
+  await audit(client, "Desktop dashboard screenshot")
+  await capture(client, "dashboard-light.png")
+  await client.send("Runtime.evaluate", { expression: `localStorage.setItem("zaati-theme", "dark")` })
+  await client.send("Page.navigate", { url: viewUrl("start") })
+  await audit(client, "Desktop dark tutorial screenshot")
+  await capture(client, "onboarding-dark.png")
+  await client.send("Page.navigate", { url: viewUrl("overview:daily") })
+  await audit(client, "Desktop dark dashboard screenshot")
+  await capture(client, "dashboard-dark.png")
+  await client.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+  await client.send("Page.navigate", { url: viewUrl("start") })
+  await audit(client, "Mobile tutorial screenshot")
   await capture(client, "onboarding-mobile.png")
-  await client.send("Runtime.evaluate", {
-    expression:
-      "Array.from(document.querySelectorAll('button')).find((button) => button.textContent?.includes('Explore the demo'))?.click()",
-  })
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  await audit(client, "Mobile dashboard")
+  await client.send("Page.navigate", { url: viewUrl("overview:daily") })
+  await audit(client, "Mobile dashboard screenshot")
   await capture(client, "dashboard-mobile.png")
   client.close()
 } finally {

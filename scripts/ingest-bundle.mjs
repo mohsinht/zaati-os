@@ -33,8 +33,12 @@ try {
   throw new Error("Bundle input must be exact JSON without Markdown fences or commentary.")
 }
 const contracts = await loadContracts()
+const workflowId = option("workflow", "daily-core")
+const workflows = JSON.parse(await readFile(path.resolve("config/workflows.json"), "utf8"))
+const workflow = workflows.workflows.find((item) => item.id === workflowId)
+if (!workflow) throw new Error(`Unknown workflow ${workflowId}.`)
 try {
-  await assertValidBundle(bundle, contracts)
+  await assertValidBundle(bundle, contracts, { expectedSourceIds: workflow.source_ids })
 } catch (error) {
   if (error.validationErrors) console.error(error.validationErrors.map((item) => `- ${item}`).join("\n"))
   throw error
@@ -47,5 +51,6 @@ const files = await persistBundle(bundle, {
   outputRoot: option("output-dir", "data/snapshots"),
   encryption: process.argv.includes("--encrypt"),
   contracts,
+  expectedSourceIds: workflow.source_ids,
 })
 console.log(`Atomically ingested ${files.length} snapshots without logging their contents.`)

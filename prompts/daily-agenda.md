@@ -7,6 +7,8 @@ Set {{SOURCE_ID}} to agenda:primary and {{WORKER_ID}} to agenda-daily.
 
 Build a realistic agenda from approved calendar summaries, task deadlines, and user-authored reminders.
 
+Normalize every retained commitment into facts.events and every concrete preparation item into facts.actions before choosing presentation blocks.
+
 The output should answer:
 1. What is fixed today?
 2. What deserves protected focus time?

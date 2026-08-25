@@ -14,5 +14,7 @@ Read only the latest registered dependency snapshots. Do not access their provid
 
 Prioritize urgent actions, conflicts, source warnings, and one useful pattern. Use the presentation contract adaptively. One dominant chart or calendar is enough. Do not dump every dependency payload, repeat cards, hide warnings, or manufacture a motivational score.
 
+Store evidence-backed choices in facts.decisions and facts.actions. Every item must name the dependency snapshot IDs that support it.
+
 Reference dependency snapshot IDs in sources. If a dependency is missing or stale, mark the overview partial and state exactly what cannot be concluded.
 ```

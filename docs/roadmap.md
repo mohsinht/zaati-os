@@ -6,7 +6,7 @@ Snapshot contracts, adaptive rendering, synthetic demo, starter prompts, private
 
 ## 0.2, workflow ecosystem
 
-Community provider recipes, contract migration helpers, key rotation, retention tooling, more failure-state fixtures, and optional packaged CLI distribution.
+Community provider recipes, contract migration helpers, transactional key-rotation and retention commands, more failure-state fixtures, and optional packaged CLI distribution.
 
 ## 0.3, domain ecosystem
 

@@ -21,7 +21,7 @@ for (const [group, dependencies] of Object.entries({
   }
 }
 
-if (!readme.includes(`Current version: **v${version}**`)) errors.push("README current version must match package.json")
+if (!readme.includes(`Code version: **v${version}**`)) errors.push("README code version must match package.json")
 if (!readme.includes("actions/workflows/ci.yml/badge.svg")) errors.push("README must expose the live CI badge")
 if (!readme.includes("actions/workflows/codeql.yml/badge.svg")) errors.push("README must expose the live CodeQL badge")
 
@@ -40,8 +40,8 @@ for (const file of workflowFiles) {
     if (!job["timeout-minutes"]) errors.push(`${file}#${jobName}: timeout-minutes is required`)
     for (const step of job.steps || []) {
       if (!step.uses) continue
-      if (!/^\.\//.test(step.uses) && !/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+@v\d+(?:\.\d+\.\d+)?$/.test(step.uses)) {
-        errors.push(`${file}#${jobName}: action ${step.uses} must use a reviewed major or exact release`)
+      if (!/^\.\//.test(step.uses) && !/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)+@[0-9a-f]{40}$/.test(step.uses)) {
+        errors.push(`${file}#${jobName}: action ${step.uses} must be pinned to a reviewed full commit SHA`)
       }
       if (step.uses.startsWith("actions/checkout@") && step.with?.["persist-credentials"] !== false) {
         errors.push(`${file}#${jobName}: checkout must disable persisted credentials`)

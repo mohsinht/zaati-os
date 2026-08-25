@@ -133,6 +133,34 @@
         }
       }
     },
+    "donut-chart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "title", "segments"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "kind": { "const": "donut-chart" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "description": { "type": "string", "maxLength": 220 },
+        "span": { "$ref": "#/$defs/span" },
+        "value_format": { "$ref": "#/$defs/format" },
+        "center_label": { "type": "string", "maxLength": 40 },
+        "segments": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "value"],
+            "properties": {
+              "label": { "type": "string", "minLength": 1, "maxLength": 60 },
+              "value": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        }
+      }
+    },
     "calendar": {
       "type": "object",
       "additionalProperties": false,
@@ -296,6 +324,7 @@
         { "$ref": "#/$defs/list" },
         { "$ref": "#/$defs/line-chart" },
         { "$ref": "#/$defs/bar-chart" },
+        { "$ref": "#/$defs/donut-chart" },
         { "$ref": "#/$defs/calendar" },
         { "$ref": "#/$defs/table" },
         { "$ref": "#/$defs/progress" },

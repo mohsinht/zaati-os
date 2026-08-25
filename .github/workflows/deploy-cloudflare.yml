@@ -23,10 +23,10 @@ jobs:
       ZAATI_WORKER_NAME: ${{ vars.ZAATI_WORKER_NAME }}
       ZAATI_INSTANCE_CONFIG_JSON: ${{ secrets.ZAATI_INSTANCE_CONFIG_JSON }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
@@ -41,7 +41,7 @@ jobs:
           npm run access:verify -- "$ZAATI_HOSTNAME"
       - name: Checkout private snapshot repository
         if: ${{ vars.ZAATI_DATA_REPOSITORY != '' }}
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ vars.ZAATI_DATA_REPOSITORY }}
           ref: ${{ vars.ZAATI_DATA_REF || 'main' }}
@@ -56,7 +56,7 @@ jobs:
           ZAATI_SNAPSHOT_KEY: ${{ secrets.ZAATI_SNAPSHOT_KEY }}
       - run: npm run deployment:configure
       - name: Deploy Worker static assets
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

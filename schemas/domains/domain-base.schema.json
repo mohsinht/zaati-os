@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zaati-os.dev/schemas/domains/domain-base.schema.json",
+  "title": "Zaati OS domain payload base",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "summary", "facts", "presentation"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "attention": { "enum": ["none", "low", "medium", "high"] },
+    "facts": { "type": "object" },
+    "presentation": { "$ref": "https://zaati-os.dev/schemas/ui-blocks.schema.json#/$defs/presentation" }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/inbox.schema.json",
   "snapshot_id": "inbox:attention:2026-08-24",
   "source_id": "inbox:attention",
   "domain": "inbox",
@@ -14,9 +14,43 @@
   "quality": { "confidence": "high", "warnings": [] },
   "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
   "data": {
-    "title": "Two messages deserve attention",
-    "summary": "One scheduling decision and one document review need a response. Everything else can wait.",
+    "title": "Four messages fit into two reply windows",
+    "summary": "One deadline and one scheduling decision come first. A review and follow-up can share the afternoon window; 18 low-value messages remain excluded.",
     "attention": "medium",
+    "facts": {
+      "items": [
+        {
+          "id": "m1",
+          "sender_label": "Project collaborator",
+          "subject_summary": "Choose a planning window",
+          "reason": "decision",
+          "deadline": "2026-08-24T17:00:00Z",
+          "status": "open"
+        },
+        {
+          "id": "m2",
+          "sender_label": "Review partner",
+          "subject_summary": "Approve the revised outline",
+          "reason": "reply",
+          "status": "open"
+        },
+        {
+          "id": "m3",
+          "sender_label": "Operations contact",
+          "subject_summary": "Confirm the renewal choice",
+          "reason": "deadline",
+          "deadline": "2026-08-24T15:00:00Z",
+          "status": "open"
+        },
+        {
+          "id": "m4",
+          "sender_label": "Research collaborator",
+          "subject_summary": "Close the open question",
+          "reason": "follow-up",
+          "status": "waiting"
+        }
+      ]
+    },
     "presentation": {
       "layout": "focus",
       "blocks": [
@@ -26,7 +60,8 @@
           "title": "Attention filter",
           "span": "full",
           "metrics": [
-            { "label": "Needs reply", "value": 2, "tone": "warning" },
+            { "label": "Needs reply", "value": 4, "tone": "warning" },
+            { "label": "Due today", "value": 2, "tone": "danger" },
             { "label": "Waiting on others", "value": 1, "tone": "neutral" },
             { "label": "Ignored noise", "value": 18, "tone": "positive" }
           ]
@@ -52,6 +87,22 @@
               "meta": "15 minutes",
               "status": "Review",
               "tone": "info"
+            },
+            {
+              "id": "m3",
+              "title": "Confirm the renewal choice",
+              "description": "A yes-or-no choice is due before the afternoon processing window.",
+              "meta": "Due 15:00",
+              "status": "Deadline",
+              "tone": "danger"
+            },
+            {
+              "id": "m4",
+              "title": "Close the open research question",
+              "description": "Send the missing constraint; no full thread review is required.",
+              "meta": "No explicit deadline",
+              "status": "Follow-up",
+              "tone": "neutral"
             }
           ]
         },
@@ -62,6 +113,44 @@
           "body": "Newsletters, receipts, automated updates, and promotional messages were excluded from the attention queue.",
           "tone": "positive",
           "span": "one"
+        },
+        {
+          "id": "reply-plan",
+          "kind": "timeline",
+          "title": "Reply plan",
+          "span": "one",
+          "items": [
+            {
+              "label": "09:50",
+              "title": "Resolve the scheduling choice",
+              "description": "Reply before the first focus block closes.",
+              "tone": "warning"
+            },
+            {
+              "label": "12:15",
+              "title": "Confirm the renewal",
+              "description": "A one-line answer clears the only hard deadline.",
+              "tone": "danger"
+            },
+            { "label": "16:00", "title": "Batch review and follow-up", "description": "Cap the window at 25 minutes.", "tone": "info" }
+          ]
+        },
+        {
+          "id": "attention-register",
+          "kind": "table",
+          "title": "Attention register",
+          "span": "one",
+          "columns": [
+            { "key": "item", "label": "Item" },
+            { "key": "reason", "label": "Reason" },
+            { "key": "window", "label": "Window" }
+          ],
+          "rows": [
+            { "item": "Planning window", "reason": "Decision", "window": "09:50" },
+            { "item": "Renewal choice", "reason": "Deadline", "window": "12:15" },
+            { "item": "Revised outline", "reason": "Review", "window": "16:00" },
+            { "item": "Research question", "reason": "Follow-up", "window": "16:00" }
+          ]
         }
       ]
     }

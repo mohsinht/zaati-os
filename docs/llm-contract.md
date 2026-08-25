@@ -17,7 +17,7 @@ A producer must:
 
 ## Multi-snapshot bundles
 
-One workflow may publish several registered sources through `schemas/snapshot-bundle.schema.json`. The bundle contains snapshots, never file paths. Zaati OS derives every target from the source registry, rejects duplicate source IDs, validates all nested contracts, and persists nothing until the complete set passes.
+One workflow may publish several registered sources through `schemas/snapshot-bundle.schema.json`. The bundle contains snapshots, never file paths. `expected_source_ids` is compared with the authoritative workflow configuration, so a producer cannot quietly redefine a six-source run as a successful one-source run. Zaati OS derives every target from the source registry, rejects missing, extra, duplicate, or misordered sources, validates all nested contracts, and persists nothing until the complete set passes.
 
 Use `prompts/daily-bundle.md` for one daily LLM run. Build direct-source candidates before aggregates so an overview can depend on valid snapshots from the same run.
 
@@ -29,22 +29,27 @@ The orchestration layer should attempt a complete candidate at most three times.
 
 The LLM chooses the information shape. The application keeps control of rendering, colors, accessibility, responsive behavior, links, and executable code.
 
-| Block          | Use it for                                        | Do not use it for                 |
-| -------------- | ------------------------------------------------- | --------------------------------- |
-| `metric-group` | A few current decision measures                   | A wall of arbitrary counts        |
-| `line-chart`   | Ordered comparable trends                         | One point or unrelated categories |
-| `bar-chart`    | Categorical comparison                            | Time-series storytelling          |
-| `calendar`     | Events with real dates or times                   | Untimed task lists                |
-| `table`        | Exact repeated fields                             | Narrative or one record           |
-| `list`         | Actions, ranked items, attention queue            | Raw provider dumps                |
-| `progress`     | Explicit target with known denominator            | Vague motivation scores           |
-| `timeline`     | Meaningful event sequence                         | Decorative daily diary            |
-| `notice`       | One caveat, risk, or insight                      | Repeating normal content          |
-| `text`         | Short analysis that loses meaning when structured | Executable Markdown or HTML       |
+Each source-specific domain schema requires stable `data.facts`. Facts carry durable dates, amounts, statuses, references, and decisions without depending on a visual component. `data.presentation` is a derived view of those facts. A future renderer can change a table into a graph without rewriting memory.
+
+| Block          | Use it for                                        | Do not use it for                        |
+| -------------- | ------------------------------------------------- | ---------------------------------------- |
+| `metric-group` | A few current decision measures                   | A wall of arbitrary counts               |
+| `line-chart`   | Ordered comparable trends                         | One point or unrelated categories        |
+| `bar-chart`    | Categorical comparison                            | Time-series storytelling                 |
+| `donut-chart`  | Parts of one meaningful, reconciled whole         | Unrelated categories or many tiny slices |
+| `calendar`     | Events with real dates or times                   | Untimed task lists                       |
+| `table`        | Exact repeated fields                             | Narrative or one record                  |
+| `list`         | Actions, ranked items, attention queue            | Raw provider dumps                       |
+| `progress`     | Explicit target with known denominator            | Vague motivation scores                  |
+| `timeline`     | Meaningful event sequence                         | Decorative daily diary                   |
+| `notice`       | One caveat, risk, or insight                      | Repeating normal content                 |
+| `text`         | Short analysis that loses meaning when structured | Executable Markdown or HTML              |
 
 ## Safety limits
 
-The schema rejects unknown properties and limits block, row, point, item, series, text, and URL sizes. Links require HTTPS. Snapshots cannot contain scripts, HTML execution, private-key blocks, or secret-shaped keys. The app never evaluates snapshot text.
+The schema rejects unknown properties and limits block, row, point, item, series, text, and URL sizes. Links require HTTPS. Snapshots cannot contain scripts, HTML execution, private-key blocks, secret-shaped values, authentication links, raw messages, or source-specific forbidden content. Validation reports field paths and rule names without repeating the suspect value. The app never evaluates snapshot text.
+
+For Git publication, the producer opens a pull request and stops. A separately installed workflow validates exact source completeness, source ownership, schemas, paths, encryption mode, and privacy rules before merge.
 
 ## Versioning
 
@@ -76,3 +81,9 @@ A producer must read the current default branch before every run. Do not rely on
 ```
 
 Use [`prompts/base-worker.md`](../prompts/base-worker.md) as the operational contract.
+
+## Complex pages without arbitrary UI
+
+The safe contract composes complexity in three layers: a page `layout` (`dashboard`, `focus`, or `timeline`), a block `span` (`one`, `two`, or `full`), and up to 16 audited blocks. The producer chooses information shape; it never chooses React components, CSS classes, renderer props, or executable behavior.
+
+In synthetic demo mode, open **Component lab** to inspect a validated JSON block beside its live rendered result. Every synthetic source page also exposes **Recreate this page**, which produces one standalone Markdown document. It resolves the source and worker IDs and embeds the base worker, domain instructions, exact source registration and permission boundary, snapshot schema, UI schema, registered domain schema, LLM contract, and privacy contract. Only the code repository, private data repository, and timezone placeholders remain. These demonstrations come from the same schemas and renderer used for private snapshots, not a separate mock UI.

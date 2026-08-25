@@ -9,7 +9,7 @@
       "prompt": "prompts/daily-bundle.md",
       "source_ids": ["agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing", "overview:daily"],
       "max_attempts": 3,
-      "publication": "single-commit"
+      "publication": "pull-request"
     }
   ]
 }

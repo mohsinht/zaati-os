@@ -4,6 +4,8 @@ import process from "node:process"
 import Ajv2020 from "ajv/dist/2020.js"
 import addFormats from "ajv-formats"
 import { decryptSnapshotEnvelope, loadSnapshotKey } from "./lib/snapshot-crypto.mjs"
+import { validateSnapshotPolicy } from "./lib/snapshot-policy.mjs"
+import { validateCustomTheme } from "./lib/theme-contrast.mjs"
 
 const root = process.cwd()
 const errors = []
@@ -33,15 +35,6 @@ function formatAjvErrors(file, validationErrors = []) {
   return validationErrors.map((item) => `${file}${item.instancePath || "/"}: ${item.message}`)
 }
 
-function walk(value, visit, trail = []) {
-  if (Array.isArray(value)) return value.forEach((item, index) => walk(item, visit, [...trail, index]))
-  if (!value || typeof value !== "object") return
-  for (const [key, child] of Object.entries(value)) {
-    visit(key, child, [...trail, key])
-    walk(child, visit, [...trail, key])
-  }
-}
-
 function findCycle(id, byId, visiting = new Set(), visited = new Set()) {
   if (visiting.has(id)) return [...visiting, id]
   if (visited.has(id)) return null
@@ -62,7 +55,17 @@ const schemaPaths = [
   "schemas/source-registry.schema.json",
   "schemas/instance.schema.json",
   "schemas/workflow-registry.schema.json",
+  "schemas/prompt-profile.schema.json",
+  "schemas/data-repository.schema.json",
+  "schemas/domains/domain-base.schema.json",
   "schemas/domains/generic.schema.json",
+  "schemas/domains/agenda.schema.json",
+  "schemas/domains/inbox.schema.json",
+  "schemas/domains/work.schema.json",
+  "schemas/domains/money.schema.json",
+  "schemas/domains/news.schema.json",
+  "schemas/domains/overview.schema.json",
+  "schemas/domains/review.schema.json",
 ]
 const schemas = await Promise.all(schemaPaths.map(readJson))
 const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true })
@@ -124,6 +127,7 @@ const instancePath = await access(path.join(root, "config/instance.local.json"))
 const instance = await readJson(instancePath)
 const validateInstance = ajv.getSchema("https://zaati-os.dev/schemas/instance.schema.json")
 if (!validateInstance(instance)) errors.push(...formatAjvErrors(instancePath, validateInstance.errors))
+else errors.push(...validateCustomTheme(instance, instancePath))
 for (const sourceId of instance.enabled_sources || [])
   if (!byId.has(sourceId)) errors.push(`${instancePath}: unknown enabled source ${sourceId}`)
 
@@ -145,10 +149,6 @@ const snapshotKey =
       })
     : null
 const validateSnapshot = ajv.getSchema("https://zaati-os.dev/schemas/snapshot.schema.json")
-const unsafeKey =
-  /(?:^|[_-])(password|passwd|secret|cookie|authorization|access[_-]?token|refresh[_-]?token|api[_-]?key|private[_-]?key)(?:$|[_-])/i
-const unsafeText = /<script\b|javascript:|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i
-
 for (const file of snapshotFiles) {
   let snapshot
   try {
@@ -168,10 +168,6 @@ for (const file of snapshotFiles) {
     errors.push(`${file}: domain and source do not match ${snapshot.source_id}`)
   if (snapshot.producer?.worker_id !== registration.worker_id) errors.push(`${file}: producer must be ${registration.worker_id}`)
   if (snapshot.schema_ref !== registration.schema_ref) errors.push(`${file}: schema_ref must be ${registration.schema_ref}`)
-  for (const dependency of registration.depends_on) {
-    if (!snapshot.sources?.some((source) => source.reference === dependency || source.reference?.startsWith(`${dependency}:`)))
-      errors.push(`${file}: aggregate must record dependency ${dependency} in sources`)
-  }
   const expectedDate = path.basename(file, file.endsWith(".enc") ? ".json.enc" : ".json")
   if (snapshot.snapshot_id !== `${snapshot.source_id}:${expectedDate}`) errors.push(`${file}: snapshot_id must end with the file date`)
   if (
@@ -187,21 +183,13 @@ for (const file of snapshotFiles) {
       .replace("{YYYY-MM-DD}", expectedDate)
     const expected = logicalExpected.replace(/^data[/\\]snapshots/, privateRoot) + (file.endsWith(".enc") ? ".enc" : "")
     if (file !== expected) errors.push(`${file}: worker ${registration.worker_id} owns ${expected}`)
-    if (snapshot.privacy?.synthetic && process.env.ZAATI_TUTORIAL_MODE !== "true")
-      errors.push(`${file}: real snapshot paths cannot claim synthetic data`)
-    const privacyRank = { public: 0, private: 1, sensitive: 2 }
-    if (
-      !snapshot.privacy?.synthetic &&
-      (privacyRank[snapshot.privacy?.classification] ?? -1) < privacyRank[registration.privacy.expected_classification]
-    )
-      errors.push(`${file}: privacy classification is weaker than ${registration.privacy.expected_classification}`)
   }
-  if (Date.parse(snapshot.effective_period?.start) > Date.parse(snapshot.effective_period?.end))
-    errors.push(`${file}: effective period starts after it ends`)
-  if (Date.parse(snapshot.generated_at) >= Date.parse(snapshot.freshness?.expires_at))
-    errors.push(`${file}: freshness expiration must be after generation`)
-  if (snapshot.status !== "success" && !snapshot.quality?.warnings?.length)
-    errors.push(`${file}: partial or failed snapshots require a warning`)
+  errors.push(
+    ...validateSnapshotPolicy(snapshot, registration, {
+      allowSynthetic: file.startsWith("data/examples/") || tutorialMode,
+      expectedDate,
+    }).map((error) => `${file}${error}`),
+  )
   const domainSchema =
     schemas.find((schema) => schema.$id?.endsWith(snapshot.schema_ref.replace("schemas/", "/schemas/"))) ||
     (await readJson(snapshot.schema_ref).catch(() => null))
@@ -209,13 +197,6 @@ for (const file of snapshotFiles) {
   const validateDomain = domainSchema ? ajv.getSchema(domainSchema.$id) : null
   if (!validateDomain) errors.push(`${file}: cannot load ${snapshot.schema_ref}`)
   else if (!validateDomain(snapshot.data)) errors.push(...formatAjvErrors(`${file}#data`, validateDomain.errors))
-  const blockIds = snapshot.data?.presentation?.blocks?.map((block) => block.id) || []
-  if (new Set(blockIds).size !== blockIds.length) errors.push(`${file}: presentation block IDs must be unique`)
-  walk(snapshot, (key, value, trail) => {
-    if (unsafeKey.test(key)) errors.push(`${file}#/${trail.join("/")}: secret-shaped keys are forbidden`)
-    if (typeof value === "string" && unsafeText.test(value))
-      errors.push(`${file}#/${trail.join("/")}: executable or private-key text is forbidden`)
-  })
 }
 
 if (!snapshotFiles.length) errors.push("No snapshots found. Keep synthetic examples or add ignored private snapshots.")

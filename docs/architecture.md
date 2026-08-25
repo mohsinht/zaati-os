@@ -6,7 +6,7 @@
 flowchart TD
   A[Approved provider data] --> B[User-owned LLM workflow]
   B --> C[Private snapshot repository]
-  C --> D[Schema and privacy validation]
+  C --> D[Independent schema and privacy gate]
   D --> E[Build-time index]
   E --> F[Static dashboard bundle]
   F --> G[Cloudflare Access]
@@ -26,9 +26,9 @@ Zaati OS does not run a hosted ingestion service. The public project never needs
 
 `schemas/snapshot.schema.json` carries identity, effective period, producer, evidence sources, status, freshness, quality, privacy, and a domain payload. One file represents one source for one effective date.
 
-### Safe presentation
+### Durable facts and safe presentation
 
-`schemas/ui-blocks.schema.json` is an executable view model. The producer may choose among audited blocks, but cannot send code or arbitrary components. React maps every allowed `kind` to a maintained renderer.
+Each source has a domain facts schema for durable memory. `schemas/ui-blocks.schema.json` is a separate executable view model. The producer may derive audited blocks from facts, but cannot send code or arbitrary components. React maps every allowed `kind` to a maintained renderer.
 
 ### Private memory
 
@@ -36,15 +36,15 @@ Snapshots use deterministic paths. Source workers write independently, so one un
 
 ### Build index
 
-`scripts/build-data-index.mjs` discovers snapshots, decrypts encrypted files in memory when enabled, selects the latest enabled source, and writes an ignored `public/data/dashboard-data.json`. When private snapshots are absent it uses the synthetic examples. The browser never receives repository credentials or the decryption key.
+`scripts/build-data-index.mjs` discovers snapshots, decrypts encrypted files in memory when enabled, selects the latest enabled source, and writes an ignored `public/data/dashboard-data.json`. The upstream example configuration explicitly enables demo mode and may use public synthetic examples when private snapshots are absent. An ignored local configuration created by setup defaults to private mode, never falls back to example snapshots, and omits Component Lab data and demo prompt guides. The browser never receives repository credentials or the decryption key.
 
 ### Static interface
 
 Vite builds a client-only shell and a separate no-store dashboard payload. Hashed application assets can be cached without baking personal facts into the JavaScript chunk. The data response is still plaintext for an authorized browser and remains private. Authentication belongs in front of every asset, not in client-side JavaScript.
 
-### Bundle transaction
+### Bundle transaction and publication gate
 
-One LLM run may return a versioned bundle containing several snapshots. Zaati OS validates all identities, schemas, source ownership, and domain payloads before writing. Local persistence uses per-file atomic renames plus rollback backups. Git-backed workflows create one tree and one commit. A partial refresh is never considered success.
+One LLM run may return a versioned bundle containing several snapshots. Zaati OS validates the authoritative source set, identities, schemas, source ownership, privacy guards, and domain payloads before writing. Local persistence uses per-file atomic renames plus rollback backups. Git-backed workflows open one pull request. A separate workflow in the private data repository validates the candidate before merge, so the producing LLM is not its own trust authority.
 
 ### Optional encrypted storage
 

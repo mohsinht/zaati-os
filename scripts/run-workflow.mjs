@@ -74,6 +74,7 @@ export async function executeWorkflow(options = {}) {
     .replaceAll("{{CODE_REPOSITORY}}", process.env.ZAATI_CODE_REPOSITORY || "the configured Zaati OS code repository")
     .replaceAll("{{DATA_REPOSITORY}}", process.env.ZAATI_DATA_REPOSITORY || "the configured private data repository")
   const contracts = await loadContracts(root)
+  const allowSynthetic = settings.adapter === "mock"
   let feedback = ""
   for (let attempt = 1; attempt <= settings.maxAttempts; attempt += 1) {
     const prompt = `${bundlePrompt}${feedback}`
@@ -84,9 +85,15 @@ export async function executeWorkflow(options = {}) {
           ? await createMockBundle({ root, attempt, failAttempts: settings.mockFailures, sourceIds: workflow.source_ids })
           : await commandAdapter(settings.command, prompt)
       const bundle = JSON.parse(raw)
-      await assertValidBundle(bundle, contracts)
+      await assertValidBundle(bundle, contracts, { expectedSourceIds: workflow.source_ids, allowSynthetic })
       const files = settings.outputRoot
-        ? await persistBundle(bundle, { outputRoot: settings.outputRoot, encryption: settings.encrypt, contracts })
+        ? await persistBundle(bundle, {
+            outputRoot: settings.outputRoot,
+            encryption: settings.encrypt,
+            contracts,
+            expectedSourceIds: workflow.source_ids,
+            allowSynthetic,
+          })
         : []
       console.log(
         `Workflow succeeded on attempt ${attempt}. Validated ${bundle.snapshots.length} snapshots${files.length ? " and committed the local file transaction" : " in dry mode"}.`,

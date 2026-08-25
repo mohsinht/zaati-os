@@ -25,13 +25,19 @@ Users separately trust their selected source providers, LLM provider or local mo
 | Static bundle served publicly                   | `workers_dev` and preview URLs disabled, custom domain behind Access                         |
 | CI exposes data                                 | No private build artifacts, no snapshot logging, secrets only on protected deployment events |
 | A broad Access rule lets anyone in              | Deny by default, exact emails or constrained identity groups, unauthenticated preflight      |
-| Credential committed accidentally               | Common secret-shape scan, GitHub secret storage, scoped tokens                               |
+| Credential committed accidentally               | Common credential-shape scan, GitHub secret storage, scoped tokens, host push protection     |
 | Private snapshot repository is copied or leaked | Optional AES-256-GCM authenticated encryption with a separate deployment key                 |
-| One snapshot in a batch is invalid              | Whole-bundle validation and rollback-safe persistence before publication                     |
+| Producer returns only part of a batch           | Authoritative expected-source comparison rejects missing, extra, or self-redefined bundles   |
+| Producer self-certifies unsafe output           | Base-branch-controlled private-repository validation before merge                            |
+| Sensitive text hides inside a valid field       | Universal secret scanning plus source-specific content guards over every snapshot string     |
 
 ## Data minimization
 
 Keep a normalized action, measure, deadline, status, and evidence reference when they are enough. Avoid raw email bodies, full documents, attachments, statements, account identifiers, source code, customer data, authentication links, cookies, tokens, and unnecessary information about other people.
+
+Financial views may retain user-approved account-level totals, normalized holdings, explicit goals, and scenario assumptions. They must not retain account numbers, payment authorization data, complete statements, transaction counterparties, or credentials. A projection must state its assumptions and remain distinct from a verified balance or financial advice.
+
+Zaati detects common credential formats and source-specific risky shapes. No regular-expression list can identify every secret, medical fact, name, message excerpt, or unnecessary personal detail. Enable secret scanning and push protection on the private repository, minimize before the first branch push, and treat model and operator judgment as part of this boundary.
 
 ## Public fork rule
 
@@ -43,7 +49,7 @@ Client-side hiding is not authentication. Zaati OS keeps personal facts out of t
 
 ## Encryption boundary
 
-Encrypted snapshot storage is optional and disabled by default. It protects repository and filesystem copies from readers who do not have the separate key and detects ciphertext modification. It does not protect data from an authorized LLM workflow, the build process, the deployed dashboard payload, an authorized browser session, a compromised provider, or a leaked decryption key.
+Encrypted snapshot storage is optional and disabled by default. It protects repository and filesystem copies from readers who do not have the separate key and detects ciphertext modification. It does not protect data from an authorized LLM workflow, the build process, the deployed dashboard payload, an authorized browser session, a compromised provider, or a leaked decryption key. Do not give the key to a hosted LLM. Use this mode with trusted local or CI ingestion.
 
 Generate the ignored key with `npm run snapshot:keygen`. In production, store its value only as the protected `ZAATI_SNAPSHOT_KEY` deployment secret. Never commit the key beside encrypted files. Back it up securely because Zaati OS cannot recover encrypted snapshots without it.
 
@@ -56,4 +62,5 @@ Generate the ignored key with `npm run snapshot:keygen`. In production, store it
 5. Test an authorized session.
 6. Test an incognito unauthenticated request.
 7. Run `npm run access:verify -- your.private.hostname`.
-8. Only then connect the private data repository.
+8. Install and require the independent private-repository validation check.
+9. Only then connect the private data repository.

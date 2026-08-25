@@ -11,6 +11,7 @@ In repository Settings, Security and analysis:
 3. Enable secret scanning and push protection when available.
 4. Enable private vulnerability reporting.
 5. Add repository variable `DEPENDENCY_REVIEW_ENABLED=true`.
+6. Enable release immutability. GitHub applies it only to releases published after the setting is enabled.
 
 The dependency review workflow remains safely skipped until that variable is set. This avoids a false failing check on new repositories where the dependency graph API is not yet active.
 
@@ -25,6 +26,10 @@ After the first successful runs, protect `main`:
 - require conversation resolution
 - block force pushes and branch deletion
 - apply the rules to administrators unless an emergency procedure says otherwise
+
+Create a second active ruleset targeting `refs/tags/v*`. Block tag updates and deletion, and create each release tag as a signed tag. Together with repository release immutability, these controls protect the tag, release metadata, and assets from later changes.
+
+For every private data repository, add a second ruleset for `.github/**` and `zaati.data.json`. Require trusted-owner review and block the producer identity from bypassing it. The producer needs Contents and Pull requests write access only. It must have no Actions, Workflows, Administration, secrets, variables, environments, or repository-settings write access.
 
 Do not require the deployment workflow for code pull requests. It intentionally runs only for manual dispatch or configured main-branch deployment.
 

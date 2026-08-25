@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/news.schema.json",
   "snapshot_id": "news:briefing:2026-08-24",
   "source_id": "news:briefing",
   "domain": "news",
@@ -14,9 +14,53 @@
   "quality": { "confidence": "high", "warnings": ["Stories and links in demo mode are illustrative, not current news."] },
   "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
   "data": {
-    "title": "Three developments worth knowing",
-    "summary": "The synthetic briefing prioritizes impact and removes duplicate commentary.",
+    "title": "Five developments, three things to watch",
+    "summary": "The synthetic briefing connects each retained development to a concrete watchpoint and shows which topics received enough independent coverage.",
     "attention": "low",
+    "facts": {
+      "stories": [
+        {
+          "id": "n1",
+          "title": "Open standards make agent workflows easier to move",
+          "summary": "Teams can change models without rebuilding every downstream view.",
+          "published_at": "2026-08-24T06:30:00Z",
+          "url": "https://example.com/ai-standards",
+          "topics": ["AI systems"]
+        },
+        {
+          "id": "n2",
+          "title": "Smaller software releases outperform big-bang delivery",
+          "summary": "Reliability improves when feedback arrives before architecture hardens.",
+          "published_at": "2026-08-24T06:20:00Z",
+          "url": "https://example.com/software-delivery",
+          "topics": ["Engineering"]
+        },
+        {
+          "id": "n3",
+          "title": "Privacy controls move closer to the data layer",
+          "summary": "Access boundaries become portable across hosting providers.",
+          "published_at": "2026-08-24T06:10:00Z",
+          "url": "https://example.com/privacy-controls",
+          "topics": ["Privacy"]
+        },
+        {
+          "id": "n4",
+          "title": "Local-first tools add portable encrypted exports",
+          "summary": "Users can move durable records without giving the application permanent custody of their history.",
+          "published_at": "2026-08-24T05:50:00Z",
+          "url": "https://example.com/local-first-exports",
+          "topics": ["Privacy", "Product design"]
+        },
+        {
+          "id": "n5",
+          "title": "Schema registries become a coordination layer for AI workflows",
+          "summary": "Teams are separating durable facts from model-specific presentation decisions.",
+          "published_at": "2026-08-24T05:40:00Z",
+          "url": "https://example.com/schema-registries",
+          "topics": ["AI systems", "Engineering"]
+        }
+      ]
+    },
     "presentation": {
       "layout": "timeline",
       "blocks": [
@@ -49,6 +93,22 @@
               "meta": "Privacy",
               "tone": "warning",
               "href": "https://example.com/privacy-controls"
+            },
+            {
+              "id": "n4",
+              "title": "Local-first tools add portable encrypted exports",
+              "description": "Why it matters: durable records can move without creating a permanent hosted account dependency.",
+              "meta": "Privacy · Product design",
+              "tone": "positive",
+              "href": "https://example.com/local-first-exports"
+            },
+            {
+              "id": "n5",
+              "title": "Schema registries become a coordination layer for AI workflows",
+              "description": "Why it matters: facts remain stable even when models and renderers change.",
+              "meta": "AI systems · Engineering",
+              "tone": "info",
+              "href": "https://example.com/schema-registries"
             }
           ]
         },
@@ -69,8 +129,60 @@
               "title": "Access by default",
               "description": "Watch whether private deployments ship authentication as a first-class step.",
               "tone": "warning"
+            },
+            {
+              "label": "This quarter",
+              "title": "Portable evidence",
+              "description": "Watch whether exports preserve provenance and schema versions, not only rendered summaries.",
+              "tone": "positive"
             }
           ]
+        },
+        {
+          "id": "editor-note",
+          "kind": "text",
+          "title": "Reading note",
+          "body": "This synthetic briefing favors developments with a concrete decision consequence. Topics without new evidence stay out of the way.",
+          "span": "full"
+        },
+        {
+          "id": "topic-coverage",
+          "kind": "bar-chart",
+          "title": "Retained topic coverage",
+          "description": "Story-topic matches after duplicates and low-impact items were removed.",
+          "span": "one",
+          "bars": [
+            { "label": "AI systems", "value": 2, "tone": "info" },
+            { "label": "Engineering", "value": 2, "tone": "positive" },
+            { "label": "Privacy", "value": 2, "tone": "warning" },
+            { "label": "Product", "value": 1, "tone": "neutral" }
+          ]
+        },
+        {
+          "id": "evidence-register",
+          "kind": "table",
+          "title": "Evidence register",
+          "span": "one",
+          "columns": [
+            { "key": "story", "label": "Development" },
+            { "key": "published", "label": "Published" },
+            { "key": "watch", "label": "Watch next" }
+          ],
+          "rows": [
+            { "story": "Agent standards", "published": "06:30 UTC", "watch": "Export formats" },
+            { "story": "Small releases", "published": "06:20 UTC", "watch": "Measured reliability" },
+            { "story": "Data-layer privacy", "published": "06:10 UTC", "watch": "Default access" },
+            { "story": "Encrypted exports", "published": "05:50 UTC", "watch": "Portable provenance" },
+            { "story": "Schema registries", "published": "05:40 UTC", "watch": "Stable fact models" }
+          ]
+        },
+        {
+          "id": "demo-warning",
+          "kind": "notice",
+          "title": "Illustrative reporting only",
+          "body": "Every story and link on this page is synthetic. A real worker must retain direct HTTPS evidence, compare publication time with event time, and clearly separate reporting from inference.",
+          "tone": "warning",
+          "span": "full"
         }
       ]
     }

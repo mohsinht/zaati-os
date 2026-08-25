@@ -1,6 +1,6 @@
 {
   "schema_version": "0.1.1",
-  "schema_ref": "schemas/domains/generic.schema.json",
+  "schema_ref": "schemas/domains/work.schema.json",
   "snapshot_id": "work:focus:2026-08-24",
   "source_id": "work:focus",
   "domain": "work",
@@ -17,6 +17,46 @@
     "title": "Ship the smallest complete slice",
     "summary": "One item is ready to build, one awaits a decision, and one is blocked outside your control.",
     "attention": "medium",
+    "facts": {
+      "items": [
+        {
+          "id": "renderer",
+          "title": "Adaptive block renderer",
+          "status": "in-progress",
+          "priority": "high",
+          "next_action": "Complete the table component"
+        },
+        {
+          "id": "deployment",
+          "title": "Private deployment recipe",
+          "status": "ready",
+          "priority": "medium",
+          "next_action": "Verify the Access checklist"
+        },
+        {
+          "id": "connector",
+          "title": "Connector example",
+          "status": "blocked",
+          "priority": "medium",
+          "next_action": "Wait for source permission"
+        },
+        {
+          "id": "fixtures",
+          "title": "Renderer fixture coverage",
+          "status": "ready",
+          "priority": "high",
+          "next_action": "Add one valid example per audited block",
+          "due_at": "2026-08-25T16:00:00Z"
+        },
+        {
+          "id": "docs",
+          "title": "Contract extension guide",
+          "status": "waiting",
+          "priority": "medium",
+          "next_action": "Review after fixtures land"
+        }
+      ]
+    },
     "presentation": {
       "layout": "dashboard",
       "blocks": [
@@ -28,7 +68,9 @@
           "metrics": [
             { "label": "In progress", "value": 1, "tone": "positive" },
             { "label": "Ready", "value": 2, "tone": "info" },
-            { "label": "Blocked", "value": 1, "tone": "warning" }
+            { "label": "Blocked", "value": 1, "tone": "warning" },
+            { "label": "Waiting", "value": 1, "tone": "neutral" },
+            { "label": "Due this week", "value": 2, "tone": "warning" }
           ]
         },
         {
@@ -44,7 +86,9 @@
           "rows": [
             { "item": "Adaptive block renderer", "state": "In progress", "next": "Complete the table component" },
             { "item": "Private deployment recipe", "state": "Ready", "next": "Verify Access checklist" },
-            { "item": "Connector example", "state": "Blocked", "next": "Wait for source permission" }
+            { "item": "Connector example", "state": "Blocked", "next": "Wait for source permission" },
+            { "item": "Renderer fixture coverage", "state": "Ready", "next": "Add one example per audited block" },
+            { "item": "Contract extension guide", "state": "Waiting", "next": "Review after fixtures land" }
           ]
         },
         {
@@ -68,6 +112,46 @@
               "tone": "info"
             }
           ]
+        },
+        {
+          "id": "delivery-progress",
+          "kind": "progress",
+          "title": "Delivery evidence",
+          "span": "one",
+          "items": [
+            { "label": "Complete slice", "value": 7, "max": 10, "value_label": "7 of 10 checks", "tone": "positive" },
+            { "label": "Fixture coverage", "value": 8, "max": 11, "value_label": "8 of 11 blocks", "tone": "info" },
+            { "label": "Release evidence", "value": 3, "max": 5, "value_label": "3 of 5 gates", "tone": "warning" }
+          ]
+        },
+        {
+          "id": "delivery-sequence",
+          "kind": "timeline",
+          "title": "Path to done",
+          "span": "one",
+          "items": [
+            {
+              "label": "Now",
+              "title": "Finish the renderer path",
+              "description": "Implementation, fixture, and test move together.",
+              "tone": "positive"
+            },
+            { "label": "Next", "title": "Run the full contract gate", "description": "Fix only evidence-backed failures.", "tone": "info" },
+            {
+              "label": "Then",
+              "title": "Publish the extension guide",
+              "description": "Document the exact safe boundary.",
+              "tone": "neutral"
+            }
+          ]
+        },
+        {
+          "id": "external-blocker",
+          "kind": "notice",
+          "title": "The connector is not startable",
+          "body": "Source permission is outside the current work boundary. Keep it visible, but do not let it interrupt the complete renderer slice.",
+          "tone": "warning",
+          "span": "full"
         }
       ]
     }

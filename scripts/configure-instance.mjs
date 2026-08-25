@@ -1,4 +1,4 @@
-import { chmod, copyFile, readFile, writeFile } from "node:fs/promises"
+import { chmod, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import process from "node:process"
 import { createInterface } from "node:readline/promises"
@@ -20,9 +20,12 @@ if (fromEnvironment) {
   if (!process.env.ZAATI_INSTANCE_CONFIG_JSON) throw new Error("ZAATI_INSTANCE_CONFIG_JSON is required with --from-env.")
   config = JSON.parse(process.env.ZAATI_INSTANCE_CONFIG_JSON)
 } else if (!process.stdin.isTTY) {
-  await copyFile(templatePath, target)
+  const defaults = JSON.parse(await readFile(templatePath, "utf8"))
+  await writeFile(target, `${JSON.stringify({ ...defaults, experience: { mode: "private", show_tour: false } }, null, 2)}\n`, {
+    mode: 0o600,
+  })
   await chmod(target, 0o600)
-  console.log("Created ignored config/instance.local.json from the safe example.")
+  console.log("Created an ignored private-workspace config. Demo content and guides are disabled.")
   process.exit(0)
 } else {
   const defaults = JSON.parse(await readFile(templatePath, "utf8"))
@@ -30,6 +33,7 @@ if (fromEnvironment) {
   const ask = async (label, fallback) => (await prompt.question(`${label} (${fallback}): `)).trim() || fallback
   config = {
     ...defaults,
+    experience: { mode: "private", show_tour: false },
     brand_name: await ask("Dashboard name", defaults.brand_name),
     brand_mark: await ask("Short brand mark", defaults.brand_mark),
     tagline: await ask("Short tagline", defaults.tagline),

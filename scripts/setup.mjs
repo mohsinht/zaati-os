@@ -3,10 +3,21 @@ import path from "node:path"
 import process from "node:process"
 import { createInterface } from "node:readline/promises"
 import { generateSnapshotKey } from "./lib/snapshot-crypto.mjs"
+import { detectedDefaults, expandDependencies, validCurrency, validLocale, validTimezone } from "./lib/setup-options.mjs"
 
 const target = path.resolve("config/instance.local.json")
 const force = process.argv.includes("--force")
-const defaults = JSON.parse(await readFile(path.resolve("config/instance.example.json"), "utf8"))
+const template = JSON.parse(await readFile(path.resolve("config/instance.example.json"), "utf8"))
+const detected = detectedDefaults()
+const keepDemo = process.argv.includes("--demo")
+const defaults = {
+  ...template,
+  timezone: detected.timezone,
+  locale: detected.locale,
+  currency: detected.currency,
+  experience: { mode: keepDemo ? "demo" : "private", show_tour: keepDemo },
+}
+const registry = JSON.parse(await readFile(path.resolve("config/sources.json"), "utf8"))
 const exists = await readFile(target)
   .then(() => true)
   .catch((error) => (error.code === "ENOENT" ? false : Promise.reject(error)))
@@ -17,6 +28,20 @@ let encryption = false
 if (process.stdin.isTTY && !process.argv.includes("--yes")) {
   const prompt = createInterface({ input: process.stdin, output: process.stdout })
   const ask = async (label, fallback) => (await prompt.question(`${label} (${fallback}): `)).trim() || fallback
+  const askValid = async (label, fallback, validate, example) => {
+    while (true) {
+      const answer = await ask(label, fallback)
+      if (validate(answer)) return answer
+      console.log(`  Not valid. Try ${example}.`)
+    }
+  }
+  const choose = async (label, values, fallback) => {
+    while (true) {
+      const answer = await ask(`${label}: ${values.join(", ")}`, fallback)
+      if (values.includes(answer)) return answer
+      console.log(`  Choose one of: ${values.join(", ")}.`)
+    }
+  }
   const confirm = async (label, fallback = false) => {
     const answer = (await prompt.question(`${label} (${fallback ? "Y/n" : "y/N"}): `)).trim().toLowerCase()
     return answer ? answer === "y" || answer === "yes" : fallback
@@ -24,22 +49,25 @@ if (process.stdin.isTTY && !process.argv.includes("--yes")) {
   console.log("\n1 of 3, make it yours")
   const brandName = await ask("Dashboard name", defaults.brand_name)
   const brandMark = await ask("Short brand mark", brandName.trim().slice(0, 1).toUpperCase() || defaults.brand_mark)
-  const timezone = await ask("IANA timezone", defaults.timezone)
-  const locale = await ask("Locale", defaults.locale)
-  const currency = (await ask("ISO currency", defaults.currency)).toUpperCase()
+  const timezone = await askValid("IANA timezone", defaults.timezone, validTimezone, "Asia/Karachi")
+  const locale = await askValid("Locale", defaults.locale, validLocale, "en-PK")
+  const currency = await askValid("ISO currency", defaults.currency, (value) => validCurrency(value.toUpperCase()), "PKR")
+  console.log(
+    `  Resolved local time: ${new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: timezone }).format(new Date())}`,
+  )
 
   console.log("\n2 of 3, choose a calm starting point")
-  const pack = await ask("Source pack: essential, everyday, all", "everyday")
+  const pack = await choose("Source pack", ["essential", "daily", "all"], "daily")
   const packs = {
-    essential: ["overview:daily", "agenda:primary", "work:focus"],
-    everyday: ["overview:daily", "agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing"],
+    essential: ["agenda:primary", "work:focus"],
+    daily: ["overview:daily"],
     all: defaults.enabled_sources,
   }
 
   console.log("\n3 of 3, choose the look and security")
-  const preset = await ask("Palette: sage, ocean, plum, sand", defaults.theme.preset)
-  const fontFamily = await ask("Font: system, humanist, editorial, rounded, mono", defaults.theme.font_family)
-  const headingStyle = await ask("Headers: plain, compact, expressive", defaults.theme.heading_style)
+  const preset = await choose("Palette", ["sage", "ocean", "plum", "sand"], defaults.theme.preset)
+  const fontFamily = await choose("Font", ["system", "humanist", "editorial", "rounded", "mono"], defaults.theme.font_family)
+  const headingStyle = await choose("Headers", ["plain", "compact", "expressive"], defaults.theme.heading_style)
   encryption = await confirm("Encrypt private snapshot files at rest", false)
   prompt.close()
   config = {
@@ -48,8 +76,8 @@ if (process.stdin.isTTY && !process.argv.includes("--yes")) {
     brand_mark: brandMark,
     timezone,
     locale,
-    currency,
-    enabled_sources: packs[pack] || packs.everyday,
+    currency: currency.toUpperCase(),
+    enabled_sources: expandDependencies(packs[pack], registry),
     theme: { ...defaults.theme, preset, font_family: fontFamily, heading_style: headingStyle },
     storage: { snapshot_encryption: encryption },
   }
@@ -63,4 +91,9 @@ if (encryption) {
   })
 }
 console.log("\nVoila. Your ignored local configuration is ready.")
-console.log("Next: npm run tutorial, then read docs/tutorials/one-task-daily-bundle.md when you want real sources.")
+if (config.experience.mode === "private") {
+  console.log("Synthetic example pages, Component Lab, prompt guides, and the automatic demo tour are disabled here.")
+  console.log("Next: npm run tutorial to test ingestion, then npm run prompt:create to connect your approved sources.")
+} else {
+  console.log("Demo mode remains enabled. Run npm run setup -- --force when you are ready to create a private workspace.")
+}

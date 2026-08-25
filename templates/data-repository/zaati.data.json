@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/YOUR_USER/zaati-os/FULL_40_CHARACTER_COMMIT_SHA/schemas/data-repository.schema.json",
+  "contract_version": "0.1.1",
+  "code_repository": "YOUR_USER/zaati-os",
+  "code_ref": "FULL_40_CHARACTER_COMMIT_SHA",
+  "workflow_id": "daily-core",
+  "expected_source_ids": ["agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing", "overview:daily"],
+  "snapshot_encryption": false
+}
