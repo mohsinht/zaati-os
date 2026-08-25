@@ -26,6 +26,8 @@ After the first successful runs, protect `main`:
 - block force pushes and branch deletion
 - apply the rules to administrators unless an emergency procedure says otherwise
 
+Create a second active ruleset targeting `refs/tags/v*`. Block tag updates and deletion, and create each release tag as a signed tag. A published release tag is an immutable validator reference only when both controls are in place.
+
 For every private data repository, add a second ruleset for `.github/**` and `zaati.data.json`. Require trusted-owner review and block the producer identity from bypassing it. The producer needs Contents and Pull requests write access only. It must have no Actions, Workflows, Administration, secrets, variables, environments, or repository-settings write access.
 
 Do not require the deployment workflow for code pull requests. It intentionally runs only for manual dispatch or configured main-branch deployment.

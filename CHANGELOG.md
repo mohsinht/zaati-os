@@ -2,7 +2,9 @@
 
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and semantic versioning.
 
-## [0.1.1] - Unreleased
+## [Unreleased]
+
+## [0.1.1] - 2026-08-25
 
 ### Added
 
@@ -30,3 +32,6 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - Dynamic freshness, real provenance disclosure, evidence references, and bounded snapshot history navigation.
 - Plain-language Prompt Studio starters with a separate human-readable permission receipt.
 - SHA-pinned GitHub Actions, a public synthetic Pages demo, fork-sync, lifecycle, compatibility, support, and release guidance.
+
+[Unreleased]: https://github.com/mohsinht/zaati-os/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/mohsinht/zaati-os/releases/tag/v0.1.1
