@@ -774,13 +774,17 @@ function ComponentLab({ data }: { data: DashboardData }) {
               <div className="grid overflow-hidden rounded-xl border border-border xl:grid-cols-2">
                 <div className="min-w-0 border-b border-border bg-muted/35 xl:border-b-0 xl:border-r">
                   <div className="flex min-h-11 items-center justify-between border-b border-border px-3">
-                    <span className="text-xs font-medium text-muted-foreground">JSON contract</span>
+                    <span className="text-xs font-medium text-foreground">JSON contract</span>
                     <Button aria-live="polite" onClick={() => void copyContract(block.id, contract)} size="sm" variant="ghost">
                       {copiedId === block.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                       {copiedId === block.id ? "Copied" : "Copy"}
                     </Button>
                   </div>
-                  <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-6">
+                  <pre
+                    aria-label={`${block.kind} JSON contract`}
+                    className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-6 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    tabIndex={0}
+                  >
                     {contract}
                   </pre>
                 </div>
