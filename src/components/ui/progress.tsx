@@ -21,7 +21,10 @@ export function Progress({
       className={cn("relative h-2 w-full overflow-hidden rounded-full bg-secondary", className)}
       role="progressbar"
     >
-      <div className={cn("h-full bg-primary transition-[width]", indicatorClassName)} style={{ width: `${normalized}%` }} />
+      <div
+        className={cn("progress-indicator h-full bg-primary transition-[width]", indicatorClassName)}
+        style={{ width: `${normalized}%` }}
+      />
     </div>
   )
 }

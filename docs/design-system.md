@@ -31,6 +31,8 @@ Owned shadcn-compatible primitives live under `src/components/ui/`. Domain rende
 
 The synthetic **Component lab** is the executable catalog: validated JSON appears on the left and the production renderer appears on the right. A new block is not complete until it appears there through a public synthetic fixture, with schema, type, renderer, tests, privacy review, and documentation.
 
+Charts are explorable rather than decorative. Line points and bars expose the same exact-value callout on pointer hover and keyboard focus. Donut legends act as controls that highlight the matching segment and update its center value. Supporting blocks use quiet hover feedback and brief entrance motion; interaction must never be required to recover a fact that is absent from the accessible table, list, or text equivalent.
+
 Use semantic tokens such as `background`, `card`, `muted`, `primary`, `warning`, and chart tokens. Do not hardcode provider or source colors inside components.
 
 ## Accessibility

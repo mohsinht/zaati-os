@@ -64,7 +64,14 @@ function Panel({
   layout: Layout
 }) {
   return (
-    <Card className={cn("min-w-0 overflow-hidden", layoutSpan(block, layout, emphasized), emphasized && "border-primary/35", className)}>
+    <Card
+      className={cn(
+        "zaati-block min-w-0 overflow-hidden",
+        layoutSpan(block, layout, emphasized),
+        emphasized && "border-primary/35",
+        className,
+      )}
+    >
       <CardHeader>
         <CardTitle>{block.title}</CardTitle>
         {"description" in block && block.description ? <CardDescription>{block.description}</CardDescription> : null}
@@ -98,13 +105,13 @@ export function BlockRenderer({
           )}
         >
           {block.metrics.map((metric) => (
-            <div className="min-w-0 bg-card px-4 py-3" key={metric.label}>
+            <div className="group min-w-0 bg-card px-4 py-3 transition-colors hover:bg-accent/45" key={metric.label}>
               <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <span aria-hidden="true" className={cn("size-1.5 rounded-full", toneDot[metric.tone || "neutral"])} />
                 {metric.label}
               </div>
               <div className="flex items-end gap-2">
-                <span className="truncate text-2xl font-semibold tracking-tight">
+                <span className="truncate text-2xl font-semibold tracking-tight transition-transform duration-200 group-hover:translate-x-0.5">
                   {formatValue(metric.value, metric.format, instance)}
                   {metric.unit ? <span className="ml-1 text-sm font-medium text-muted-foreground">{metric.unit}</span> : null}
                 </span>
@@ -149,7 +156,7 @@ export function BlockRenderer({
               )
               return item.href ? (
                 <a
-                  className="flex gap-3 py-3 first:pt-0 last:pb-0 hover:text-primary"
+                  className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
                   href={item.href}
                   key={item.id}
                   rel="noreferrer"
@@ -158,7 +165,10 @@ export function BlockRenderer({
                   {content}
                 </a>
               ) : (
-                <div className="flex gap-3 py-3 first:pt-0 last:pb-0" key={item.id}>
+                <div
+                  className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/45"
+                  key={item.id}
+                >
                   {content}
                 </div>
               )
@@ -205,7 +215,10 @@ export function BlockRenderer({
         {block.events.length ? (
           <div className="space-y-1">
             {block.events.map((event) => (
-              <div className="group flex gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/60" key={event.id}>
+              <div
+                className="group flex gap-3 rounded-lg px-2 py-2.5 transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-muted/60"
+                key={event.id}
+              >
                 <div className="w-16 shrink-0 pt-0.5 text-xs font-medium text-muted-foreground">{time(event.start)}</div>
                 <span className={cn("mt-1.5 h-8 w-0.5 rounded-full", toneDot[event.tone || "neutral"])} />
                 <div className="min-w-0">
@@ -249,7 +262,7 @@ export function BlockRenderer({
               </thead>
               <tbody className="divide-y divide-border">
                 {block.rows.map((row, index) => (
-                  <tr className="hover:bg-muted/40" key={index}>
+                  <tr className="transition-colors hover:bg-muted/55" key={index}>
                     {block.columns.map((column) => (
                       <td className="max-w-64 px-3 py-3 align-top" key={column.key}>
                         {formatValue(row[column.key] ?? null, column.format, instance)}
@@ -274,7 +287,7 @@ export function BlockRenderer({
           {block.items.map((item) => {
             const percent = (item.value / item.max) * 100
             return (
-              <div key={item.label}>
+              <div className="group rounded-lg px-1 py-1 transition-colors hover:bg-muted/45" key={item.label}>
                 <div className="mb-2 flex items-center justify-between gap-4">
                   <span className="text-sm font-medium">{item.label}</span>
                   <span className="text-xs font-medium text-muted-foreground">{item.value_label || `${Math.round(percent)}%`}</span>
@@ -302,7 +315,7 @@ export function BlockRenderer({
     return (
       <div
         className={cn(
-          "rounded-xl border p-5",
+          "zaati-block rounded-xl border p-5 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-sm",
           layoutSpan(block, layout, emphasized),
           block.tone === "warning" && "border-warning/30 bg-warning/10",
           block.tone === "danger" && "border-destructive/30 bg-destructive/10",
@@ -340,9 +353,17 @@ export function BlockRenderer({
         {block.items.length ? (
           <div>
             {block.items.map((item, index) => (
-              <div className="relative flex gap-4 pb-5 last:pb-0" key={`${item.label}-${item.title}`}>
+              <div
+                className="group relative flex gap-4 rounded-lg pb-5 transition-colors hover:bg-muted/35 last:pb-0"
+                key={`${item.label}-${item.title}`}
+              >
                 <div className="flex w-3 shrink-0 flex-col items-center">
-                  <span className={cn("mt-1.5 size-2.5 rounded-full ring-4 ring-background", toneDot[item.tone || "neutral"])} />
+                  <span
+                    className={cn(
+                      "mt-1.5 size-2.5 rounded-full ring-4 ring-background transition-transform duration-200 group-hover:scale-125",
+                      toneDot[item.tone || "neutral"],
+                    )}
+                  />
                   {index < block.items.length - 1 ? <span className="mt-1 h-full w-px bg-border" /> : null}
                 </div>
                 <div className="min-w-0">

@@ -1,4 +1,4 @@
-import { useId } from "react"
+import { useId, useState } from "react"
 import type { BarChartBlock, DonutChartBlock, InstanceConfig, LineChartBlock, ValueFormat } from "@/types"
 
 const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
@@ -34,6 +34,23 @@ function yPosition(value: number, min: number, max: number) {
   return plot.top + ((max - value) / (max - min)) * available
 }
 
+function ChartTooltip({ x, y, title, value }: { x: number; y: number; title: string; value: string }) {
+  const tooltipWidth = Math.min(220, Math.max(112, Math.max(title.length, value.length) * 7 + 24))
+  const tooltipX = Math.max(4, Math.min(width - tooltipWidth - 4, x - tooltipWidth / 2))
+  const tooltipY = y < 76 ? y + 18 : y - 58
+  return (
+    <g aria-hidden="true" className="chart-tooltip" pointerEvents="none" transform={`translate(${tooltipX} ${tooltipY})`}>
+      <rect fill="var(--popover)" height="44" rx="8" stroke="var(--border)" width={tooltipWidth} />
+      <text fill="var(--muted-foreground)" fontSize="10" x="11" y="17">
+        {title.length > 28 ? `${title.slice(0, 27)}…` : title}
+      </text>
+      <text fill="var(--popover-foreground)" fontSize="12" fontWeight="600" x="11" y="34">
+        {value}
+      </text>
+    </g>
+  )
+}
+
 export default function ChartVisual({
   block,
   instance,
@@ -48,6 +65,7 @@ export default function ChartVisual({
 }
 
 function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBlock; descriptionId: string; instance: InstanceConfig }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const valueFormat = block.value_format || "number"
   const total = block.segments.reduce((sum, segment) => sum + segment.value, 0)
   const radius = 76
@@ -68,33 +86,55 @@ function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBloc
           {arcs.map((segment, index) => {
             return (
               <circle
+                className="chart-donut-segment"
                 cx="100"
                 cy="100"
                 fill="none"
                 key={segment.label}
+                onPointerEnter={() => setActiveIndex(index)}
+                onPointerLeave={() => setActiveIndex(null)}
+                opacity={activeIndex === null || activeIndex === index ? 1 : 0.38}
                 r={radius}
                 stroke={colors[index % colors.length]}
                 strokeDasharray={`${Math.max(0, segment.length - 2)} ${circumference}`}
                 strokeDashoffset={-segment.offset}
                 strokeLinecap="butt"
-                strokeWidth="24"
+                strokeWidth={activeIndex === index ? 30 : 24}
               />
             )
           })}
         </svg>
         <div className="absolute inset-0 grid place-content-center text-center">
-          <span className="text-xl font-semibold tracking-tight">{format(total, valueFormat, instance)}</span>
-          {block.center_label ? <span className="mt-1 text-xs text-muted-foreground">{block.center_label}</span> : null}
+          <span aria-live="polite" className="text-xl font-semibold tracking-tight">
+            {format(activeIndex === null ? total : block.segments[activeIndex].value, valueFormat, instance)}
+          </span>
+          <span className="mt-1 max-w-28 truncate text-xs text-muted-foreground">
+            {activeIndex === null ? block.center_label : block.segments[activeIndex].label}
+          </span>
         </div>
       </div>
       <ul className="divide-y divide-border" aria-label={`${block.title} values`}>
         {block.segments.map((segment, index) => (
-          <li className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0" key={segment.label}>
-            <span className="flex min-w-0 items-center gap-2 text-sm">
-              <span aria-hidden="true" className="size-2 shrink-0 rounded-full" style={{ background: colors[index % colors.length] }} />
-              <span className="truncate">{segment.label}</span>
-            </span>
-            <span className="shrink-0 text-sm font-medium">{format(segment.value, valueFormat, instance)}</span>
+          <li key={segment.label}>
+            <button
+              aria-pressed={activeIndex === index}
+              className="group flex min-h-10 w-full items-center justify-between gap-3 rounded-md px-1 py-2.5 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
+              onBlur={() => setActiveIndex(null)}
+              onFocus={() => setActiveIndex(index)}
+              onPointerEnter={() => setActiveIndex(index)}
+              onPointerLeave={() => setActiveIndex(null)}
+              type="button"
+            >
+              <span className="flex min-w-0 items-center gap-2 text-sm">
+                <span
+                  aria-hidden="true"
+                  className="size-2 shrink-0 rounded-full transition-transform group-hover:scale-125 group-focus-visible:scale-125"
+                  style={{ background: colors[index % colors.length] }}
+                />
+                <span className="truncate">{segment.label}</span>
+              </span>
+              <span className="shrink-0 text-sm font-medium">{format(segment.value, valueFormat, instance)}</span>
+            </button>
           </li>
         ))}
       </ul>
@@ -103,6 +143,7 @@ function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBloc
 }
 
 function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock; descriptionId: string; instance: InstanceConfig }) {
+  const [activePoint, setActivePoint] = useState<{ pointIndex: number; seriesIndex: number } | null>(null)
   const valueFormat = block.y_format || "number"
   const values = block.points.flatMap((point) =>
     block.series.map((series) => point.values[series.key]).filter((value): value is number => Number.isFinite(value)),
@@ -116,9 +157,10 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
         {block.title} line chart. Exact values follow in an accessible table.
       </figcaption>
       <svg
-        aria-hidden="true"
+        aria-label={`${block.title} interactive line chart`}
         className="h-auto w-full overflow-visible"
         preserveAspectRatio="xMidYMid meet"
+        role="group"
         viewBox={`0 0 ${width} ${height}`}
       >
         {ticks.map((tick) => {
@@ -132,36 +174,78 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
             </g>
           )
         })}
-        {block.series.map((series, seriesIndex) => {
-          const points = block.points
-            .map((point, index) => `${x(index)},${yPosition(point.values[series.key], range.min, range.max)}`)
-            .join(" ")
-          return (
-            <polyline
-              fill="none"
-              key={series.key}
-              points={points}
-              stroke={colors[seriesIndex % colors.length]}
-              strokeDasharray={dashPatterns[seriesIndex % dashPatterns.length]}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="3"
-            />
-          )
-        })}
+        <g className="chart-series-reveal">
+          {block.series.map((series, seriesIndex) => {
+            const points = block.points
+              .map((point, index) => `${x(index)},${yPosition(point.values[series.key], range.min, range.max)}`)
+              .join(" ")
+            return (
+              <polyline
+                className="transition-opacity duration-200"
+                fill="none"
+                key={series.key}
+                opacity={activePoint === null || activePoint.seriesIndex === seriesIndex ? 1 : 0.3}
+                points={points}
+                stroke={colors[seriesIndex % colors.length]}
+                strokeDasharray={dashPatterns[seriesIndex % dashPatterns.length]}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="3"
+              />
+            )
+          })}
+        </g>
         {block.series.flatMap((series, seriesIndex) =>
-          block.points.map((point, pointIndex) => (
-            <circle
-              cx={x(pointIndex)}
-              cy={yPosition(point.values[series.key], range.min, range.max)}
-              fill="var(--card)"
-              key={`${series.key}-${point.x}`}
-              r={seriesIndex % 2 === 0 ? 3.5 : 2.5}
-              stroke={colors[seriesIndex % colors.length]}
-              strokeWidth="2"
-            />
-          )),
+          block.points.map((point, pointIndex) => {
+            const pointX = x(pointIndex)
+            const pointY = yPosition(point.values[series.key], range.min, range.max)
+            const active = activePoint?.pointIndex === pointIndex && activePoint.seriesIndex === seriesIndex
+            const label = `${series.label}, ${point.x}: ${format(point.values[series.key], valueFormat, instance)}`
+            return (
+              <g
+                aria-label={label}
+                className="chart-data-target"
+                key={`${series.key}-${point.x}`}
+                onBlur={() => setActivePoint(null)}
+                onFocus={() => setActivePoint({ pointIndex, seriesIndex })}
+                onPointerEnter={() => setActivePoint({ pointIndex, seriesIndex })}
+                onPointerLeave={() => setActivePoint(null)}
+                role="img"
+                tabIndex={0}
+              >
+                <circle cx={pointX} cy={pointY} fill="transparent" r="12" />
+                <circle
+                  className="chart-point"
+                  cx={pointX}
+                  cy={pointY}
+                  fill="var(--card)"
+                  r={active ? 6 : seriesIndex % 2 === 0 ? 3.5 : 2.5}
+                  stroke={colors[seriesIndex % colors.length]}
+                  strokeWidth={active ? 3 : 2}
+                />
+              </g>
+            )
+          }),
         )}
+        {activePoint
+          ? (() => {
+              const series = block.series[activePoint.seriesIndex]
+              const point = block.points[activePoint.pointIndex]
+              const pointX = x(activePoint.pointIndex)
+              const pointY = yPosition(point.values[series.key], range.min, range.max)
+              return (
+                <>
+                  <line className="chart-guide" x1={pointX} x2={pointX} y1={plot.top} y2={height - plot.bottom} />
+                  <ChartTooltip
+                    title={`${series.label} · ${point.x}`}
+                    value={format(point.values[series.key], valueFormat, instance)}
+                    x={pointX}
+                    y={pointY}
+                  />
+                </>
+              )
+            })()
+          : null}
         {block.points.map((point, index) =>
           index === 0 || index === block.points.length - 1 || block.points.length <= 8 ? (
             <text
@@ -221,6 +305,7 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
 }
 
 function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; descriptionId: string; instance: InstanceConfig }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const valueFormat = block.value_format || "number"
   const range = domain(block.bars.map((bar) => bar.value))
   const available = width - plot.left - plot.right
@@ -235,9 +320,10 @@ function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; d
         {block.title} bar chart. Exact values follow in an accessible table.
       </figcaption>
       <svg
-        aria-hidden="true"
+        aria-label={`${block.title} interactive bar chart`}
         className="h-auto w-full overflow-visible"
         preserveAspectRatio="xMidYMid meet"
+        role="group"
         viewBox={`0 0 ${width} ${height}`}
       >
         {ticks.map((tick) => {
@@ -257,10 +343,28 @@ function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; d
           const y = Math.min(valueY, baseline)
           const barHeight = Math.max(1, Math.abs(baseline - valueY))
           return (
-            <g key={bar.label}>
-              <rect fill={colors[index % colors.length]} height={barHeight} rx="4" width={barWidth} x={x} y={y}>
-                <title>{`${bar.label}: ${format(bar.value, valueFormat, instance)}`}</title>
-              </rect>
+            <g
+              aria-label={`${bar.label}: ${format(bar.value, valueFormat, instance)}`}
+              className="chart-data-target"
+              key={bar.label}
+              onBlur={() => setActiveIndex(null)}
+              onFocus={() => setActiveIndex(index)}
+              onPointerEnter={() => setActiveIndex(index)}
+              onPointerLeave={() => setActiveIndex(null)}
+              role="img"
+              tabIndex={0}
+            >
+              <rect fill="transparent" height={height - plot.top - plot.bottom} width={slot} x={plot.left + index * slot} y={plot.top} />
+              <rect
+                className="chart-bar"
+                fill={colors[index % colors.length]}
+                height={barHeight}
+                opacity={activeIndex === null || activeIndex === index ? 1 : 0.32}
+                rx="4"
+                width={barWidth}
+                x={x}
+                y={y}
+              />
               {index % labelEvery === 0 ? (
                 <text fill="var(--muted-foreground)" fontSize="10" textAnchor="middle" x={x + barWidth / 2} y={height - 18}>
                   {bar.label.length > 12 ? `${bar.label.slice(0, 11)}…` : bar.label}
@@ -269,6 +373,14 @@ function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; d
             </g>
           )
         })}
+        {activeIndex !== null
+          ? (() => {
+              const bar = block.bars[activeIndex]
+              const valueY = yPosition(bar.value, range.min, range.max)
+              const pointX = plot.left + activeIndex * slot + slot / 2
+              return <ChartTooltip title={bar.label} value={format(bar.value, valueFormat, instance)} x={pointX} y={valueY} />
+            })()
+          : null}
       </svg>
       <table className="sr-only">
         <caption>{block.title}</caption>
