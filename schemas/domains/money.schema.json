@@ -45,6 +45,61 @@
                   "unit": { "type": "string", "maxLength": 24 }
                 }
               }
+            },
+            "accounts": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "label", "type", "status", "balance", "currency", "as_of"],
+                "properties": {
+                  "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+                  "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+                  "type": { "enum": ["cash", "investment", "retirement", "credit", "other"] },
+                  "status": { "enum": ["connected", "manual", "stale", "unavailable"] },
+                  "balance": { "type": "number" },
+                  "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+                  "as_of": { "type": "string", "format": "date-time" }
+                }
+              }
+            },
+            "holdings": {
+              "type": "array",
+              "maxItems": 50,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "label", "asset_type", "units", "unit_price", "market_value", "currency", "weight_percent", "as_of"],
+                "properties": {
+                  "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+                  "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+                  "symbol": { "type": "string", "maxLength": 16 },
+                  "asset_type": { "enum": ["stock", "fund", "bond", "crypto", "cash", "other"] },
+                  "units": { "type": "number", "minimum": 0 },
+                  "unit_price": { "type": "number", "minimum": 0 },
+                  "market_value": { "type": "number", "minimum": 0 },
+                  "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+                  "weight_percent": { "type": "number", "minimum": 0, "maximum": 100 },
+                  "day_change_percent": { "type": "number" },
+                  "as_of": { "type": "string", "format": "date-time" }
+                }
+              }
+            },
+            "projections": {
+              "type": "array",
+              "maxItems": 30,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["year", "scenario", "value", "currency"],
+                "properties": {
+                  "year": { "type": "integer", "minimum": 2000, "maximum": 2200 },
+                  "scenario": { "enum": ["conservative", "baseline", "stretch"] },
+                  "value": { "type": "number", "minimum": 0 },
+                  "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+                }
+              }
             }
           }
         }

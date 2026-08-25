@@ -2,25 +2,28 @@
 
 This guide takes a new user from fork to a working synthetic dashboard, then to one real multi-source workflow without placing personal data in the public fork.
 
-## 1. Fork and run the demo
+## 1. Fork and explore the demo
 
 ```bash
 git clone https://github.com/YOUR_GITHUB_USERNAME/zaati-os.git
 cd zaati-os
 npm install
-npm run setup
-npm run tutorial
+npm run dev
 ```
 
-The guided setup covers name, timezone, starter sources, visual style, and optional encryption. The tutorial proves validation and retry behavior with synthetic data, then opens the app.
+The first visit offers an optional guided tour of sources, component contracts, rendered results, example task prompts, and the private setup path.
 
 The Synthetic demo workflow always builds and checks public fixtures on pushes to `main`. Deployment is opt-in so a fresh fork stays green before GitHub Pages exists. To publish it, enable **Settings > Pages > GitHub Actions**, add the repository variable `ZAATI_ENABLE_DEMO_PAGES=true`, then run the workflow or push to `main`.
 
-When the demo feels right, generate the complete prompt for your real scheduled LLM task:
+When the demo feels right, create an ignored private workspace and verify the ingestion loop:
 
 ```bash
+npm run setup
+npm run tutorial
 npm run prompt:create
 ```
+
+Setup disables synthetic example fallback, Component Lab, copy-prompt guides, and the automatic demo tour. The tutorial remains available as clearly labeled synthetic test data inside the private shell.
 
 Choose a provider and starter dashboard, then enter your public code fork and private data repository. Review the generated permission receipt before pasting the prompt into your LLM. Read [Prompt Studio](prompt-studio.md) for advanced profiles and new-source setup.
 

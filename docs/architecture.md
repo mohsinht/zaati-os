@@ -36,7 +36,7 @@ Snapshots use deterministic paths. Source workers write independently, so one un
 
 ### Build index
 
-`scripts/build-data-index.mjs` discovers snapshots, decrypts encrypted files in memory when enabled, selects the latest enabled source, and writes an ignored `public/data/dashboard-data.json`. When private snapshots are absent it uses the synthetic examples. The browser never receives repository credentials or the decryption key.
+`scripts/build-data-index.mjs` discovers snapshots, decrypts encrypted files in memory when enabled, selects the latest enabled source, and writes an ignored `public/data/dashboard-data.json`. The upstream example configuration explicitly enables demo mode and may use public synthetic examples when private snapshots are absent. An ignored local configuration created by setup defaults to private mode, never falls back to example snapshots, and omits Component Lab data and demo prompt guides. The browser never receives repository credentials or the decryption key.
 
 ### Static interface
 

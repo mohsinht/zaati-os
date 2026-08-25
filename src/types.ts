@@ -31,6 +31,12 @@ export type BarChartBlock = BlockBase & {
   value_format?: ValueFormat
   bars: Array<{ label: string; value: number; tone?: Tone }>
 }
+export type DonutChartBlock = BlockBase & {
+  kind: "donut-chart"
+  value_format?: ValueFormat
+  center_label?: string
+  segments: Array<{ label: string; value: number }>
+}
 export type CalendarBlock = BlockBase & {
   kind: "calendar"
   date: string
@@ -56,6 +62,7 @@ export type DashboardBlock =
   | ListBlock
   | LineChartBlock
   | BarChartBlock
+  | DonutChartBlock
   | CalendarBlock
   | TableBlock
   | ProgressBlock
@@ -100,6 +107,7 @@ export type InstanceConfig = {
   currency: string
   week_starts_on: "monday" | "sunday"
   enabled_sources: string[]
+  experience: { mode: "demo" | "private"; show_tour: boolean }
   theme: {
     preset: "sage" | "ocean" | "plum" | "sand" | "custom"
     default_mode: "system" | "light" | "dark"
@@ -135,6 +143,7 @@ export type InstanceConfig = {
 export type DashboardData = {
   generatedAt: string
   demoMode: boolean
+  syntheticData: boolean
   instance: InstanceConfig
   sources: Array<{
     definition: SourceDefinition
@@ -142,4 +151,6 @@ export type DashboardData = {
     freshnessState: "fresh" | "aging" | "stale" | "partial" | "failed" | "missing"
   }>
   historyBySource: Record<string, Snapshot[]>
+  demoPromptsBySource: Record<string, string>
+  componentExamples: Array<{ sourceId: string; block: DashboardBlock }>
 }

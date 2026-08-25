@@ -14,7 +14,7 @@
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["calendar", "list", "notice"] },
+      "presentation": { "preferred_blocks": ["metric-group", "calendar", "list", "timeline", "notice"] },
       "depends_on": [],
       "target_path": "data/snapshots/agenda/primary/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -36,7 +36,7 @@
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "list", "notice"] },
+      "presentation": { "preferred_blocks": ["metric-group", "list", "timeline", "table", "notice"] },
       "depends_on": [],
       "target_path": "data/snapshots/inbox/attention/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -58,7 +58,7 @@
       "cadence": "weekdays",
       "freshness_sla_hours": 36,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "table", "list", "progress", "notice"] },
+      "presentation": { "preferred_blocks": ["metric-group", "table", "list", "progress", "timeline", "notice"] },
       "depends_on": [],
       "target_path": "data/snapshots/work/focus/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -80,7 +80,7 @@
       "cadence": "daily",
       "freshness_sla_hours": 36,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "bar-chart", "table", "progress", "notice"] },
+      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "bar-chart", "donut-chart", "table", "progress", "notice"] },
       "depends_on": [],
       "target_path": "data/snapshots/money/pulse/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -102,7 +102,7 @@
       "cadence": "daily",
       "freshness_sla_hours": 24,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["list", "timeline", "text", "notice"] },
+      "presentation": { "preferred_blocks": ["list", "timeline", "bar-chart", "table", "text", "notice"] },
       "depends_on": [],
       "target_path": "data/snapshots/news/briefing/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -124,7 +124,7 @@
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "calendar", "list", "progress", "notice"] },
+      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "calendar", "list", "progress", "timeline", "table", "notice"] },
       "depends_on": ["agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing"],
       "target_path": "data/snapshots/overview/daily/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -146,7 +146,7 @@
       "cadence": "weekly",
       "freshness_sla_hours": 192,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "list", "progress", "timeline", "notice"] },
+      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "list", "progress", "timeline", "table", "notice"] },
       "depends_on": ["overview:daily", "agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing"],
       "target_path": "data/snapshots/review/weekly/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {

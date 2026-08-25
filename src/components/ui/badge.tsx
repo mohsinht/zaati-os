@@ -10,7 +10,7 @@ const badgeVariants = cva("inline-flex items-center rounded-full border px-2.5 p
       outline: "border-border text-muted-foreground",
       positive: "border-positive/20 bg-positive/10 text-positive-foreground",
       warning: "border-warning/25 bg-warning/10 text-warning-foreground",
-      danger: "border-destructive/20 bg-destructive/10 text-destructive",
+      danger: "border-destructive/35 bg-destructive/10 text-foreground",
       info: "border-info/20 bg-info/10 text-info-foreground",
     },
   },

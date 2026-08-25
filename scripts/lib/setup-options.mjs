@@ -70,3 +70,9 @@ export function expandDependencies(sourceIds, registry) {
   sourceIds.forEach(add)
   return [...expanded]
 }
+
+export function resolvedExperience(config, { hasLocalConfig = false, demoOverride = false } = {}) {
+  if (demoOverride) return { mode: "demo", show_tour: true }
+  if (config?.experience?.mode === "demo" || config?.experience?.mode === "private") return config.experience
+  return { mode: hasLocalConfig ? "private" : "demo", show_tour: !hasLocalConfig }
+}

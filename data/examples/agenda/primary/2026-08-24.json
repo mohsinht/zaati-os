@@ -39,11 +39,19 @@
           "start": "2026-08-24T13:00:00Z",
           "end": "2026-08-24T14:30:00Z",
           "status": "scheduled"
+        },
+        {
+          "id": "a4",
+          "title": "Walk and reset",
+          "start": "2026-08-24T15:00:00Z",
+          "end": "2026-08-24T15:30:00Z",
+          "status": "scheduled"
         }
       ],
       "actions": [
         { "id": "p1", "title": "Open the acceptance criteria", "due_at": "2026-08-24T08:30:00Z", "status": "open" },
-        { "id": "p2", "title": "Write the sync decision", "due_at": "2026-08-24T11:00:00Z", "status": "open" }
+        { "id": "p2", "title": "Write the sync decision", "due_at": "2026-08-24T11:00:00Z", "status": "open" },
+        { "id": "p3", "title": "Prepare the release note", "due_at": "2026-08-24T13:00:00Z", "status": "open" }
       ]
     },
     "presentation": {
@@ -64,7 +72,8 @@
               "tone": "positive"
             },
             { "id": "a2", "title": "Project sync", "start": "2026-08-24T11:00:00Z", "end": "2026-08-24T11:30:00Z", "tone": "info" },
-            { "id": "a3", "title": "Review and ship", "start": "2026-08-24T13:00:00Z", "end": "2026-08-24T14:30:00Z", "tone": "positive" }
+            { "id": "a3", "title": "Review and ship", "start": "2026-08-24T13:00:00Z", "end": "2026-08-24T14:30:00Z", "tone": "positive" },
+            { "id": "a4", "title": "Walk and reset", "start": "2026-08-24T15:00:00Z", "end": "2026-08-24T15:30:00Z", "tone": "neutral" }
           ]
         },
         {
@@ -74,8 +83,55 @@
           "span": "one",
           "items": [
             { "id": "p1", "title": "Open the acceptance criteria", "meta": "Before 08:30", "tone": "neutral" },
-            { "id": "p2", "title": "Write the sync decision in one sentence", "meta": "Before 11:00", "tone": "info" }
+            { "id": "p2", "title": "Write the sync decision in one sentence", "meta": "Before 11:00", "tone": "info" },
+            { "id": "p3", "title": "Prepare the release note", "meta": "Before 13:00", "tone": "neutral" }
           ]
+        },
+        {
+          "id": "day-capacity",
+          "kind": "metric-group",
+          "title": "Day capacity",
+          "span": "full",
+          "metrics": [
+            { "label": "Protected focus", "value": 3.5, "unit": "hours", "tone": "positive" },
+            { "label": "Meetings", "value": 0.5, "unit": "hours", "tone": "neutral" },
+            { "label": "Open buffer", "value": 2, "unit": "hours", "tone": "info" },
+            { "label": "Prep actions", "value": 3, "tone": "warning" }
+          ]
+        },
+        {
+          "id": "day-sequence",
+          "kind": "timeline",
+          "title": "Energy-aware sequence",
+          "span": "one",
+          "items": [
+            {
+              "label": "08:30",
+              "title": "Build before coordinating",
+              "description": "Use the highest-energy window for the complete slice.",
+              "tone": "positive"
+            },
+            {
+              "label": "11:00",
+              "title": "Make one decision visible",
+              "description": "End the sync with an owner and next checkpoint.",
+              "tone": "info"
+            },
+            {
+              "label": "15:00",
+              "title": "Stop before the final push",
+              "description": "The reset protects the remaining buffer.",
+              "tone": "neutral"
+            }
+          ]
+        },
+        {
+          "id": "buffer",
+          "kind": "notice",
+          "title": "Keep 15:30 onward unclaimed",
+          "body": "That window absorbs a late review, travel, or an unfinished release note without displacing recovery time.",
+          "tone": "info",
+          "span": "one"
         }
       ]
     }
