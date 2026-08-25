@@ -247,7 +247,7 @@ Code version: **v0.1.1**
 
 Latest GitHub release: **[v0.1.1](https://github.com/mohsinht/zaati-os/releases/tag/v0.1.1)**, published August 25, 2026.
 
-This foundation release establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. Hosted LLM workflows remain contract-compatible rather than provider-certified until their recorded end-to-end gates pass. Private validators should pin the reviewed v0.1.1 release commit `0ef31dc8e973e5f1f557b1df9c7f79a012dd7d2a`; future signed and protected release tags may be used as immutable references. See [CHANGELOG.md](CHANGELOG.md).
+This foundation release establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. Hosted LLM workflows remain contract-compatible rather than provider-certified until their recorded end-to-end gates pass. Private validators should pin the reviewed v0.1.1 release commit `0ef31dc8e973e5f1f557b1df9c7f79a012dd7d2a`; future signed, protected, and immutable releases may be used as stable references. See [CHANGELOG.md](CHANGELOG.md).
 
 Before storing real data, read [Data lifecycle and key recovery](docs/data-lifecycle.md). Fork maintainers can follow [Upgrade and fork sync](docs/upgrading.md).
 

@@ -7,6 +7,6 @@
 5. Confirm GitHub Actions remain pinned to reviewed full commit SHAs.
 6. Merge through the protected `Quality gate` and CodeQL checks.
 7. Create and push a signed tag matching `vX.Y.Z`; the protected `v*` tag ruleset prevents later updates or deletion. Do not publish the GitHub release manually. The tag workflow reruns all checks before creating it.
-8. Verify the release notes, tag, assets, demo, and fork-upgrade instructions.
+8. Verify the release notes, signed and protected tag, immutable-release status, assets, demo, and fork-upgrade instructions.
 
 Do not create a release when the complete-source, privacy, or independent-publication gates are failing. A shiny tag is not a security control, although it does look fetching.
