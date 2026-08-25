@@ -164,7 +164,7 @@ See [LLM contract](docs/llm-contract.md) and [`schemas/`](schemas/) for the exec
 | `daily-overview.md`  | Combine registered source snapshots                  | Adaptive dashboard            |
 | `weekly-review.md`   | Find patterns and produce an evidence-based review   | Progress, timeline, decisions |
 
-These are provider-neutral templates, not connectors. ChatGPT scheduled tasks are the target first real path, but the release evidence is not complete yet. Other providers are contract-compatible and are not claimed as end-to-end certified until their documented release gate passes.
+These are provider-neutral templates, not connectors. The local mock tutorial and command adapter are maintained in v0.1.1. ChatGPT scheduled tasks are the target first hosted path, but no hosted provider is claimed as end-to-end certified until its documented provider gate passes.
 
 ## Repository map
 
@@ -245,7 +245,9 @@ Zaati OS charges no platform fee and can be deployed using free or already-owned
 
 Code version: **v0.1.1**
 
-No immutable GitHub Release is published yet. Until the recorded provider and hosted-demo release gates pass, pin private validators to a reviewed full commit SHA. This code version establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. See [CHANGELOG.md](CHANGELOG.md).
+Latest GitHub release: **[v0.1.1](https://github.com/mohsinht/zaati-os/releases/tag/v0.1.1)**, published August 25, 2026.
+
+This foundation release establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. Hosted LLM workflows remain contract-compatible rather than provider-certified until their recorded end-to-end gates pass. Private validators should pin the reviewed v0.1.1 release commit `0ef31dc8e973e5f1f557b1df9c7f79a012dd7d2a`; future signed and protected release tags may be used as immutable references. See [CHANGELOG.md](CHANGELOG.md).
 
 Before storing real data, read [Data lifecycle and key recovery](docs/data-lifecycle.md). Fork maintainers can follow [Upgrade and fork sync](docs/upgrading.md).
 
