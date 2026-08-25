@@ -31,6 +31,18 @@
           "label": "One complete slice shipped",
           "status": "positive",
           "evidence_snapshot_ids": ["work:focus:2026-08-24", "overview:daily:2026-08-24"]
+        },
+        {
+          "id": "reply-backlog",
+          "label": "The actionable inbox returned to a bounded queue",
+          "status": "positive",
+          "evidence_snapshot_ids": ["inbox:attention:2026-08-24", "overview:daily:2026-08-24"]
+        },
+        {
+          "id": "money-limited",
+          "label": "Money movement remained unconfirmed because one source was stale",
+          "status": "unknown",
+          "evidence_snapshot_ids": ["money:pulse:2026-08-24"]
         }
       ],
       "patterns": [
@@ -39,6 +51,12 @@
           "label": "Protected mornings coincided with completed work",
           "status": "positive",
           "evidence_snapshot_ids": ["agenda:primary:2026-08-24", "overview:daily:2026-08-24"]
+        },
+        {
+          "id": "smaller-queue",
+          "label": "A smaller active queue made completion and review more predictable",
+          "status": "positive",
+          "evidence_snapshot_ids": ["work:focus:2026-08-24", "inbox:attention:2026-08-24"]
         }
       ],
       "next_actions": [
@@ -47,6 +65,12 @@
           "label": "Keep the first two hours meeting-free on three weekdays",
           "status": "neutral",
           "evidence_snapshot_ids": ["review:weekly:2026-08-24"]
+        },
+        {
+          "id": "two-reply-windows",
+          "label": "Keep inbox handling to two bounded windows",
+          "status": "neutral",
+          "evidence_snapshot_ids": ["inbox:attention:2026-08-24", "overview:daily:2026-08-24"]
         }
       ]
     },
@@ -61,7 +85,9 @@
           "metrics": [
             { "label": "Focus blocks", "value": 18, "change": 4, "change_label": "vs last week", "tone": "positive" },
             { "label": "Completed decisions", "value": 9, "tone": "positive" },
-            { "label": "Carried forward", "value": 3, "tone": "warning" }
+            { "label": "Carried forward", "value": 3, "tone": "warning" },
+            { "label": "Inbox actions", "value": 11, "change": -5, "change_label": "vs last week", "tone": "positive" },
+            { "label": "Evidence gaps", "value": 1, "tone": "warning" }
           ]
         },
         {
@@ -108,6 +134,71 @@
           "body": "Keep the first two hours meeting-free on at least three weekdays. The evidence is behavioral, not motivational: those mornings produced the week's completed work.",
           "tone": "positive",
           "span": "full"
+        },
+        {
+          "id": "focus-trend",
+          "kind": "line-chart",
+          "title": "Focus and interruption trend",
+          "description": "Synthetic daily counts retained from the week's normalized snapshots.",
+          "span": "two",
+          "series": [
+            { "key": "focus", "label": "Focus blocks" },
+            { "key": "interruptions", "label": "Interruptions" }
+          ],
+          "points": [
+            { "x": "Mon", "values": { "focus": 2, "interruptions": 5 } },
+            { "x": "Tue", "values": { "focus": 3, "interruptions": 4 } },
+            { "x": "Wed", "values": { "focus": 3, "interruptions": 3 } },
+            { "x": "Thu", "values": { "focus": 4, "interruptions": 2 } },
+            { "x": "Fri", "values": { "focus": 3, "interruptions": 3 } },
+            { "x": "Sat", "values": { "focus": 1, "interruptions": 1 } },
+            { "x": "Sun", "values": { "focus": 2, "interruptions": 1 } }
+          ]
+        },
+        {
+          "id": "carry-forward",
+          "kind": "table",
+          "title": "Carry-forward register",
+          "span": "one",
+          "columns": [
+            { "key": "decision", "label": "Decision" },
+            { "key": "evidence", "label": "Evidence" },
+            { "key": "first_step", "label": "First step" }
+          ],
+          "rows": [
+            { "decision": "Protect three mornings", "evidence": "Completed work", "first_step": "Block Monday 08:30" },
+            { "decision": "Use two reply windows", "evidence": "Smaller queue", "first_step": "Set 09:50 and 16:00" },
+            { "decision": "Recheck money source", "evidence": "Stale pricing", "first_step": "Wait for valid refresh" }
+          ]
+        },
+        {
+          "id": "next-week-actions",
+          "kind": "list",
+          "title": "First actions",
+          "span": "full",
+          "items": [
+            {
+              "id": "n1",
+              "title": "Reserve Monday, Wednesday, and Friday mornings",
+              "description": "Keep the first two hours meeting-free.",
+              "status": "Calendar",
+              "tone": "positive"
+            },
+            {
+              "id": "n2",
+              "title": "Set two inbox windows",
+              "description": "Use 09:50 for decisions and 16:00 for reviews and follow-ups.",
+              "status": "Boundary",
+              "tone": "info"
+            },
+            {
+              "id": "n3",
+              "title": "Wait for reconciled money evidence",
+              "description": "Do not convert a stale source into a weekly conclusion.",
+              "status": "Evidence",
+              "tone": "warning"
+            }
+          ]
         }
       ]
     }

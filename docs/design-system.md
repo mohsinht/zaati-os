@@ -23,9 +23,13 @@ Zaati OS is a decision interface, not a marketing dashboard.
 
 Repeated facts belong in a table or row. Empty cards, decorative KPIs, arbitrary bold text, and chart-shaped wallpaper do not belong.
 
+Complexity should come from hierarchy, not ornament. Use `dashboard` for a dominant view plus supporting evidence, `focus` for one leading decision, and `timeline` for a narrow sequence. A block may span one, two, or all dashboard columns. Do not simulate complexity with nested cards, arbitrary component trees, or repeated metrics.
+
 ## Components
 
 Owned shadcn-compatible primitives live under `src/components/ui/`. Domain rendering goes through `BlockRenderer`. Add a primitive only when an existing one cannot express the interaction cleanly.
+
+The synthetic **Component lab** is the executable catalog: validated JSON appears on the left and the production renderer appears on the right. A new block is not complete until it appears there through a public synthetic fixture, with schema, type, renderer, tests, privacy review, and documentation.
 
 Use semantic tokens such as `background`, `card`, `muted`, `primary`, `warning`, and chart tokens. Do not hardcode provider or source colors inside components.
 

@@ -106,6 +106,10 @@ export function validateSnapshotPolicy(snapshot, registration, { allowSynthetic 
       const columnKeys = block.columns.map((column) => column.key)
       if (new Set(columnKeys).size !== columnKeys.length) errors.push(`${blockPath}/columns: column keys must be unique`)
     }
+    if (block.kind === "donut-chart") {
+      const labels = block.segments.map((segment) => segment.label)
+      if (new Set(labels).size !== labels.length) errors.push(`${blockPath}/segments: labels must be unique`)
+    }
   }
   walk(snapshot, (key, value, trail) => {
     if (unsafeKey.test(key)) errors.push(`#/${trail.join("/")}: secret-shaped keys are forbidden`)

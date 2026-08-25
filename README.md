@@ -36,7 +36,7 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
 ## What makes it different
 
 - **Any LLM workflow:** ChatGPT, Claude, Gemini, a local model, n8n, cron, or custom code can publish the same contract.
-- **LLM-directed presentation:** A safe UI contract lets the producer request metrics, lists, timelines, calendars, line or bar charts, progress views, notices, text, and tables. The renderer only permits audited components, never arbitrary HTML or code.
+- **LLM-directed presentation:** A safe UI contract lets the producer request metrics, lists, timelines, calendars, line, bar, or allocation charts, progress views, notices, text, and tables. The renderer only permits audited components, never arbitrary HTML or code.
 - **Private by architecture:** Real snapshots are ignored in the public code repository. The recommended public-fork setup keeps data in a separate private repository and protects the deployment with Cloudflare Access.
 - **Files before databases:** JSON is portable, diffable, inspectable, and easy for AI tools to create.
 - **Useful failure states:** Freshness, provenance, confidence, missing sources, and warnings remain visible.
@@ -74,6 +74,8 @@ make tutorial
 3. Run `npm run prompt:create`, then paste the generated task prompt into the LLM you already use.
 
 Everything else, including custom sources, encrypted storage, full theme tokens, and automatic deployment, is optional and documented separately.
+
+Synthetic demo mode includes a **Component lab** with the JSON contract beside each rendered block. Every demo source also includes a **Recreate this page** drawer containing the current base worker and source-specific Markdown prompt, ready for placeholder review and use in a scheduled LLM workflow.
 
 The canonical daily bundle contains agenda, inbox attention, work focus, money, news, and the dependency-backed daily overview. Prompt Studio can also create smaller independent bundles, and now generates the matching private-repository setup command.
 

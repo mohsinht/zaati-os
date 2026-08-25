@@ -152,7 +152,7 @@ try {
   await client.send("Runtime.enable")
   await client.send("Page.enable")
   const dashboard = await waitForJson(`${appUrl}/data/dashboard-data.json`)
-  const views = ["start", ...dashboard.sources.map((source) => source.definition.id)]
+  const views = ["start", ...(dashboard.demoMode ? ["components"] : []), ...dashboard.sources.map((source) => source.definition.id)]
   const viewUrl = (view) => `${appUrl}?view=${encodeURIComponent(view)}&at=${encodeURIComponent(dashboard.generatedAt)}`
   const viewports = [320, 390, 768, 1024, 1440]
   for (const width of viewports) {
@@ -183,6 +183,13 @@ try {
   await waitForApp(client)
   await client.send("Runtime.evaluate", { expression: `document.querySelector('button[aria-label="Open theme studio"]')?.click()` })
   await audit(client, "Desktop theme studio open")
+
+  await client.send("Page.navigate", { url: viewUrl("money:pulse") })
+  await waitForApp(client)
+  await client.send("Runtime.evaluate", {
+    expression: `Array.from(document.querySelectorAll("button")).find((button) => button.textContent?.includes("Recreate this page"))?.click()`,
+  })
+  await audit(client, "Desktop scheduled-task prompt open")
 
   await client.send("Page.navigate", { url: viewUrl("start") })
   await audit(client, "Desktop tutorial screenshot")

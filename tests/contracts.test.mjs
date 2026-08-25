@@ -11,6 +11,7 @@ test("safe UI contract exposes only audited block kinds", async () => {
   assert.deepEqual(kinds, [
     "bar-chart",
     "calendar",
+    "donut-chart",
     "line-chart",
     "list",
     "metric-group",
@@ -53,6 +54,18 @@ test("public examples are unmistakably synthetic", async () => {
   }
 })
 
+test("synthetic pages demonstrate every audited block kind", async () => {
+  const schema = await readJson("schemas/ui-blocks.schema.json")
+  const expected = new Set(schema.$defs.block.oneOf.map((item) => item.$ref.split("/").at(-1)))
+  const registry = await readJson("config/sources.json")
+  const demonstrated = new Set()
+  for (const source of registry.sources) {
+    const snapshot = await readJson(`data/examples/${source.domain}/${source.source}/2026-08-24.json`)
+    for (const block of snapshot.data.presentation.blocks) demonstrated.add(block.kind)
+  }
+  assert.deepEqual([...demonstrated].sort(), [...expected].sort())
+})
+
 test("line charts require exact unique series coverage", async () => {
   const registry = await readJson("config/sources.json")
   const registration = registry.sources.find((source) => source.id === "money:pulse")
@@ -65,6 +78,16 @@ test("line charts require exact unique series coverage", async () => {
   assert.ok(errors.some((error) => error.includes("series keys must be unique")))
   assert.ok(errors.some((error) => error.includes("x labels must be unique")))
   assert.ok(errors.some((error) => error.includes("keys must exactly match")))
+})
+
+test("donut charts require unique segment labels", async () => {
+  const registry = await readJson("config/sources.json")
+  const registration = registry.sources.find((source) => source.id === "money:pulse")
+  const snapshot = await readJson("data/examples/money/pulse/2026-08-24.json")
+  const chart = snapshot.data.presentation.blocks.find((block) => block.kind === "donut-chart")
+  chart.segments[1].label = chart.segments[0].label
+  const errors = validateSnapshotPolicy(snapshot, registration, { allowSynthetic: true, expectedDate: "2026-08-24" })
+  assert.ok(errors.some((error) => error.includes("labels must be unique")))
 })
 
 test("custom themes reject low-contrast semantic pairs in both modes", () => {

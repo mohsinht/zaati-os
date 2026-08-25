@@ -181,7 +181,7 @@ export function BlockRenderer({
     )
   }
 
-  if (block.kind === "bar-chart") {
+  if (block.kind === "bar-chart" || block.kind === "donut-chart") {
     return (
       <Panel block={block} emphasized={emphasized} layout={layout}>
         <Suspense fallback={<ChartLoading />}>

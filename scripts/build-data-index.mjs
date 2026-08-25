@@ -60,12 +60,37 @@ const latest = sourceDefinitions.map((definition) => ({
   snapshot: bySource[definition.id]?.at(-1) || null,
   freshnessState: snapshotFreshness(bySource[definition.id]?.at(-1) || null),
 }))
+const demoPromptsBySource = demoMode
+  ? Object.fromEntries(
+      await Promise.all(
+        sourceDefinitions.map(async (definition) => {
+          const [basePrompt, domainPrompt] = await Promise.all([
+            readFile(path.join(root, "prompts/base-worker.md"), "utf8"),
+            readFile(path.join(root, definition.prompt), "utf8"),
+          ])
+          return [definition.id, `${basePrompt.trim()}\n\n---\n\n${domainPrompt.trim()}\n`]
+        }),
+      ),
+    )
+  : {}
+const exampleKinds = new Set()
+const componentExamples = demoMode
+  ? snapshots
+      .flatMap((snapshot) => (snapshot.data?.presentation?.blocks || []).map((block) => ({ sourceId: snapshot.source_id, block })))
+      .filter(({ block }) => {
+        if (exampleKinds.has(block.kind)) return false
+        exampleKinds.add(block.kind)
+        return true
+      })
+  : []
 const output = {
   generatedAt: new Date().toISOString(),
   demoMode,
   instance,
   sources: latest,
   historyBySource: Object.fromEntries(Object.entries(bySource).map(([id, values]) => [id, values.slice(-historyLimit)])),
+  demoPromptsBySource,
+  componentExamples,
 }
 await mkdir(path.join(root, "public/data"), { recursive: true })
 await writeFile(path.join(root, "public/data/dashboard-data.json"), `${JSON.stringify(output)}\n`, { mode: 0o600 })

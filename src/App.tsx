@@ -6,6 +6,9 @@ import {
   ChevronDown,
   Clock3,
   CircleDollarSign,
+  Braces,
+  Check,
+  Copy,
   Inbox,
   LayoutDashboard,
   Menu,
@@ -41,6 +44,7 @@ const domainIcons = {
   review: Activity,
 } as const
 const START_ID = "__start"
+const COMPONENTS_ID = "__components"
 const publicAsset = (file: string) => `${import.meta.env.BASE_URL}${file.replace(/^\//, "")}`
 const health = {
   fresh: { label: "Fresh and complete", dot: "bg-positive" },
@@ -65,6 +69,7 @@ function initialMode(data: DashboardData): ThemeMode {
 function initialView(data: DashboardData, fallback: string) {
   const requested = new URL(window.location.href).searchParams.get("view")
   if (requested === "start" && data.demoMode) return START_ID
+  if (requested === "components" && data.demoMode) return COMPONENTS_ID
   if (data.sources.some((item) => item.definition.id === requested)) return requested as string
   return data.demoMode ? START_ID : fallback
 }
@@ -121,7 +126,8 @@ function DashboardApp({ data }: { data: DashboardData }) {
   const activeSnapshot = historySnapshotId
     ? history.find((snapshot) => snapshot.snapshot_id === historySnapshotId) || selected?.snapshot
     : selected?.snapshot
-  const selectedLabel = selectedId === START_ID ? "Start here" : selected?.definition.label || "Dashboard"
+  const selectedLabel =
+    selectedId === START_ID ? "Start here" : selectedId === COMPONENTS_ID ? "Component lab" : selected?.definition.label || "Dashboard"
 
   useEffect(() => {
     const root = document.documentElement
@@ -207,7 +213,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
     setHistorySnapshotId("")
     setMobileOpen(false)
     const url = new URL(window.location.href)
-    url.searchParams.set("view", id === START_ID ? "start" : id)
+    url.searchParams.set("view", id === START_ID ? "start" : id === COMPONENTS_ID ? "components" : id)
     window.history.pushState({}, "", url)
   }
   const chooseMode = (value: ThemeMode) => {
@@ -305,6 +311,8 @@ function DashboardApp({ data }: { data: DashboardData }) {
             <Suspense fallback={<InlineLoading />}>
               <Onboarding instance={data.instance} onOpenDashboard={() => select(overviewId)} />
             </Suspense>
+          ) : selectedId === COMPONENTS_ID ? (
+            <ComponentLab data={data} />
           ) : selected ? (
             <DashboardPage
               definition={selected.definition}
@@ -312,6 +320,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
               instance={data.instance}
               now={now}
               onHistory={setHistorySnapshotId}
+              prompt={data.demoPromptsBySource[selected.definition.id]}
               snapshot={activeSnapshot || null}
             />
           ) : (
@@ -430,6 +439,21 @@ function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, select
         >
           Your system
         </p>
+        {data.demoMode ? (
+          <button
+            aria-current={selectedId === COMPONENTS_ID ? "page" : undefined}
+            className={cn(
+              "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              selectedId === COMPONENTS_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+              compact && "md:justify-center md:px-2",
+            )}
+            onClick={() => onSelect(COMPONENTS_ID)}
+            title={compact ? "Component lab" : undefined}
+          >
+            <Braces className={cn("size-4 shrink-0 text-sidebar-foreground/55", selectedId === COMPONENTS_ID && "text-sidebar-primary")} />
+            <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>Component lab</span>
+          </button>
+        ) : null}
         {data.sources.map(({ definition, snapshot }) => {
           const Icon = Object.hasOwn(domainIcons, definition.domain) ? domainIcons[definition.domain as keyof typeof domainIcons] : Activity
           const active = definition.id === selectedId
@@ -478,6 +502,7 @@ function DashboardPage({
   instance,
   now,
   onHistory,
+  prompt,
   snapshot,
 }: {
   definition: SourceDefinition
@@ -485,6 +510,7 @@ function DashboardPage({
   instance: InstanceConfig
   now: number
   onHistory: (snapshotId: string) => void
+  prompt?: string
   snapshot: Snapshot | null
 }) {
   if (!snapshot)
@@ -512,26 +538,29 @@ function DashboardPage({
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PageEyebrow definition={definition} instance={instance} snapshot={snapshot} />
-        {history.length > 1 ? (
-          <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            Snapshot
-            <select
-              className="min-h-9 rounded-md border border-input bg-background px-2 text-foreground"
-              onChange={(event) => onHistory(event.target.value)}
-              value={snapshot.snapshot_id === history.at(-1)?.snapshot_id ? "" : snapshot.snapshot_id}
-            >
-              <option value="">Latest</option>
-              {[...history]
-                .reverse()
-                .slice(1)
-                .map((item) => (
-                  <option key={item.snapshot_id} value={item.snapshot_id}>
-                    {formatTimestamp(item.generated_at, instance)}
-                  </option>
-                ))}
-            </select>
-          </label>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {history.length > 1 ? (
+            <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              Snapshot
+              <select
+                className="min-h-9 rounded-md border border-input bg-background px-2 text-foreground"
+                onChange={(event) => onHistory(event.target.value)}
+                value={snapshot.snapshot_id === history.at(-1)?.snapshot_id ? "" : snapshot.snapshot_id}
+              >
+                <option value="">Latest</option>
+                {[...history]
+                  .reverse()
+                  .slice(1)
+                  .map((item) => (
+                    <option key={item.snapshot_id} value={item.snapshot_id}>
+                      {formatTimestamp(item.generated_at, instance)}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          ) : null}
+          {prompt ? <PromptDrawer prompt={prompt} sourceLabel={definition.label} /> : null}
+        </div>
       </div>
       <div className="mt-5 flex flex-col justify-between gap-5 border-b border-border pb-7 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
@@ -610,6 +639,116 @@ function DashboardPage({
           {formatTimestamp(snapshot.freshness.expires_at, instance)}
         </span>
       </footer>
+    </section>
+  )
+}
+
+function PromptDrawer({ prompt, sourceLabel }: { prompt: string; sourceLabel: string }) {
+  const [copied, setCopied] = useState(false)
+  const copyPrompt = async () => {
+    await navigator.clipboard.writeText(prompt)
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1800)
+  }
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Braces className="size-3.5" />
+          Recreate this page
+        </Button>
+      </DialogTrigger>
+      <DialogContent side="right">
+        <div className="flex items-start justify-between gap-4 border-b border-border p-5 pr-14">
+          <div>
+            <DialogTitle className="text-base font-semibold">{sourceLabel} scheduled-task prompt</DialogTitle>
+            <DialogDescription className="mt-1 text-sm leading-6 text-muted-foreground">
+              Replace every placeholder, review the permission boundary, then paste this Markdown into your LLM workflow.
+            </DialogDescription>
+          </div>
+          <Button aria-live="polite" onClick={() => void copyPrompt()} size="sm" variant="secondary">
+            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto bg-muted/35 p-4 sm:p-5">
+          <pre className="whitespace-pre-wrap break-words rounded-lg border border-border bg-card p-4 font-mono text-xs leading-6 text-card-foreground">
+            {prompt}
+          </pre>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ComponentLab({ data }: { data: DashboardData }) {
+  const [copiedId, setCopiedId] = useState("")
+  const copyContract = async (id: string, value: string) => {
+    await navigator.clipboard.writeText(value)
+    setCopiedId(id)
+    window.setTimeout(() => setCopiedId(""), 1800)
+  }
+  return (
+    <section>
+      <div className="max-w-3xl border-b border-border pb-7">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Safe presentation contract / Synthetic</p>
+        <h1 className="mt-4 text-pretty text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+          Build richer pages without shipping UI code
+        </h1>
+        <p className="mt-3 text-base leading-7 text-muted-foreground">
+          Your LLM chooses an audited block, a semantic page layout, and a span. Zaati OS owns rendering, responsive behavior, theme tokens,
+          focus handling, and accessibility.
+        </p>
+      </div>
+      <div className="mt-5 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
+        {[
+          ["dashboard", "Three-column canvas", "Use one dominant two-column block with supporting evidence."],
+          ["focus", "Focused decision", "The first block leads; supporting blocks stay quieter."],
+          ["timeline", "Linear narrative", "Sequence and review pages remain deliberately narrow."],
+        ].map(([name, label, description]) => (
+          <div className="bg-card p-4" key={name}>
+            <code className="text-xs font-semibold text-primary">{name}</code>
+            <p className="mt-2 text-sm font-medium">{label}</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-10 space-y-10">
+        {data.componentExamples.map(({ sourceId, block }) => {
+          const contract = JSON.stringify(block, null, 2)
+          return (
+            <article className="border-t border-border pt-5" id={`component-${block.kind}`} key={block.kind}>
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{sourceId}</p>
+                  <h2 className="mt-1 text-xl font-semibold">{block.kind}</h2>
+                </div>
+                <Badge variant="outline">Audited JSON only</Badge>
+              </div>
+              <div className="grid overflow-hidden rounded-xl border border-border xl:grid-cols-2">
+                <div className="min-w-0 border-b border-border bg-muted/35 xl:border-b-0 xl:border-r">
+                  <div className="flex min-h-11 items-center justify-between border-b border-border px-3">
+                    <span className="text-xs font-medium text-muted-foreground">JSON contract</span>
+                    <Button aria-live="polite" onClick={() => void copyContract(block.id, contract)} size="sm" variant="ghost">
+                      {copiedId === block.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                      {copiedId === block.id ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                  <pre className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-6">
+                    {contract}
+                  </pre>
+                </div>
+                <div className="min-w-0 bg-background p-4 sm:p-5">
+                  <p className="mb-3 text-xs font-medium text-muted-foreground">Rendered result</p>
+                  <div className="grid grid-cols-1">
+                    <BlockRenderer block={block} instance={data.instance} />
+                  </div>
+                </div>
+              </div>
+            </article>
+          )
+        })}
+      </div>
     </section>
   )
 }

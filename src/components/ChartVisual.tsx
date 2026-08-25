@@ -1,5 +1,5 @@
 import { useId } from "react"
-import type { BarChartBlock, InstanceConfig, LineChartBlock, ValueFormat } from "@/types"
+import type { BarChartBlock, DonutChartBlock, InstanceConfig, LineChartBlock, ValueFormat } from "@/types"
 
 const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
 const dashPatterns = [undefined, "9 5", "2 5", "12 4 2 4", "5 4"]
@@ -34,12 +34,71 @@ function yPosition(value: number, min: number, max: number) {
   return plot.top + ((max - value) / (max - min)) * available
 }
 
-export default function ChartVisual({ block, instance }: { block: LineChartBlock | BarChartBlock; instance: InstanceConfig }) {
+export default function ChartVisual({
+  block,
+  instance,
+}: {
+  block: LineChartBlock | BarChartBlock | DonutChartBlock
+  instance: InstanceConfig
+}) {
   const descriptionId = useId()
-  return block.kind === "line-chart" ? (
-    <LineVisual block={block} descriptionId={descriptionId} instance={instance} />
-  ) : (
-    <BarVisual block={block} descriptionId={descriptionId} instance={instance} />
+  if (block.kind === "line-chart") return <LineVisual block={block} descriptionId={descriptionId} instance={instance} />
+  if (block.kind === "bar-chart") return <BarVisual block={block} descriptionId={descriptionId} instance={instance} />
+  return <DonutVisual block={block} descriptionId={descriptionId} instance={instance} />
+}
+
+function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBlock; descriptionId: string; instance: InstanceConfig }) {
+  const valueFormat = block.value_format || "number"
+  const total = block.segments.reduce((sum, segment) => sum + segment.value, 0)
+  const radius = 76
+  const circumference = 2 * Math.PI * radius
+  const arcs = block.segments.map((segment, index) => ({
+    ...segment,
+    length: (segment.value / total) * circumference,
+    offset: (block.segments.slice(0, index).reduce((sum, previous) => sum + previous.value, 0) / total) * circumference,
+  }))
+  return (
+    <figure aria-labelledby={descriptionId} className="m-0 grid gap-5 sm:grid-cols-[minmax(190px,0.8fr)_minmax(0,1.2fr)] sm:items-center">
+      <figcaption className="sr-only" id={descriptionId}>
+        {block.title} allocation chart. Exact values follow in a list.
+      </figcaption>
+      <div className="relative mx-auto aspect-square w-full max-w-[230px]">
+        <svg aria-hidden="true" className="size-full -rotate-90" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" fill="none" r={radius} stroke="var(--muted)" strokeWidth="24" />
+          {arcs.map((segment, index) => {
+            return (
+              <circle
+                cx="100"
+                cy="100"
+                fill="none"
+                key={segment.label}
+                r={radius}
+                stroke={colors[index % colors.length]}
+                strokeDasharray={`${Math.max(0, segment.length - 2)} ${circumference}`}
+                strokeDashoffset={-segment.offset}
+                strokeLinecap="butt"
+                strokeWidth="24"
+              />
+            )
+          })}
+        </svg>
+        <div className="absolute inset-0 grid place-content-center text-center">
+          <span className="text-xl font-semibold tracking-tight">{format(total, valueFormat, instance)}</span>
+          {block.center_label ? <span className="mt-1 text-xs text-muted-foreground">{block.center_label}</span> : null}
+        </div>
+      </div>
+      <ul className="divide-y divide-border" aria-label={`${block.title} values`}>
+        {block.segments.map((segment, index) => (
+          <li className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0" key={segment.label}>
+            <span className="flex min-w-0 items-center gap-2 text-sm">
+              <span aria-hidden="true" className="size-2 shrink-0 rounded-full" style={{ background: colors[index % colors.length] }} />
+              <span className="truncate">{segment.label}</span>
+            </span>
+            <span className="shrink-0 text-sm font-medium">{format(segment.value, valueFormat, instance)}</span>
+          </li>
+        ))}
+      </ul>
+    </figure>
   )
 }
 

@@ -35,6 +35,8 @@ Users separately trust their selected source providers, LLM provider or local mo
 
 Keep a normalized action, measure, deadline, status, and evidence reference when they are enough. Avoid raw email bodies, full documents, attachments, statements, account identifiers, source code, customer data, authentication links, cookies, tokens, and unnecessary information about other people.
 
+Financial views may retain user-approved account-level totals, normalized holdings, explicit goals, and scenario assumptions. They must not retain account numbers, payment authorization data, complete statements, transaction counterparties, or credentials. A projection must state its assumptions and remain distinct from a verified balance or financial advice.
+
 Zaati detects common credential formats and source-specific risky shapes. No regular-expression list can identify every secret, medical fact, name, message excerpt, or unnecessary personal detail. Enable secret scanning and push protection on the private repository, minimize before the first branch push, and treat model and operator judgment as part of this boundary.
 
 ## Public fork rule

@@ -31,6 +31,12 @@ export type BarChartBlock = BlockBase & {
   value_format?: ValueFormat
   bars: Array<{ label: string; value: number; tone?: Tone }>
 }
+export type DonutChartBlock = BlockBase & {
+  kind: "donut-chart"
+  value_format?: ValueFormat
+  center_label?: string
+  segments: Array<{ label: string; value: number }>
+}
 export type CalendarBlock = BlockBase & {
   kind: "calendar"
   date: string
@@ -56,6 +62,7 @@ export type DashboardBlock =
   | ListBlock
   | LineChartBlock
   | BarChartBlock
+  | DonutChartBlock
   | CalendarBlock
   | TableBlock
   | ProgressBlock
@@ -142,4 +149,6 @@ export type DashboardData = {
     freshnessState: "fresh" | "aging" | "stale" | "partial" | "failed" | "missing"
   }>
   historyBySource: Record<string, Snapshot[]>
+  demoPromptsBySource: Record<string, string>
+  componentExamples: Array<{ sourceId: string; block: DashboardBlock }>
 }

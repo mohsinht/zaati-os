@@ -58,7 +58,19 @@
               "minItems": 1,
               "uniqueItems": true,
               "items": {
-                "enum": ["metric-group", "list", "line-chart", "bar-chart", "calendar", "table", "progress", "notice", "timeline", "text"]
+                "enum": [
+                  "metric-group",
+                  "list",
+                  "line-chart",
+                  "bar-chart",
+                  "donut-chart",
+                  "calendar",
+                  "table",
+                  "progress",
+                  "notice",
+                  "timeline",
+                  "text"
+                ]
               }
             }
           }
