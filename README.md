@@ -50,11 +50,17 @@ Requires Node.js 22 or newer.
 git clone https://github.com/YOUR_GITHUB_USERNAME/zaati-os.git
 cd zaati-os
 npm install
+npm run dev
+```
+
+The first demo visit opens an optional guided tour of sources, safe components, scheduled-task prompts, and the private setup path. Everything shown is public synthetic data. When you are ready to create your workspace:
+
+```bash
 npm run setup
 npm run tutorial
 ```
 
-The setup assistant creates ignored local preferences. The tutorial runs a credential-free mock LLM that deliberately fails its first contract attempt, retries safely, creates six synthetic snapshots in one transaction, and opens the dashboard.
+The setup assistant creates ignored local preferences and switches the local app to private mode. Synthetic example pages, Component Lab, copy-prompt guides, and the automatic demo tour are no longer included. The tutorial can still test ingestion with credential-free synthetic snapshots, clearly labeled as test data inside the private shell.
 
 ![Animated terminal showing Zaati OS setup and the synthetic tutorial](docs/assets/onboarding/setup.gif)
 
@@ -69,9 +75,10 @@ make tutorial
 
 ## Make it yours
 
-1. Fork the code repository and run `npm run setup`.
-2. Test the entire ingestion loop with `npm run tutorial`.
-3. Run `npm run prompt:create`, then paste the generated task prompt into the LLM you already use.
+1. Explore the synthetic demo and guided tour with `npm run dev`.
+2. Run `npm run setup` to create an ignored private workspace and remove demo-only UI.
+3. Test the entire ingestion loop with `npm run tutorial`.
+4. Run `npm run prompt:create`, then paste the generated task prompt into the LLM you already use.
 
 Everything else, including custom sources, encrypted storage, full theme tokens, and automatic deployment, is optional and documented separately.
 

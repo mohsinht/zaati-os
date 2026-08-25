@@ -34,6 +34,7 @@ import { snapshotFreshness, type FreshnessState } from "@/lib/freshness"
 import type { DashboardData, InstanceConfig, Snapshot, SourceDefinition } from "@/types"
 
 const Onboarding = lazy(() => import("@/components/Onboarding"))
+const DemoTour = lazy(() => import("@/components/DemoTour"))
 const domainIcons = {
   overview: LayoutDashboard,
   agenda: CalendarDays,
@@ -68,10 +69,10 @@ function initialMode(data: DashboardData): ThemeMode {
 
 function initialView(data: DashboardData, fallback: string) {
   const requested = new URL(window.location.href).searchParams.get("view")
-  if (requested === "start" && data.demoMode) return START_ID
+  if (requested === "start") return START_ID
   if (requested === "components" && data.demoMode) return COMPONENTS_ID
   if (data.sources.some((item) => item.definition.id === requested)) return requested as string
-  return data.demoMode ? START_ID : fallback
+  return data.demoMode || data.sources.every((item) => !item.snapshot) ? START_ID : fallback
 }
 
 function initialNow(data: DashboardData) {
@@ -121,6 +122,13 @@ function DashboardApp({ data }: { data: DashboardData }) {
   const [sidebarCompact, setSidebarCompact] = useState(false)
   const [now, setNow] = useState(() => initialNow(data))
   const [historySnapshotId, setHistorySnapshotId] = useState("")
+  const [tourOpen, setTourOpen] = useState(
+    () =>
+      data.demoMode &&
+      data.instance.experience.show_tour &&
+      initialView(data, overviewId) === START_ID &&
+      localStorage.getItem("zaati-demo-tour") !== "complete",
+  )
   const selected = data.sources.find((item) => item.definition.id === selectedId)
   const history = data.historyBySource[selectedId] || []
   const activeSnapshot = historySnapshotId
@@ -220,8 +228,22 @@ function DashboardApp({ data }: { data: DashboardData }) {
     localStorage.setItem("zaati-theme", value)
     setMode(value)
   }
+  const completeTour = () => {
+    localStorage.setItem("zaati-demo-tour", "complete")
+    setTourOpen(false)
+  }
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {data.demoMode && tourOpen ? (
+        <Suspense fallback={null}>
+          <DemoTour
+            onComplete={completeTour}
+            onOpenComponentLab={() => select(COMPONENTS_ID)}
+            open={tourOpen}
+            sources={data.sources.map((item) => item.definition)}
+          />
+        </Suspense>
+      ) : null}
       <a
         className="fixed left-3 top-3 z-[70] -translate-y-20 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-lg transition-transform focus:translate-y-0"
         href="#main-content"
@@ -258,13 +280,13 @@ function DashboardApp({ data }: { data: DashboardData }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {data.demoMode ? (
+            {data.demoMode || data.syntheticData ? (
               <Badge variant="info">
                 <Sparkles className="size-3 min-[360px]:mr-1" />
                 <span aria-hidden="true" className="hidden min-[360px]:inline">
-                  Synthetic demo
+                  {data.demoMode ? "Synthetic demo" : "Synthetic test data"}
                 </span>
-                <span className="sr-only">Synthetic demo</span>
+                <span className="sr-only">{data.demoMode ? "Synthetic demo" : "Synthetic test data"}</span>
               </Badge>
             ) : (
               <Badge className="hidden sm:inline-flex" variant="positive">
@@ -309,7 +331,13 @@ function DashboardApp({ data }: { data: DashboardData }) {
         <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
           {selectedId === START_ID ? (
             <Suspense fallback={<InlineLoading />}>
-              <Onboarding instance={data.instance} onOpenDashboard={() => select(overviewId)} />
+              <Onboarding
+                demoMode={data.demoMode}
+                hasSnapshots={data.sources.some((item) => item.snapshot)}
+                instance={data.instance}
+                onOpenDashboard={() => select(overviewId)}
+                onStartTour={() => setTourOpen(true)}
+              />
             </Suspense>
           ) : selectedId === COMPONENTS_ID ? (
             <ComponentLab data={data} />

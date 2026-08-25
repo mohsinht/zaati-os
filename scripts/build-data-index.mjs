@@ -2,6 +2,7 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { decryptSnapshotEnvelope, loadSnapshotKey } from "./lib/snapshot-crypto.mjs"
 import { snapshotFreshness } from "./lib/freshness.mjs"
+import { resolvedExperience } from "./lib/setup-options.mjs"
 
 const root = process.cwd()
 async function snapshotFiles(directory) {
@@ -25,17 +26,23 @@ async function snapshotFiles(directory) {
   }
 }
 const readJson = async (file) => JSON.parse(await readFile(path.join(root, file), "utf8"))
-const instance = await readJson(
-  await readFile(path.join(root, "config/instance.local.json"), "utf8")
-    .then(() => "config/instance.local.json")
-    .catch(() => "config/instance.example.json"),
-)
+const localInstance = await readFile(path.join(root, "config/instance.local.json"), "utf8")
+  .then(() => true)
+  .catch(() => false)
+const rawInstance = await readJson(localInstance ? "config/instance.local.json" : "config/instance.example.json")
+const instance = {
+  ...rawInstance,
+  experience: resolvedExperience(rawInstance, {
+    hasLocalConfig: localInstance,
+    demoOverride: process.env.ZAATI_DEMO_MODE === "true",
+  }),
+}
 const privateRoot = process.env.ZAATI_DATA_DIR || "data/snapshots"
 const tutorialMode = process.env.ZAATI_TUTORIAL_MODE === "true"
 const historyLimit = Math.min(366, Math.max(1, Number(process.env.ZAATI_HISTORY_LIMIT || 31)))
 if (!Number.isInteger(historyLimit)) throw new Error("ZAATI_HISTORY_LIMIT must be an integer from 1 to 366.")
 const privateFiles = await snapshotFiles(privateRoot)
-const usingExamples = privateFiles.length === 0
+const usingExamples = privateFiles.length === 0 && instance.experience.mode === "demo"
 const files = usingExamples ? await snapshotFiles("data/examples") : privateFiles
 const encryptedFiles = files.filter((file) => file.endsWith(".enc"))
 if (!usingExamples && !tutorialMode && instance.storage.snapshot_encryption && files.some((file) => !file.endsWith(".enc")))
@@ -48,7 +55,8 @@ const snapshots = await Promise.all(
     file.endsWith(".enc") ? decryptSnapshotEnvelope(JSON.parse(await readFile(path.join(root, file), "utf8")), key) : readJson(file),
   ),
 )
-const demoMode = usingExamples || snapshots.every((snapshot) => snapshot.privacy?.synthetic === true)
+const demoMode = usingExamples
+const syntheticData = snapshots.length > 0 && snapshots.every((snapshot) => snapshot.privacy?.synthetic === true)
 const registry = await readJson("config/sources.json")
 const enabled = new Set(instance.enabled_sources)
 const sourceDefinitions = registry.sources.filter((source) => enabled.has(source.id))
@@ -86,6 +94,7 @@ const componentExamples = demoMode
 const output = {
   generatedAt: new Date().toISOString(),
   demoMode,
+  syntheticData,
   instance,
   sources: latest,
   historyBySource: Object.fromEntries(Object.entries(bySource).map(([id, values]) => [id, values.slice(-historyLimit)])),

@@ -9,7 +9,14 @@ const target = path.resolve("config/instance.local.json")
 const force = process.argv.includes("--force")
 const template = JSON.parse(await readFile(path.resolve("config/instance.example.json"), "utf8"))
 const detected = detectedDefaults()
-const defaults = { ...template, timezone: detected.timezone, locale: detected.locale, currency: detected.currency }
+const keepDemo = process.argv.includes("--demo")
+const defaults = {
+  ...template,
+  timezone: detected.timezone,
+  locale: detected.locale,
+  currency: detected.currency,
+  experience: { mode: keepDemo ? "demo" : "private", show_tour: keepDemo },
+}
 const registry = JSON.parse(await readFile(path.resolve("config/sources.json"), "utf8"))
 const exists = await readFile(target)
   .then(() => true)
@@ -84,4 +91,9 @@ if (encryption) {
   })
 }
 console.log("\nVoila. Your ignored local configuration is ready.")
-console.log("Next: npm run tutorial, then read docs/tutorials/one-task-daily-bundle.md when you want real sources.")
+if (config.experience.mode === "private") {
+  console.log("Synthetic example pages, Component Lab, prompt guides, and the automatic demo tour are disabled here.")
+  console.log("Next: npm run tutorial to test ingestion, then npm run prompt:create to connect your approved sources.")
+} else {
+  console.log("Demo mode remains enabled. Run npm run setup -- --force when you are ready to create a private workspace.")
+}

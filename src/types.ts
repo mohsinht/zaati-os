@@ -107,6 +107,7 @@ export type InstanceConfig = {
   currency: string
   week_starts_on: "monday" | "sunday"
   enabled_sources: string[]
+  experience: { mode: "demo" | "private"; show_tour: boolean }
   theme: {
     preset: "sage" | "ocean" | "plum" | "sand" | "custom"
     default_mode: "system" | "light" | "dark"
@@ -142,6 +143,7 @@ export type InstanceConfig = {
 export type DashboardData = {
   generatedAt: string
   demoMode: boolean
+  syntheticData: boolean
   instance: InstanceConfig
   sources: Array<{
     definition: SourceDefinition

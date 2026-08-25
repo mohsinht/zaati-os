@@ -163,7 +163,9 @@ try {
       mobile: width < 768,
     })
     for (const mode of ["light", "dark"]) {
-      await client.send("Runtime.evaluate", { expression: `localStorage.setItem("zaati-theme", "${mode}")` })
+      await client.send("Runtime.evaluate", {
+        expression: `localStorage.setItem("zaati-theme", "${mode}"); localStorage.setItem("zaati-demo-tour", "complete")`,
+      })
       for (const view of views) {
         await client.send("Page.navigate", { url: viewUrl(view) })
         await audit(client, `${width}px ${mode} ${view}`)
@@ -179,6 +181,14 @@ try {
   await audit(client, "Mobile navigation open")
 
   await client.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
+  await client.send("Runtime.evaluate", { expression: `localStorage.removeItem("zaati-demo-tour")` })
+  await client.send("Page.navigate", { url: viewUrl("start") })
+  await audit(client, "Desktop first-run demo tour")
+  await client.send("Runtime.evaluate", {
+    expression: `Array.from(document.querySelectorAll("button")).find((button) => button.textContent?.includes("Skip tour"))?.click()`,
+  })
+  await client.send("Runtime.evaluate", { expression: `localStorage.setItem("zaati-demo-tour", "complete")` })
+
   await client.send("Page.navigate", { url: viewUrl("overview:daily") })
   await waitForApp(client)
   await client.send("Runtime.evaluate", { expression: `document.querySelector('button[aria-label="Open theme studio"]')?.click()` })

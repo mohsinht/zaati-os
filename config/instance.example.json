@@ -8,6 +8,10 @@
   "currency": "USD",
   "week_starts_on": "monday",
   "enabled_sources": ["overview:daily", "agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing", "review:weekly"],
+  "experience": {
+    "mode": "demo",
+    "show_tour": true
+  },
   "theme": {
     "preset": "sage",
     "default_mode": "system",
