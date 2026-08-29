@@ -1,7 +1,14 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import registry from "../config/sources.json" with { type: "json" }
-import { detectedDefaults, expandDependencies, validCurrency, validLocale, validTimezone } from "../scripts/lib/setup-options.mjs"
+import {
+  detectedDefaults,
+  expandDependencies,
+  resolvedExperience,
+  validCurrency,
+  validLocale,
+  validTimezone,
+} from "../scripts/lib/setup-options.mjs"
 
 test("detects usable local defaults", () => {
   const defaults = detectedDefaults()
@@ -29,4 +36,14 @@ test("expands aggregate source dependencies in deterministic order", () => {
     "overview:daily",
   ])
   assert.throws(() => expandDependencies(["missing:source"], registry), /Unknown source/)
+})
+
+test("local workspaces fail closed to private mode while the upstream example remains a demo", () => {
+  assert.deepEqual(resolvedExperience({}, { hasLocalConfig: true }), { mode: "private", show_tour: false })
+  assert.deepEqual(resolvedExperience({}, { hasLocalConfig: false }), { mode: "demo", show_tour: true })
+  assert.deepEqual(resolvedExperience({ experience: { mode: "private", show_tour: false } }), {
+    mode: "private",
+    show_tour: false,
+  })
+  assert.deepEqual(resolvedExperience({}, { hasLocalConfig: true, demoOverride: true }), { mode: "demo", show_tour: true })
 })

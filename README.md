@@ -36,7 +36,7 @@ You choose the LLM. You own the data. You control the deployment. Zaati OS has n
 ## What makes it different
 
 - **Any LLM workflow:** ChatGPT, Claude, Gemini, a local model, n8n, cron, or custom code can publish the same contract.
-- **LLM-directed presentation:** A safe UI contract lets the producer request metrics, lists, timelines, calendars, line or bar charts, progress views, notices, text, and tables. The renderer only permits audited components, never arbitrary HTML or code.
+- **LLM-directed presentation:** A safe UI contract lets the producer request metrics, lists, timelines, calendars, line, bar, or allocation charts, progress views, notices, text, and tables. The renderer only permits audited components, never arbitrary HTML or code.
 - **Private by architecture:** Real snapshots are ignored in the public code repository. The recommended public-fork setup keeps data in a separate private repository and protects the deployment with Cloudflare Access.
 - **Files before databases:** JSON is portable, diffable, inspectable, and easy for AI tools to create.
 - **Useful failure states:** Freshness, provenance, confidence, missing sources, and warnings remain visible.
@@ -50,11 +50,17 @@ Requires Node.js 22 or newer.
 git clone https://github.com/YOUR_GITHUB_USERNAME/zaati-os.git
 cd zaati-os
 npm install
+npm run dev
+```
+
+The first demo visit opens an optional guided tour of sources, safe components, scheduled-task prompts, and the private setup path. Everything shown is public synthetic data. When you are ready to create your workspace:
+
+```bash
 npm run setup
 npm run tutorial
 ```
 
-The setup assistant creates ignored local preferences. The tutorial runs a credential-free mock LLM that deliberately fails its first contract attempt, retries safely, creates six synthetic snapshots in one transaction, and opens the dashboard.
+The setup assistant creates ignored local preferences and switches the local app to private mode. Synthetic example pages, Component Lab, copy-prompt guides, and the automatic demo tour are no longer included. The tutorial can still test ingestion with credential-free synthetic snapshots, clearly labeled as test data inside the private shell.
 
 ![Animated terminal showing Zaati OS setup and the synthetic tutorial](docs/assets/onboarding/setup.gif)
 
@@ -69,11 +75,14 @@ make tutorial
 
 ## Make it yours
 
-1. Fork the code repository and run `npm run setup`.
-2. Test the entire ingestion loop with `npm run tutorial`.
-3. Run `npm run prompt:create`, then paste the generated task prompt into the LLM you already use.
+1. Explore the synthetic demo and guided tour with `npm run dev`.
+2. Run `npm run setup` to create an ignored private workspace and remove demo-only UI.
+3. Test the entire ingestion loop with `npm run tutorial`.
+4. Run `npm run prompt:create`, then paste the generated task prompt into the LLM you already use.
 
 Everything else, including custom sources, encrypted storage, full theme tokens, and automatic deployment, is optional and documented separately.
+
+Synthetic demo mode includes a **Component lab** with the JSON contract beside each rendered block. Every demo source also includes a **Recreate this page** drawer containing one standalone scheduled-task prompt. It includes the resolved worker and source, permission boundary, and current executable schemas; the user only replaces the code repository, private data repository, and timezone placeholders before review and use.
 
 The canonical daily bundle contains agenda, inbox attention, work focus, money, news, and the dependency-backed daily overview. Prompt Studio can also create smaller independent bundles, and now generates the matching private-repository setup command.
 
@@ -155,7 +164,7 @@ See [LLM contract](docs/llm-contract.md) and [`schemas/`](schemas/) for the exec
 | `daily-overview.md`  | Combine registered source snapshots                  | Adaptive dashboard            |
 | `weekly-review.md`   | Find patterns and produce an evidence-based review   | Progress, timeline, decisions |
 
-These are provider-neutral templates, not connectors. ChatGPT scheduled tasks are the target first real path, but the release evidence is not complete yet. Other providers are contract-compatible and are not claimed as end-to-end certified until their documented release gate passes.
+These are provider-neutral templates, not connectors. The local mock tutorial and command adapter are maintained in v0.1.1. ChatGPT scheduled tasks are the target first hosted path, but no hosted provider is claimed as end-to-end certified until its documented provider gate passes.
 
 ## Repository map
 
@@ -236,7 +245,9 @@ Zaati OS charges no platform fee and can be deployed using free or already-owned
 
 Code version: **v0.1.1**
 
-No immutable GitHub Release is published yet. Until the recorded provider and hosted-demo release gates pass, pin private validators to a reviewed full commit SHA. This code version establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. See [CHANGELOG.md](CHANGELOG.md).
+Latest GitHub release: **[v0.1.1](https://github.com/mohsinht/zaati-os/releases/tag/v0.1.1)**, published August 25, 2026.
+
+This foundation release establishes the portable data contract, atomic bundle ingestion, adaptive renderer, guided onboarding, provider-neutral prompts, optional encrypted storage, theme studio, privacy boundaries, Cloudflare recipe, and CI quality gates. Hosted LLM workflows remain contract-compatible rather than provider-certified until their recorded end-to-end gates pass. Private validators should pin the reviewed v0.1.1 release commit `0ef31dc8e973e5f1f557b1df9c7f79a012dd7d2a`; future signed, protected, and immutable releases may be used as stable references. See [CHANGELOG.md](CHANGELOG.md).
 
 Before storing real data, read [Data lifecycle and key recovery](docs/data-lifecycle.md). Fork maintainers can follow [Upgrade and fork sync](docs/upgrading.md).
 

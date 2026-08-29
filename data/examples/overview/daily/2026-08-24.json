@@ -33,6 +33,18 @@
           "title": "Protect the first focus block",
           "reason": "The agenda and work queue both identify it as the highest-value window.",
           "source_ids": ["agenda:primary:2026-08-24", "work:focus:2026-08-24"]
+        },
+        {
+          "id": "batch-replies",
+          "title": "Use two bounded reply windows",
+          "reason": "The inbox has four actionable messages but only two carry hard timing constraints.",
+          "source_ids": ["inbox:attention:2026-08-24", "agenda:primary:2026-08-24"]
+        },
+        {
+          "id": "defer-money-conclusion",
+          "title": "Defer daily portfolio conclusions",
+          "reason": "The crypto summary is stale, so today's allocation and movement do not fully reconcile.",
+          "source_ids": ["money:pulse:2026-08-24"]
         }
       ],
       "actions": [
@@ -41,6 +53,18 @@
           "title": "Reply to the scheduling question",
           "reason": "The inbox snapshot records a decision due today.",
           "source_ids": ["inbox:attention:2026-08-24"]
+        },
+        {
+          "id": "ship-slice",
+          "title": "Finish the complete renderer slice",
+          "reason": "It is startable, high priority, and supported by the protected morning block.",
+          "source_ids": ["work:focus:2026-08-24", "agenda:primary:2026-08-24"]
+        },
+        {
+          "id": "preserve-buffer",
+          "title": "Leave 15:30 onward unclaimed",
+          "reason": "The agenda reserves this time to absorb review delay or unfinished admin.",
+          "source_ids": ["agenda:primary:2026-08-24"]
         }
       ]
     },
@@ -54,7 +78,7 @@
           "span": "full",
           "metrics": [
             { "label": "Focus time", "value": 3.5, "unit": "hours", "tone": "positive" },
-            { "label": "Needs a reply", "value": 2, "format": "number", "tone": "warning" },
+            { "label": "Needs a reply", "value": 4, "format": "number", "tone": "warning" },
             { "label": "Open blockers", "value": 1, "format": "number", "tone": "neutral" },
             { "label": "Goal pace", "value": 78, "format": "percent", "change": 6, "change_label": "this week", "tone": "positive" }
           ]
@@ -157,6 +181,51 @@
           "body": "The afternoon has enough space to absorb surprises. Filling it now would turn a calm plan into calendar Tetris.",
           "tone": "info",
           "span": "full"
+        },
+        {
+          "id": "decision-sequence",
+          "kind": "timeline",
+          "title": "Decision sequence",
+          "span": "two",
+          "items": [
+            {
+              "label": "Before 08:30",
+              "title": "Open the acceptance criteria",
+              "description": "Start the focus block with the finish line visible.",
+              "tone": "positive"
+            },
+            {
+              "label": "09:50",
+              "title": "Resolve the scheduling choice",
+              "description": "One bounded reply prevents inbox drift.",
+              "tone": "warning"
+            },
+            {
+              "label": "13:00",
+              "title": "Review and ship",
+              "description": "Use the second focus block for evidence and release.",
+              "tone": "positive"
+            },
+            { "label": "15:30", "title": "Stop scheduling", "description": "Keep the buffer available for reality.", "tone": "info" }
+          ]
+        },
+        {
+          "id": "source-register",
+          "kind": "table",
+          "title": "Source state",
+          "span": "one",
+          "columns": [
+            { "key": "source", "label": "Source" },
+            { "key": "state", "label": "State" },
+            { "key": "consequence", "label": "Decision consequence" }
+          ],
+          "rows": [
+            { "source": "Agenda", "state": "Fresh", "consequence": "Schedule is usable" },
+            { "source": "Inbox", "state": "Fresh", "consequence": "Four actions retained" },
+            { "source": "Work", "state": "Fresh", "consequence": "One startable priority" },
+            { "source": "Money", "state": "Partial", "consequence": "No daily movement claim" },
+            { "source": "News", "state": "Fresh", "consequence": "No urgent action" }
+          ]
         }
       ]
     }

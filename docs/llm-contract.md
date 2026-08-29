@@ -31,18 +31,19 @@ The LLM chooses the information shape. The application keeps control of renderin
 
 Each source-specific domain schema requires stable `data.facts`. Facts carry durable dates, amounts, statuses, references, and decisions without depending on a visual component. `data.presentation` is a derived view of those facts. A future renderer can change a table into a graph without rewriting memory.
 
-| Block          | Use it for                                        | Do not use it for                 |
-| -------------- | ------------------------------------------------- | --------------------------------- |
-| `metric-group` | A few current decision measures                   | A wall of arbitrary counts        |
-| `line-chart`   | Ordered comparable trends                         | One point or unrelated categories |
-| `bar-chart`    | Categorical comparison                            | Time-series storytelling          |
-| `calendar`     | Events with real dates or times                   | Untimed task lists                |
-| `table`        | Exact repeated fields                             | Narrative or one record           |
-| `list`         | Actions, ranked items, attention queue            | Raw provider dumps                |
-| `progress`     | Explicit target with known denominator            | Vague motivation scores           |
-| `timeline`     | Meaningful event sequence                         | Decorative daily diary            |
-| `notice`       | One caveat, risk, or insight                      | Repeating normal content          |
-| `text`         | Short analysis that loses meaning when structured | Executable Markdown or HTML       |
+| Block          | Use it for                                        | Do not use it for                        |
+| -------------- | ------------------------------------------------- | ---------------------------------------- |
+| `metric-group` | A few current decision measures                   | A wall of arbitrary counts               |
+| `line-chart`   | Ordered comparable trends                         | One point or unrelated categories        |
+| `bar-chart`    | Categorical comparison                            | Time-series storytelling                 |
+| `donut-chart`  | Parts of one meaningful, reconciled whole         | Unrelated categories or many tiny slices |
+| `calendar`     | Events with real dates or times                   | Untimed task lists                       |
+| `table`        | Exact repeated fields                             | Narrative or one record                  |
+| `list`         | Actions, ranked items, attention queue            | Raw provider dumps                       |
+| `progress`     | Explicit target with known denominator            | Vague motivation scores                  |
+| `timeline`     | Meaningful event sequence                         | Decorative daily diary                   |
+| `notice`       | One caveat, risk, or insight                      | Repeating normal content                 |
+| `text`         | Short analysis that loses meaning when structured | Executable Markdown or HTML              |
 
 ## Safety limits
 
@@ -80,3 +81,9 @@ A producer must read the current default branch before every run. Do not rely on
 ```
 
 Use [`prompts/base-worker.md`](../prompts/base-worker.md) as the operational contract.
+
+## Complex pages without arbitrary UI
+
+The safe contract composes complexity in three layers: a page `layout` (`dashboard`, `focus`, or `timeline`), a block `span` (`one`, `two`, or `full`), and up to 16 audited blocks. The producer chooses information shape; it never chooses React components, CSS classes, renderer props, or executable behavior.
+
+In synthetic demo mode, open **Component lab** to inspect a validated JSON block beside its live rendered result. Every synthetic source page also exposes **Recreate this page**, which produces one standalone Markdown document. It resolves the source and worker IDs and embeds the base worker, domain instructions, exact source registration and permission boundary, snapshot schema, UI schema, registered domain schema, LLM contract, and privacy contract. Only the code repository, private data repository, and timezone placeholders remain. These demonstrations come from the same schemas and renderer used for private snapshots, not a separate mock UI.
