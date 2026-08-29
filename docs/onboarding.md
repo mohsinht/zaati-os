@@ -9,15 +9,16 @@ You will end with:
 - one scheduled LLM workflow that refreshes several sources together
 - a private dashboard protected by Cloudflare Access
 
-> Want to look around first? Stop after [the synthetic tutorial](#2-run-the-synthetic-tutorial). It needs no credentials, provider account, `.env` file, or personal data.
+> Want to look around first? Run `npm run dev` before setup. The public synthetic demo includes an optional guided tour, Component Lab, and example prompt guides without credentials, provider accounts, `.env` files, or personal data.
 
 ## The journey
 
-| Stage               | What you do                                   | What Zaati OS creates                       |
-| ------------------- | --------------------------------------------- | ------------------------------------------- |
-| 1. Test drive       | Fork, install, and run the tutorial           | A local dashboard with synthetic data       |
-| 2. Connect your LLM | Generate and paste one private task prompt    | Validated snapshots in a private repository |
-| 3. Deploy safely    | Protect a hostname, then connect private data | Your private, always-available dashboard    |
+| Stage               | What you do                                   | What Zaati OS creates                        |
+| ------------------- | --------------------------------------------- | -------------------------------------------- |
+| 1. Test drive       | Explore the demo, tour, sources, and blocks   | A local dashboard with public synthetic data |
+| 2. Go private       | Run setup, then verify the ingestion tutorial | An ignored workspace without demo-only UI    |
+| 3. Connect your LLM | Generate and paste one private task prompt    | Validated snapshots in a private repository  |
+| 4. Deploy safely    | Protect a hostname, then connect private data | Your private, always-available dashboard     |
 
 ## Before you start
 
@@ -29,7 +30,7 @@ You need:
 - an LLM or automation environment that can use your approved sources and write to GitHub
 - a Cloudflare account and custom domain only when you are ready to deploy
 
-The contract is provider-neutral, but Zaati OS does not bundle source connectors. ChatGPT scheduled tasks are the target first real workflow, with recorded release evidence still pending. Other capable LLMs, local models, n8n, cron, and custom commands can use the same contract when they already have the required approved tools.
+The contract is provider-neutral, but Zaati OS does not bundle source connectors. ChatGPT scheduled tasks are the target first hosted workflow, but v0.1.1 does not claim a hosted provider as end-to-end certified. Other capable LLMs, local models, n8n, cron, and custom commands can use the same contract when they already have the required approved tools.
 
 ## 1. Fork, clone, and personalize
 
@@ -39,10 +40,18 @@ Fork [`mohsinht/zaati-os`](https://github.com/mohsinht/zaati-os), then clone you
 git clone https://github.com/YOUR_GITHUB_USERNAME/zaati-os.git
 cd zaati-os
 npm install
+npm run dev
+```
+
+The first visit offers a five-step tour. You can skip it immediately or reopen it from **Start here**. It explains registered sources, the safe JSON-to-component contract, the example prompt guides, and the private handoff.
+
+When you are ready, stop the development server and run:
+
+```bash
 npm run setup
 ```
 
-The setup assistant asks for your dashboard name, timezone, currency, starter sources, theme, and optional encrypted snapshot storage. It writes `config/instance.local.json`, which is ignored by Git and uses private file permissions.
+The setup assistant asks for your dashboard name, timezone, currency, starter sources, theme, and optional encrypted snapshot storage. It writes `config/instance.local.json`, which is ignored by Git and uses private file permissions. This local configuration switches the workspace to private mode, so synthetic example pages, Component Lab, copy-prompt guides, and the automatic tour all disappear together.
 
 ![Animated terminal showing the Zaati OS local setup](assets/onboarding/setup.gif)
 
@@ -68,7 +77,7 @@ The tutorial uses a credential-free mock LLM. It deliberately produces an invali
 
 ![Zaati OS onboarding screen using synthetic data](assets/onboarding-light.png)
 
-Nothing personal is written. If this screen opens, the complete local ingestion and rendering loop works.
+Nothing personal is written. The resulting pages are labeled **Synthetic test data**, but demo-only navigation and guides stay disabled. If this screen opens, the complete local ingestion and rendering loop works.
 
 ## 3. Create the private memory repository
 

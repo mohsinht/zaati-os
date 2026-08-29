@@ -1,16 +1,56 @@
 import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
 import test from "node:test"
+import { assembleStandaloneDemoPrompt } from "../scripts/lib/demo-prompt.mjs"
 import { validateSnapshotPolicy } from "../scripts/lib/snapshot-policy.mjs"
 import { validateCustomTheme } from "../scripts/lib/theme-contrast.mjs"
 
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"))
+test("demo scheduled-task prompts are standalone and embed the complete contract", async () => {
+  const registry = await readJson("config/sources.json")
+  const definition = registry.sources.find((source) => source.id === "money:pulse")
+  const [basePrompt, domainPrompt, snapshotSchema, uiBlocksSchema, domainSchema, llmContract, privacyContract] = await Promise.all([
+    readFile("prompts/base-worker.md", "utf8"),
+    readFile(definition.prompt, "utf8"),
+    readJson("schemas/snapshot.schema.json"),
+    readJson("schemas/ui-blocks.schema.json"),
+    readJson(definition.schema_ref),
+    readFile("docs/llm-contract.md", "utf8"),
+    readFile("docs/privacy.md", "utf8"),
+  ])
+  const prompt = assembleStandaloneDemoPrompt({
+    basePrompt,
+    domainPrompt,
+    definition,
+    snapshotSchema,
+    uiBlocksSchema,
+    domainSchema,
+    llmContract,
+    privacyContract,
+  })
+
+  assert.match(prompt, /This is a standalone Zaati OS prompt/)
+  assert.match(prompt, /You are a registered Zaati OS snapshot worker/)
+  assert.match(prompt, /Use only user-approved normalized totals/)
+  assert.match(prompt, /registered for source money:pulse and worker money-pulse-daily/)
+  assert.doesNotMatch(prompt, /Set money:pulse to money:pulse/)
+  assert.match(prompt, /"id": "money:pulse"/)
+  assert.match(prompt, /"worker_id": "money-pulse-daily"/)
+  assert.match(prompt, /"target_path": "data\/snapshots\/money\/pulse/)
+  assert.ok(prompt.includes(JSON.stringify(snapshotSchema, null, 2)))
+  assert.ok(prompt.includes(JSON.stringify(uiBlocksSchema, null, 2)))
+  assert.ok(prompt.includes(JSON.stringify(domainSchema, null, 2)))
+  assert.doesNotMatch(prompt, /base-worker\.md/)
+  assert.doesNotMatch(prompt, /\{\{SOURCE_ID\}\}|\{\{WORKER_ID\}\}/)
+  assert.deepEqual([...new Set(prompt.match(/\{\{[A-Z_]+\}\}/g))].sort(), ["{{CODE_REPOSITORY}}", "{{DATA_REPOSITORY}}", "{{TIMEZONE}}"])
+})
 test("safe UI contract exposes only audited block kinds", async () => {
   const schema = await readJson("schemas/ui-blocks.schema.json")
   const kinds = schema.$defs.block.oneOf.map((item) => item.$ref.split("/").at(-1)).sort()
   assert.deepEqual(kinds, [
     "bar-chart",
     "calendar",
+    "donut-chart",
     "line-chart",
     "list",
     "metric-group",
@@ -53,6 +93,18 @@ test("public examples are unmistakably synthetic", async () => {
   }
 })
 
+test("synthetic pages demonstrate every audited block kind", async () => {
+  const schema = await readJson("schemas/ui-blocks.schema.json")
+  const expected = new Set(schema.$defs.block.oneOf.map((item) => item.$ref.split("/").at(-1)))
+  const registry = await readJson("config/sources.json")
+  const demonstrated = new Set()
+  for (const source of registry.sources) {
+    const snapshot = await readJson(`data/examples/${source.domain}/${source.source}/2026-08-24.json`)
+    for (const block of snapshot.data.presentation.blocks) demonstrated.add(block.kind)
+  }
+  assert.deepEqual([...demonstrated].sort(), [...expected].sort())
+})
+
 test("line charts require exact unique series coverage", async () => {
   const registry = await readJson("config/sources.json")
   const registration = registry.sources.find((source) => source.id === "money:pulse")
@@ -65,6 +117,16 @@ test("line charts require exact unique series coverage", async () => {
   assert.ok(errors.some((error) => error.includes("series keys must be unique")))
   assert.ok(errors.some((error) => error.includes("x labels must be unique")))
   assert.ok(errors.some((error) => error.includes("keys must exactly match")))
+})
+
+test("donut charts require unique segment labels", async () => {
+  const registry = await readJson("config/sources.json")
+  const registration = registry.sources.find((source) => source.id === "money:pulse")
+  const snapshot = await readJson("data/examples/money/pulse/2026-08-24.json")
+  const chart = snapshot.data.presentation.blocks.find((block) => block.kind === "donut-chart")
+  chart.segments[1].label = chart.segments[0].label
+  const errors = validateSnapshotPolicy(snapshot, registration, { allowSynthetic: true, expectedDate: "2026-08-24" })
+  assert.ok(errors.some((error) => error.includes("labels must be unique")))
 })
 
 test("custom themes reject low-contrast semantic pairs in both modes", () => {

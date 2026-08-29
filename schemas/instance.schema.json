@@ -34,6 +34,15 @@
       "uniqueItems": true,
       "items": { "type": "string", "pattern": "^[a-z0-9-]+:[a-z0-9-]+$" }
     },
+    "experience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "show_tour"],
+      "properties": {
+        "mode": { "enum": ["demo", "private"] },
+        "show_tour": { "type": "boolean" }
+      }
+    },
     "theme": {
       "type": "object",
       "additionalProperties": false,

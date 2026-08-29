@@ -18,7 +18,7 @@ export function DialogContent({
   children,
   side = "center",
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & { side?: "center" | "left" }) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & { side?: "center" | "left" | "right" }) {
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/30 backdrop-blur-[1px] data-[state=closed]:animate-out data-[state=open]:animate-in" />
@@ -28,12 +28,13 @@ export function DialogContent({
           side === "center" &&
             "left-1/2 top-1/2 max-h-[calc(100vh-2rem)] w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl p-4",
           side === "left" && "inset-y-0 left-0 flex w-[min(18rem,calc(100vw-2rem))] flex-col border-y-0 border-l-0",
+          side === "right" && "inset-y-0 right-0 flex w-[min(46rem,100vw)] flex-col border-y-0 border-r-0",
           className,
         )}
         {...props}
       >
         {children}
-        {side === "center" ? (
+        {side !== "left" ? (
           <DialogPrimitive.Close className="absolute right-3 top-3 grid size-10 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
             <X className="size-4" />
             <span className="sr-only">Close</span>
