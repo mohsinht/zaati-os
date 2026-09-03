@@ -1,10 +1,10 @@
 import { lazy, Suspense } from "react"
-import { ArrowUpRight, CalendarDays, CheckCircle2, Clock3, Info, TriangleAlert } from "lucide-react"
+import { ArrowUpRight, CalendarDays, CheckCircle2, ChevronDown, Info, TriangleAlert } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import type { DashboardBlock, InstanceConfig, Span, Tone, ValueFormat } from "@/types"
+import type { DashboardBlock, InstanceConfig, ListBlock, Span, TableBlock, Tone, ValueFormat } from "@/types"
 
 const toneDot: Record<Tone, string> = {
   neutral: "bg-muted-foreground",
@@ -44,10 +44,95 @@ function formatValue(value: string | number | boolean | null, format: ValueForma
     return new Intl.NumberFormat(instance.locale, { style: "currency", currency: instance.currency, maximumFractionDigits: 0 }).format(
       value,
     )
-  if (format === "percent") return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(value)}%`
+  if (format === "percent") {
+    const rounded = Math.round(value * 10) / 10
+    return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(Object.is(rounded, -0) ? 0 : rounded)}%`
+  }
   if (format === "compact-number")
     return new Intl.NumberFormat(instance.locale, { notation: "compact", maximumFractionDigits: 1 }).format(value)
   return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(value)
+}
+
+function ListRows({ items }: { items: ListBlock["items"] }) {
+  return items.map((item) => {
+    const content = (
+      <>
+        <span aria-hidden="true" className={cn("mt-2 size-1.5 shrink-0 rounded-full", toneDot[item.tone || "neutral"])} />
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-start justify-between gap-2">
+            <span className="font-medium leading-6">{item.title}</span>
+            {item.status ? <Badge variant={toneBadge[item.tone || "neutral"]}>{item.status}</Badge> : null}
+          </span>
+          {item.description ? <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{item.description}</span> : null}
+          {item.meta ? <span className="mt-2 block text-xs font-medium text-muted-foreground">{item.meta}</span> : null}
+        </span>
+        {item.href ? <ArrowUpRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-muted-foreground" /> : null}
+      </>
+    )
+    return item.href ? (
+      <a
+        className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
+        href={item.href}
+        key={item.id}
+        rel="noreferrer"
+        target="_blank"
+      >
+        {content}
+      </a>
+    ) : (
+      <div className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/45" key={item.id}>
+        {content}
+      </div>
+    )
+  })
+}
+
+function DataTable({
+  block,
+  instance,
+  rows,
+  suffix = "",
+}: {
+  block: TableBlock
+  instance: InstanceConfig
+  rows: TableBlock["rows"]
+  suffix?: string
+}) {
+  return (
+    <div
+      aria-label={`${block.title}${suffix} table`}
+      className="overflow-x-auto rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
+      role="region"
+      tabIndex={0}
+    >
+      <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+        <caption className="sr-only">
+          {block.title}
+          {suffix}
+        </caption>
+        <thead className="bg-muted/70 text-xs text-foreground">
+          <tr>
+            {block.columns.map((column) => (
+              <th className="px-3 py-2.5 font-medium" key={column.key}>
+                {column.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {rows.map((row, index) => (
+            <tr className="transition-colors hover:bg-muted/55" key={index}>
+              {block.columns.map((column) => (
+                <td className="max-w-64 break-words px-3 py-3 align-top tabular-nums" key={column.key}>
+                  {formatValue(row[column.key] ?? null, column.format, instance)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 function Panel({
@@ -96,13 +181,8 @@ export function BlockRenderer({
     return (
       <Panel block={block} className="bg-card/80" emphasized={emphasized} layout={layout}>
         <div
-          className={cn(
-            "grid gap-px overflow-hidden rounded-lg bg-border sm:grid-cols-2",
-            block.metrics.length === 3 && "xl:grid-cols-3",
-            block.metrics.length === 4 && "xl:grid-cols-4",
-            block.metrics.length === 5 && "xl:grid-cols-5",
-            block.metrics.length === 6 && "xl:grid-cols-3",
-          )}
+          className="grid gap-px overflow-hidden rounded-lg bg-border"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 13rem), 1fr))" }}
         >
           {block.metrics.map((metric) => (
             <div className="group min-w-0 bg-card px-4 py-3 transition-colors hover:bg-accent/45" key={metric.label}>
@@ -110,8 +190,8 @@ export function BlockRenderer({
                 <span aria-hidden="true" className={cn("size-1.5 rounded-full", toneDot[metric.tone || "neutral"])} />
                 {metric.label}
               </div>
-              <div className="flex items-end gap-2">
-                <span className="truncate text-2xl font-semibold tracking-tight transition-transform duration-200 group-hover:translate-x-0.5">
+              <div className="flex min-w-0 items-end gap-2">
+                <span className="min-w-0 break-words text-[clamp(1.25rem,2vw,1.5rem)] font-semibold leading-tight tracking-tight tabular-nums">
                   {formatValue(metric.value, metric.format, instance)}
                   {metric.unit ? <span className="ml-1 text-sm font-medium text-muted-foreground">{metric.unit}</span> : null}
                 </span>
@@ -133,46 +213,26 @@ export function BlockRenderer({
   }
 
   if (block.kind === "list") {
+    const visibleItems = block.items.slice(0, 8)
+    const remainingItems = block.items.slice(8)
     return (
       <Panel block={block} emphasized={emphasized} layout={layout}>
         {block.items.length ? (
-          <div className="divide-y divide-border">
-            {block.items.map((item) => {
-              const content = (
-                <>
-                  <span aria-hidden="true" className={cn("mt-2 size-1.5 shrink-0 rounded-full", toneDot[item.tone || "neutral"])} />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-start justify-between gap-2">
-                      <span className="font-medium leading-6">{item.title}</span>
-                      {item.status ? <Badge variant={toneBadge[item.tone || "neutral"]}>{item.status}</Badge> : null}
-                    </span>
-                    {item.description ? (
-                      <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{item.description}</span>
-                    ) : null}
-                    {item.meta ? <span className="mt-2 block text-xs font-medium text-muted-foreground">{item.meta}</span> : null}
-                  </span>
-                  {item.href ? <ArrowUpRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-muted-foreground" /> : null}
-                </>
-              )
-              return item.href ? (
-                <a
-                  className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
-                  href={item.href}
-                  key={item.id}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {content}
-                </a>
-              ) : (
-                <div
-                  className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/45"
-                  key={item.id}
-                >
-                  {content}
+          <div>
+            <div className="divide-y divide-border">
+              <ListRows items={visibleItems} />
+            </div>
+            {remainingItems.length ? (
+              <details className="group/more mt-2 border-t border-border pt-2">
+                <summary className="flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-lg px-3 text-xs font-medium text-muted-foreground hover:bg-muted/55 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  Show {remainingItems.length} more
+                  <ChevronDown className="size-3.5 transition-transform group-open/more:rotate-180" />
+                </summary>
+                <div className="mt-1 divide-y divide-border">
+                  <ListRows items={remainingItems} />
                 </div>
-              )
-            })}
+              </details>
+            ) : null}
           </div>
         ) : (
           <EmptyState label="Nothing needs attention here." />
@@ -219,15 +279,19 @@ export function BlockRenderer({
                 className="group flex gap-3 rounded-lg px-2 py-2.5 transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-muted/60"
                 key={event.id}
               >
-                <div className="w-16 shrink-0 pt-0.5 text-xs font-medium text-muted-foreground">{time(event.start)}</div>
+                <div className="w-16 shrink-0 pt-0.5 text-xs font-medium text-muted-foreground">
+                  {event.all_day ? "All day" : time(event.start)}
+                </div>
                 <span className={cn("mt-1.5 h-8 w-0.5 rounded-full", toneDot[event.tone || "neutral"])} />
                 <div className="min-w-0">
                   <p className="text-sm font-medium leading-5">{event.title}</p>
-                  <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock3 className="size-3" />
-                    {event.end ? `${time(event.start)} to ${time(event.end)}` : time(event.start)}
-                    {event.location ? `, ${event.location}` : ""}
-                  </p>
+                  {(!event.all_day && event.end) || event.location ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {!event.all_day && event.end ? `Until ${time(event.end)}` : ""}
+                      {!event.all_day && event.end && event.location ? " · " : ""}
+                      {event.location || ""}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -240,38 +304,24 @@ export function BlockRenderer({
   }
 
   if (block.kind === "table") {
+    const visibleRows = block.rows.slice(0, 10)
+    const remainingRows = block.rows.slice(10)
     return (
       <Panel block={block} emphasized={emphasized} layout={layout}>
         {block.rows.length ? (
-          <div
-            aria-label={`${block.title} table`}
-            className="overflow-x-auto rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
-            role="region"
-            tabIndex={0}
-          >
-            <table className="w-full min-w-[520px] border-collapse text-left text-sm">
-              <caption className="sr-only">{block.title}</caption>
-              <thead className="bg-muted/70 text-xs text-foreground">
-                <tr>
-                  {block.columns.map((column) => (
-                    <th className="px-3 py-2.5 font-medium" key={column.key}>
-                      {column.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {block.rows.map((row, index) => (
-                  <tr className="transition-colors hover:bg-muted/55" key={index}>
-                    {block.columns.map((column) => (
-                      <td className="max-w-64 px-3 py-3 align-top" key={column.key}>
-                        {formatValue(row[column.key] ?? null, column.format, instance)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            <DataTable block={block} instance={instance} rows={visibleRows} />
+            {remainingRows.length ? (
+              <details className="group/more mt-2">
+                <summary className="flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-lg px-3 text-xs font-medium text-muted-foreground hover:bg-muted/55 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  Show {remainingRows.length} more rows
+                  <ChevronDown className="size-3.5 transition-transform group-open/more:rotate-180" />
+                </summary>
+                <div className="mt-2">
+                  <DataTable block={block} instance={instance} rows={remainingRows} suffix=" continuation" />
+                </div>
+              </details>
+            ) : null}
           </div>
         ) : (
           <EmptyState label="No rows to show." />

@@ -45,6 +45,8 @@ Each source-specific domain schema requires stable `data.facts`. Facts carry dur
 | `notice`       | One caveat, risk, or insight                      | Repeating normal content                 |
 | `text`         | Short analysis that loses meaning when structured | Executable Markdown or HTML              |
 
+Calendar events that cover a date without a meaningful time should set `all_day: true`. Keep the required ISO `start` and optional `end` values for ordering and provenance; the renderer presents the event as “All day” instead of inventing a midnight appointment.
+
 ## Safety limits
 
 The schema rejects unknown properties and limits block, row, point, item, series, text, and URL sizes. Links require HTTPS. Snapshots cannot contain scripts, HTML execution, private-key blocks, secret-shaped values, authentication links, raw messages, or source-specific forbidden content. Validation reports field paths and rule names without repeating the suspect value. The app never evaluates snapshot text.

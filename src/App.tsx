@@ -260,7 +260,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
         onSelect={select}
         selectedId={selectedId}
       />
-      <div className={cn("transition-[padding] duration-200 md:pl-64", sidebarCompact && "md:pl-[76px]")}>
+      <div className={cn("transition-[padding] duration-200 md:pl-72", sidebarCompact && "md:pl-[76px]")}>
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/80 bg-background/95 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <Button
@@ -328,7 +328,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
             </Dialog>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
+        <main className="mx-auto w-full max-w-[1380px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
           {selectedId === START_ID ? (
             <Suspense fallback={<InlineLoading />}>
               <Onboarding
@@ -405,7 +405,7 @@ function Sidebar({
       </Dialog>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex",
+          "fixed inset-y-0 left-0 z-40 hidden w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex",
           compact && "md:w-[76px]",
         )}
         id="primary-navigation"
@@ -496,7 +496,7 @@ function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, select
               )}
               key={definition.id}
               onClick={() => onSelect(definition.id)}
-              title={compact ? `${definition.label}, ${status}` : undefined}
+              title={`${definition.label}, ${health[status].label}`}
             >
               <Icon className={cn("size-4 shrink-0 text-sidebar-foreground/55", active && "text-sidebar-primary")} />
               <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>{definition.label}</span>
@@ -590,18 +590,36 @@ function DashboardPage({
           {prompt ? <PromptDrawer prompt={prompt} sourceLabel={definition.label} /> : null}
         </div>
       </div>
-      <div className="mt-5 flex flex-col justify-between gap-5 border-b border-border pb-7 lg:flex-row lg:items-end">
+      <div className="mt-4 flex flex-col justify-between gap-4 border-b border-border pb-6 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
           <h1 className="text-pretty text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{snapshot.data.title}</h1>
           <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">{snapshot.data.summary}</p>
         </div>
         <details className="group shrink-0 rounded-lg border border-border bg-card text-xs text-muted-foreground lg:max-w-md">
-          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-3 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <span aria-hidden="true" className={cn("size-2 rounded-full", health[freshness].dot)} />
             <span>{health[freshness].label}</span>
+            {snapshot.quality.warnings.length ? (
+              <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning-foreground">
+                {snapshot.quality.warnings.length} note{snapshot.quality.warnings.length === 1 ? "" : "s"}
+              </span>
+            ) : null}
             <ChevronDown aria-hidden="true" className="size-3.5 opacity-50 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="border-t border-border px-3 py-3">
+          <div className="max-h-[min(70vh,34rem)] overflow-y-auto border-t border-border px-3 py-3">
+            {snapshot.quality.warnings.length ? (
+              <div className="mb-3 rounded-md bg-warning/10 px-3 py-2.5 text-foreground/80">
+                <p className="font-medium text-foreground">Evidence notes</p>
+                <ul className="mt-1.5 space-y-1.5 leading-relaxed">
+                  {snapshot.quality.warnings.map((warning) => (
+                    <li className="flex gap-2" key={warning}>
+                      <span aria-hidden="true" className="mt-1.5 size-1 shrink-0 rounded-full bg-warning" />
+                      <span>{warning}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
               <dt>Generated</dt>
               <dd className="text-foreground">{formatTimestamp(snapshot.generated_at, instance)}</dd>
@@ -640,27 +658,14 @@ function DashboardPage({
           </div>
         </details>
       </div>
-      {snapshot.quality.warnings.length ? (
-        <div className="mt-5 flex gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4">
-          <RefreshCcw className="mt-0.5 size-4 shrink-0 text-warning-foreground" />
-          <div>
-            <p className="text-sm font-medium">Evidence note</p>
-            {snapshot.quality.warnings.map((warning) => (
-              <p className="mt-1 text-sm leading-relaxed text-foreground/80" key={warning}>
-                {warning}
-              </p>
-            ))}
-          </div>
-        </div>
-      ) : null}
-      <div className={cn("mt-5 grid grid-cols-1 gap-4", blockGrid)} data-layout={layout}>
+      <div className={cn("mt-5 grid grid-cols-1 gap-5", blockGrid)} data-layout={layout}>
         {snapshot.data.presentation.blocks.map((block, index) => (
           <BlockRenderer block={block} emphasized={layout === "focus" && index === 0} instance={instance} key={block.id} layout={layout} />
         ))}
       </div>
       <footer className="mt-8 flex flex-col justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground sm:flex-row">
         <span className="inline-flex items-center gap-1.5">
-          <Clock3 className="size-3.5" /> Last successful update {formatTimestamp(snapshot.generated_at, instance)}
+          <Clock3 className="size-3.5" /> Updated {formatTimestamp(snapshot.generated_at, instance)}
         </span>
         <span>
           {snapshot.quality.confidence} confidence, {snapshot.sources.length} source{snapshot.sources.length === 1 ? "" : "s"}, expires{" "}
