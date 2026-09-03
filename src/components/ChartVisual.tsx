@@ -53,7 +53,10 @@ function barDomain(values: number[]) {
   const max = Math.max(...values, 0)
   if (min === max) return { min: min - 1, max: max + 1 }
   const padding = (max - min) * 0.08
-  return { min: Math.min(0, min - padding), max: Math.max(0, max + padding) }
+  return {
+    min: min >= 0 ? 0 : min - padding,
+    max: max <= 0 ? 0 : max + padding,
+  }
 }
 
 function yPosition(value: number, min: number, max: number) {
