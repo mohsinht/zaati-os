@@ -40,7 +40,7 @@ export type DonutChartBlock = BlockBase & {
 export type CalendarBlock = BlockBase & {
   kind: "calendar"
   date: string
-  events: Array<{ id: string; title: string; start: string; end?: string; location?: string; tone?: Tone }>
+  events: Array<{ id: string; title: string; start: string; end?: string; all_day?: boolean; location?: string; tone?: Tone }>
 }
 export type TableBlock = BlockBase & {
   kind: "table"

@@ -5,28 +5,58 @@ const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--cha
 const dashPatterns = [undefined, "9 5", "2 5", "12 4 2 4", "5 4"]
 const width = 640
 const height = 260
-const plot = { left: 58, right: 18, top: 18, bottom: 48 }
+const plot = { left: 72, right: 18, top: 18, bottom: 48 }
 
 function format(value: number, kind: ValueFormat, instance: InstanceConfig) {
   if (kind === "currency")
     return new Intl.NumberFormat(instance.locale, { style: "currency", currency: instance.currency, maximumFractionDigits: 0 }).format(
       value,
     )
-  if (kind === "percent") return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(value)}%`
+  if (kind === "percent") {
+    const rounded = Math.round(value * 10) / 10
+    return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(Object.is(rounded, -0) ? 0 : rounded)}%`
+  }
   if (kind === "compact-number")
     return new Intl.NumberFormat(instance.locale, { notation: "compact", maximumFractionDigits: 1 }).format(value)
   return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(value)
 }
 
-function domain(values: number[]) {
-  let min = Math.min(...values, 0)
-  let max = Math.max(...values, 0)
+function axisFormat(value: number, kind: ValueFormat, instance: InstanceConfig) {
+  const rounded = Object.is(value, -0) ? 0 : value
+  if (kind === "currency")
+    return new Intl.NumberFormat(instance.locale, {
+      style: "currency",
+      currency: instance.currency,
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(rounded)
+  if (kind === "percent") return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(rounded)}%`
+  if (kind === "compact-number" || Math.abs(rounded) >= 10_000)
+    return new Intl.NumberFormat(instance.locale, { notation: "compact", maximumFractionDigits: 1 }).format(rounded)
+  return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(rounded)
+}
+
+function lineDomain(values: number[]) {
+  let min = Math.min(...values)
+  let max = Math.max(...values)
   if (min === max) {
-    min -= 1
-    max += 1
+    const fallback = Math.max(Math.abs(min) * 0.05, 1)
+    min -= fallback
+    max += fallback
   }
   const padding = (max - min) * 0.08
   return { min: min - padding, max: max + padding }
+}
+
+function barDomain(values: number[]) {
+  const min = Math.min(...values, 0)
+  const max = Math.max(...values, 0)
+  if (min === max) return { min: min - 1, max: max + 1 }
+  const padding = (max - min) * 0.08
+  return {
+    min: min >= 0 ? 0 : min - padding,
+    max: max <= 0 ? 0 : max + padding,
+  }
 }
 
 function yPosition(value: number, min: number, max: number) {
@@ -148,7 +178,7 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
   const values = block.points.flatMap((point) =>
     block.series.map((series) => point.values[series.key]).filter((value): value is number => Number.isFinite(value)),
   )
-  const range = domain(values)
+  const range = lineDomain(values)
   const x = (index: number) => plot.left + (index / Math.max(1, block.points.length - 1)) * (width - plot.left - plot.right)
   const ticks = Array.from({ length: 5 }, (_, index) => range.min + ((range.max - range.min) * index) / 4).reverse()
   return (
@@ -169,7 +199,7 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
             <g key={tick}>
               <line stroke="var(--border)" strokeDasharray="3 4" x1={plot.left} x2={width - plot.right} y1={y} y2={y} />
               <text fill="var(--muted-foreground)" fontSize="11" textAnchor="end" x={plot.left - 9} y={y + 4}>
-                {format(tick, valueFormat, instance)}
+                {axisFormat(tick, valueFormat, instance)}
               </text>
             </g>
           )
@@ -307,7 +337,7 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
 function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; descriptionId: string; instance: InstanceConfig }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const valueFormat = block.value_format || "number"
-  const range = domain(block.bars.map((bar) => bar.value))
+  const range = barDomain(block.bars.map((bar) => bar.value))
   const available = width - plot.left - plot.right
   const slot = available / block.bars.length
   const barWidth = Math.min(44, slot * 0.66)
@@ -332,7 +362,7 @@ function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; d
             <g key={tick}>
               <line stroke="var(--border)" strokeDasharray="3 4" x1={plot.left} x2={width - plot.right} y1={y} y2={y} />
               <text fill="var(--muted-foreground)" fontSize="11" textAnchor="end" x={plot.left - 9} y={y + 4}>
-                {format(tick, valueFormat, instance)}
+                {axisFormat(tick, valueFormat, instance)}
               </text>
             </g>
           )

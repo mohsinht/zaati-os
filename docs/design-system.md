@@ -23,6 +23,8 @@ Zaati OS is a decision interface, not a marketing dashboard.
 
 Repeated facts belong in a table or row. Empty cards, decorative KPIs, arbitrary bold text, and chart-shaped wallpaper do not belong.
 
+Long lists and tables disclose an initial decision-sized set, with the remaining validated content available on demand. Metric values wrap without truncation. Line charts use a data-relative domain so meaningful change stays visible; categorical bar charts retain a zero baseline.
+
 Complexity should come from hierarchy, not ornament. Use `dashboard` for a dominant view plus supporting evidence, `focus` for one leading decision, and `timeline` for a narrow sequence. A block may span one, two, or all dashboard columns. Do not simulate complexity with nested cards, arbitrary component trees, or repeated metrics.
 
 ## Components

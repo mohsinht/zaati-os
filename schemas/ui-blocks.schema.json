@@ -184,6 +184,7 @@
               "title": { "type": "string", "minLength": 1, "maxLength": 120 },
               "start": { "type": "string", "format": "date-time" },
               "end": { "type": "string", "format": "date-time" },
+              "all_day": { "type": "boolean" },
               "location": { "type": "string", "maxLength": 100 },
               "tone": { "$ref": "#/$defs/tone" }
             }
