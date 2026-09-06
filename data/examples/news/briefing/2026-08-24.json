@@ -122,7 +122,7 @@
               "id": "n4",
               "title": "Local-first tools add portable encrypted exports",
               "description": "Users can move durable records without giving the application permanent custody of their history.",
-              "meta": "Privacy \u00b7 Product design",
+              "meta": "Privacy · Product design",
               "tone": "neutral",
               "href": "https://example.com/local-first-exports"
             },
@@ -130,7 +130,7 @@
               "id": "n5",
               "title": "Schema registries become a coordination layer for AI workflows",
               "description": "Teams are separating durable facts from model-specific presentation decisions.",
-              "meta": "AI systems \u00b7 Engineering",
+              "meta": "AI systems · Engineering",
               "tone": "neutral",
               "href": "https://example.com/schema-registries"
             }
@@ -139,21 +139,23 @@
         },
         {
           "id": "watch",
-          "kind": "timeline",
+          "kind": "list",
           "title": "Questions worth checking",
           "span": "one",
           "items": [
             {
-              "label": "Portability",
               "title": "Can you export your data?",
               "description": "Look for a documented export format before adopting a new tool.",
-              "tone": "neutral"
+              "tone": "neutral",
+              "id": "question-1",
+              "meta": "Portability"
             },
             {
-              "label": "Privacy",
               "title": "Is access private by default?",
               "description": "Check the actual access settings, not only the product description.",
-              "tone": "neutral"
+              "tone": "neutral",
+              "id": "question-2",
+              "meta": "Privacy"
             }
           ]
         }

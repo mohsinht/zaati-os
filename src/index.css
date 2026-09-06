@@ -43,7 +43,7 @@
   --radius: 0.9rem;
   --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-heading: var(--font-ui);
-  --background: #ffffff;
+  --background: #f8f9fb;
   --foreground: #18181b;
   --card: #ffffff;
   --card-foreground: #18181b;
@@ -215,7 +215,7 @@ h3 {
   --font-ui: "Trebuchet MS", Candara, Optima, ui-sans-serif, system-ui, sans-serif;
 }
 [data-font="editorial"] {
-  --font-ui: Georgia, Cambria, "Times New Roman", ui-serif, serif;
+  --font-ui: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-heading: Georgia, Cambria, "Times New Roman", ui-serif, serif;
 }
 [data-font="rounded"] {
@@ -405,10 +405,7 @@ h3 {
 
 .zaati-block {
   animation: zaati-block-enter 320ms ease-out both;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
+  transition: border-color 180ms ease;
 }
 
 .chart-series-reveal {

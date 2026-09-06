@@ -28,6 +28,8 @@ import { BlockRenderer } from "@/components/BlockRenderer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { snapshotFreshness, type FreshnessState } from "@/lib/freshness"
@@ -334,7 +336,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
             </Dialog>
           </div>
         </header>
-        <main className="mx-auto w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
+        <main className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
           {selectedId === START_ID ? (
             <Suspense fallback={<InlineLoading />}>
               <Onboarding
@@ -461,8 +463,8 @@ function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, select
             <button
               aria-current={active ? "page" : undefined}
               className={cn(
-                "group flex min-h-10 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+                "group flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                active && "bg-card font-medium text-sidebar-accent-foreground shadow-sm ring-1 ring-border",
                 compact && "md:justify-center md:px-2",
               )}
               key={definition.id}
@@ -480,8 +482,8 @@ function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, select
         <button
           aria-current={selectedId === START_ID ? "page" : undefined}
           className={cn(
-            "group flex min-h-10 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            selectedId === START_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+            "group flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            selectedId === START_ID && "bg-card font-medium text-sidebar-accent-foreground shadow-sm ring-1 ring-border",
             compact && "md:justify-center md:px-2",
           )}
           onClick={() => onSelect(START_ID)}
@@ -494,8 +496,8 @@ function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, select
           <button
             aria-current={selectedId === COMPONENTS_ID ? "page" : undefined}
             className={cn(
-              "group flex min-h-10 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              selectedId === COMPONENTS_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+              "group flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              selectedId === COMPONENTS_ID && "bg-card font-medium text-sidebar-accent-foreground shadow-sm ring-1 ring-border",
               compact && "md:justify-center md:px-2",
             )}
             onClick={() => onSelect(COMPONENTS_ID)}
@@ -591,11 +593,11 @@ function DashboardPage({
         </div>
       </div>
       <div className="mt-4 flex flex-col justify-between gap-4 border-b border-border pb-6 lg:flex-row lg:items-end">
-        <div className="max-w-3xl">
+        <div className="min-w-0 flex-1">
           <h1 className="text-pretty text-2xl font-medium tracking-tight sm:text-3xl">{snapshot.data.title}</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{snapshot.data.summary}</p>
         </div>
-        <details className="group shrink-0 rounded-lg border border-border bg-card text-xs text-muted-foreground lg:max-w-md">
+        <details className="group w-fit max-w-full shrink-0 rounded-lg border border-border bg-card text-xs text-muted-foreground lg:max-w-xs">
           <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <span aria-hidden="true" className={cn("size-2 rounded-full", health[freshness].dot)} />
             <span>{health[freshness].label}</span>
@@ -739,14 +741,30 @@ function PromptDrawer({ prompt, sourceLabel }: { prompt: string; sourceLabel: st
 
 function ComponentLab({ data }: { data: DashboardData }) {
   const [copiedId, setCopiedId] = useState("")
+  const [category, setCategory] = useState("all")
+  const [query, setQuery] = useState("")
+  const groups: Record<string, string[]> = {
+    data: ["metric-group", "line-chart", "bar-chart", "donut-chart", "progress"],
+    organize: ["calendar", "list", "table", "timeline"],
+    explain: ["notice", "text"],
+  }
+  const examples = data.componentExamples.filter(
+    ({ block }) =>
+      (category === "all" || groups[category]?.includes(block.kind)) &&
+      `${block.kind} ${block.title}`.toLowerCase().includes(query.toLowerCase()),
+  )
   const copyContract = async (id: string, value: string) => {
-    await navigator.clipboard.writeText(value)
-    setCopiedId(id)
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopiedId(id)
+    } catch {
+      setCopiedId("failed")
+    }
     window.setTimeout(() => setCopiedId(""), 1800)
   }
   return (
     <section>
-      <div className="max-w-3xl border-b border-border pb-7">
+      <div className="border-b border-border pb-7">
         <p className="text-xs font-medium text-muted-foreground">Safe presentation contract / Synthetic</p>
         <h1 className="mt-4 text-pretty text-2xl font-medium tracking-tight sm:text-3xl">Build richer pages without shipping UI code</h1>
         <p className="mt-3 text-base leading-7 text-muted-foreground">
@@ -767,46 +785,71 @@ function ComponentLab({ data }: { data: DashboardData }) {
           </div>
         ))}
       </div>
-      <div className="mt-10 space-y-10">
-        {data.componentExamples.map(({ sourceId, block }) => {
-          const contract = JSON.stringify(block, null, 2)
-          return (
-            <article className="border-t border-border pt-5" id={`component-${block.kind}`} key={block.kind}>
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">{sourceId}</p>
-                  <h2 className="mt-1 text-xl font-semibold">{block.kind}</h2>
-                </div>
-                <Badge variant="outline">Audited JSON only</Badge>
-              </div>
-              <div className="grid overflow-hidden rounded-xl border border-border xl:grid-cols-2">
-                <div className="min-w-0 border-b border-border bg-muted/35 xl:border-b-0 xl:border-r">
-                  <div className="flex min-h-11 items-center justify-between border-b border-border px-3">
-                    <span className="text-xs font-medium text-foreground">JSON contract</span>
-                    <Button aria-live="polite" onClick={() => void copyContract(block.id, contract)} size="sm" variant="ghost">
-                      {copiedId === block.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                      {copiedId === block.id ? "Copied" : "Copy"}
-                    </Button>
+      <Tabs value={category} onValueChange={setCategory}>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <TabsList className="grid-cols-4 gap-1 rounded-lg bg-muted p-1" aria-label="Component categories">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="data">Measure</TabsTrigger>
+            <TabsTrigger value="organize">Organize</TabsTrigger>
+            <TabsTrigger value="explain">Explain</TabsTrigger>
+          </TabsList>
+          <Input
+            className="w-full sm:w-64"
+            aria-label="Find a component"
+            placeholder="Find a component…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground" role="status">
+          {examples.length} components{copiedId === "failed" ? ". Clipboard unavailable. Select the JSON to copy it." : ""}
+        </p>
+        <TabsContent value={category} className="mt-6 space-y-8">
+          {!examples.length ? (
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              No components match. Try another category or search term.
+            </div>
+          ) : null}
+          {examples.map(({ sourceId, block }) => {
+            const contract = JSON.stringify(block, null, 2)
+            return (
+              <article className="border-t border-border pt-5" id={`component-${block.kind}`} key={block.kind}>
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">{sourceId}</p>
+                    <h2 className="mt-1 text-xl font-semibold">{block.kind}</h2>
                   </div>
-                  <pre
-                    aria-label={`${block.kind} JSON contract`}
-                    className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-6 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-                    tabIndex={0}
-                  >
-                    {contract}
-                  </pre>
+                  <Badge variant="outline">Audited JSON only</Badge>
                 </div>
-                <div className="min-w-0 bg-background p-4 sm:p-5">
-                  <p className="mb-3 text-xs font-medium text-muted-foreground">Rendered result</p>
-                  <div className="grid grid-cols-1">
-                    <BlockRenderer block={block} instance={data.instance} />
+                <div className="grid overflow-hidden rounded-xl border border-border xl:grid-cols-2">
+                  <div className="min-w-0 border-b border-border bg-muted/35 xl:border-b-0 xl:border-r">
+                    <div className="flex min-h-11 items-center justify-between border-b border-border px-3">
+                      <span className="text-xs font-medium text-foreground">JSON contract</span>
+                      <Button aria-live="polite" onClick={() => void copyContract(block.id, contract)} size="sm" variant="ghost">
+                        {copiedId === block.id ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                        {copiedId === block.id ? "Copied" : "Copy"}
+                      </Button>
+                    </div>
+                    <pre
+                      aria-label={`${block.kind} JSON contract`}
+                      className="max-h-[32rem] overflow-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-6 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                      tabIndex={0}
+                    >
+                      {contract}
+                    </pre>
+                  </div>
+                  <div className="min-w-0 bg-background p-4 sm:p-5">
+                    <p className="mb-3 text-xs font-medium text-muted-foreground">Rendered result</p>
+                    <div className="grid grid-cols-1">
+                      <BlockRenderer block={block} instance={data.instance} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          )
-        })}
-      </div>
+              </article>
+            )
+          })}
+        </TabsContent>
+      </Tabs>
     </section>
   )
 }

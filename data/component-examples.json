@@ -5,5 +5,31 @@
     "title": "Reading a snapshot",
     "body": "A snapshot records what was known at a point in time. Check the source dates before using it to make a decision.",
     "span": "full"
+  },
+  {
+    "id": "release-sequence",
+    "kind": "timeline",
+    "title": "A release in three steps",
+    "span": "full",
+    "items": [
+      {
+        "label": "Monday · 09:00",
+        "title": "Review the candidate",
+        "description": "Check the proposed changes and the validation results.",
+        "tone": "neutral"
+      },
+      {
+        "label": "Tuesday · 10:00",
+        "title": "Publish the reviewed version",
+        "description": "Record the exact version so it can be traced later.",
+        "tone": "info"
+      },
+      {
+        "label": "Wednesday · 09:00",
+        "title": "Check the outcome",
+        "description": "Compare the observed behavior with the release goal.",
+        "tone": "positive"
+      }
+    ]
   }
 ]
