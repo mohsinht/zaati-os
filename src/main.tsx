@@ -2,7 +2,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { App } from "@/App"
 import "@/index.css"
-import "@/layout-fixes.css"
+import "@/dashboard-layout"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
