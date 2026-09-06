@@ -57,6 +57,10 @@ Presentation rules:
 - Choose UI blocks based on the information, not decoration.
 - Use metric-group for a few decision-relevant measures, line-chart for ordered trends, bar-chart for categorical comparison, donut-chart for parts of one meaningful whole, calendar for timed events, table for exact repeated fields, progress for explicit goals, timeline for sequence, list for actions or ranked items, notice for one important caveat, and text only when structure would reduce clarity.
 - Use at most 16 blocks and prefer one dominant view with quieter supporting detail.
+- Normally use 3–6 blocks: a small metric strip when useful, one primary view, and supporting context. A briefing may need only a reading list and watchpoints. Do not fill space to meet a block count.
+- Use a plain page title and a summary that explains the page's purpose and the most useful finding. Avoid slogans, motivational advice, and implementation jargon.
+- Derive every count and comparison from retained evidence. State the period, units, and assumptions. Separate items needing the user's response from items waiting on others. Do not claim causation from a short trend or generate projection curves without a reproducible model.
+- Keep one fact in one primary representation. Use two-column spans for prose-heavy tables or dominant charts, with a one-column supporting list. All layouts share the same outer page width.
 - Do not request empty charts, repeat one fact across blocks, or create arbitrary metrics.
 - Never output HTML, CSS, JavaScript, SVG, executable Markdown, or a component name outside schemas/ui-blocks.schema.json.
 - Every external href must use HTTPS.
@@ -78,3 +82,5 @@ Validation and retry behavior:
 
 Return a short run report with effective date, status, target path, source freshness, warnings, validation performed, and pull request or commit reference. Never repeat sensitive snapshot values in the report.
 ```
+
+For a richer overview, combine a compact metric panel with a wider trend chart when recorded history exists. Optional metric `trend` needs 2–24 dated numeric points and a period label, with matching evidence in facts. Never manufacture history. Optional table `searchable`, column `filterable`, and semantic column `tones` support exploring detailed rows; they do not mutate the source. Keep comparisons in the same unit, state their baseline, and do not describe balance change as investment return.

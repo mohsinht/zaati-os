@@ -102,13 +102,14 @@ test("synthetic pages demonstrate every audited block kind", async () => {
     const snapshot = await readJson(`data/examples/${source.domain}/${source.source}/2026-08-24.json`)
     for (const block of snapshot.data.presentation.blocks) demonstrated.add(block.kind)
   }
+  for (const block of await readJson("data/component-examples.json")) demonstrated.add(block.kind)
   assert.deepEqual([...demonstrated].sort(), [...expected].sort())
 })
 
 test("line charts require exact unique series coverage", async () => {
   const registry = await readJson("config/sources.json")
-  const registration = registry.sources.find((source) => source.id === "money:pulse")
-  const snapshot = await readJson("data/examples/money/pulse/2026-08-24.json")
+  const registration = registry.sources.find((source) => source.id === "review:weekly")
+  const snapshot = await readJson("data/examples/review/weekly/2026-08-24.json")
   const chart = snapshot.data.presentation.blocks.find((block) => block.kind === "line-chart")
   chart.series.push({ ...chart.series[0] })
   chart.points[0].values = { unexpected: 1 }
@@ -173,4 +174,64 @@ test("custom themes reject low-contrast semantic pairs in both modes", () => {
   assert.ok(errors.some((error) => error.includes("custom_tokens/light")))
   assert.ok(errors.some((error) => error.includes("custom_tokens/dark")))
   assert.deepEqual(validateCustomTheme({ theme: { preset: "sage" } }), [])
+})
+
+test("optional trend and table controls remain bounded safe data", async () => {
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js")
+  const ajv = new Ajv2020({ strict: true, allowUnionTypes: true })
+  const { default: addFormats } = await import("ajv-formats")
+  addFormats(ajv)
+  const schema = await readJson("schemas/ui-blocks.schema.json")
+  ajv.addSchema(schema)
+  const validate = ajv.compile({ $ref: `${schema.$id}#/$defs/block` })
+  const money = await readJson("data/examples/money/pulse/2026-08-24.json")
+  const work = await readJson("data/examples/work/focus/2026-08-24.json")
+  const metric = structuredClone(money.data.presentation.blocks[0])
+  const table = structuredClone(work.data.presentation.blocks[1])
+  assert.equal(validate(metric), true)
+  assert.equal(validate(table), true)
+  metric.metrics[0].trend.points = [{ label: "Only one date", value: 1 }]
+  assert.equal(validate(metric), false, "one observation is not a trend")
+  metric.metrics[0].trend.points = Array.from({ length: 25 }, (_, i) => ({ label: String(i), value: i }))
+  assert.equal(validate(metric), false, "sparkline payloads are bounded")
+  table.columns[1].tones.Ready = "arbitrary-class-name"
+  assert.equal(validate(table), false, "status colors must use semantic tones")
+  table.columns[1].tones.Ready = "positive"
+  table.onClick = "execute()"
+  assert.equal(validate(table), false, "snapshot controls cannot contain handlers")
+})
+
+test("money history, sparklines, allocation, and final balances reconcile", async () => {
+  const { data } = await readJson("data/examples/money/pulse/2026-08-24.json")
+  const history = data.facts.balance_history
+  const blocks = data.presentation.blocks
+  const metrics = blocks.find((b) => b.kind === "metric-group").metrics
+  const chart = blocks.find((b) => b.kind === "line-chart")
+  const allocation = blocks.find((b) => b.kind === "donut-chart")
+  const latest = history.at(-1)
+  assert.equal(
+    latest.cash + latest.invested,
+    data.facts.accounts.reduce((sum, a) => sum + a.balance, 0),
+  )
+  assert.equal(
+    latest.invested,
+    data.facts.holdings.reduce((sum, h) => sum + h.market_value, 0),
+  )
+  assert.equal(
+    allocation.segments.reduce((sum, s) => sum + s.value, 0),
+    metrics[0].value,
+  )
+  assert.deepEqual(
+    chart.points.map((p) => p.values.total),
+    history.map((p) => p.cash + p.invested),
+  )
+  for (const [index, key] of ["total", "invested", "cash"].entries()) {
+    const values = history.map((p) => (key === "total" ? p.cash + p.invested : p[key]))
+    assert.deepEqual(
+      metrics[index].trend.points.map((p) => p.value),
+      values,
+    )
+    assert.equal(metrics[index].value, values.at(-1))
+    assert.equal(metrics[index].change, values.at(-1) - values[0])
+  }
 })

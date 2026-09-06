@@ -71,6 +71,10 @@ const schemas = await Promise.all(schemaPaths.map(readJson))
 const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true })
 addFormats(ajv)
 schemas.forEach((schema) => ajv.addSchema(schema))
+const validateCatalogBlock = ajv.compile({ $ref: "https://zaati-os.dev/schemas/ui-blocks.schema.json#/$defs/block" })
+for (const block of await readJson("data/component-examples.json")) {
+  if (!validateCatalogBlock(block)) errors.push(...formatAjvErrors("data/component-examples.json", validateCatalogBlock.errors))
+}
 
 const registry = await readJson("config/sources.json")
 const validateRegistry = ajv.getSchema("https://zaati-os.dev/schemas/source-registry.schema.json")

@@ -43,23 +43,23 @@
   --radius: 0.9rem;
   --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-heading: var(--font-ui);
-  --background: #f6f7f4;
-  --foreground: #17201c;
+  --background: #ffffff;
+  --foreground: #18181b;
   --card: #ffffff;
-  --card-foreground: #17201c;
+  --card-foreground: #18181b;
   --popover: #ffffff;
-  --popover-foreground: #17201c;
+  --popover-foreground: #18181b;
   --primary: #2f6f59;
   --primary-foreground: #ffffff;
-  --secondary: #e9ece8;
-  --secondary-foreground: #22312a;
-  --muted: #ecefeb;
-  --muted-foreground: #68736d;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #27272a;
+  --muted: #f4f4f5;
+  --muted-foreground: #64646c;
   --accent: #e2eee8;
   --accent-foreground: #245543;
   --destructive: #c83f4d;
-  --border: #dde2de;
-  --input: #dde2de;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
   --ring: #2f6f59;
   --positive: #3c8b68;
   --positive-foreground: #226044;
@@ -72,34 +72,34 @@
   --chart-3: #5287a4;
   --chart-4: #8c6e9b;
   --chart-5: #8f7d61;
-  --sidebar: #f0f2ee;
-  --sidebar-foreground: #26312b;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #27272a;
   --sidebar-primary: #2f6f59;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e0e6e1;
-  --sidebar-accent-foreground: #17201c;
-  --sidebar-border: #d9dfda;
+  --sidebar-accent: #f0f0f2;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
 }
 
 .dark {
   color-scheme: dark;
-  --background: #111512;
-  --foreground: #eef2ef;
-  --card: #171c18;
-  --card-foreground: #eef2ef;
-  --popover: #1b211d;
-  --popover-foreground: #eef2ef;
+  --background: #101012;
+  --foreground: #f4f4f5;
+  --card: #18181b;
+  --card-foreground: #f4f4f5;
+  --popover: #1c1c20;
+  --popover-foreground: #f4f4f5;
   --primary: #75b99d;
   --primary-foreground: #0e2119;
-  --secondary: #252b27;
-  --secondary-foreground: #e4e9e5;
-  --muted: #202622;
-  --muted-foreground: #99a39c;
+  --secondary: #27272a;
+  --secondary-foreground: #e4e4e7;
+  --muted: #222225;
+  --muted-foreground: #a1a1aa;
   --accent: #233a30;
   --accent-foreground: #bfe3d3;
   --destructive: #f0707c;
-  --border: #2b332e;
-  --input: #2b332e;
+  --border: #303035;
+  --input: #303035;
   --ring: #75b99d;
   --positive: #62aa84;
   --positive-foreground: #89d0a8;
@@ -112,12 +112,12 @@
   --chart-3: #65a0c0;
   --chart-4: #a98cb8;
   --chart-5: #ad9a7d;
-  --sidebar: #141915;
-  --sidebar-foreground: #dce3de;
+  --sidebar: #151518;
+  --sidebar-foreground: #e4e4e7;
   --sidebar-primary: #75b99d;
   --sidebar-primary-foreground: #0e2119;
-  --sidebar-accent: #222a25;
-  --sidebar-accent-foreground: #f0f4f1;
+  --sidebar-accent: #26262b;
+  --sidebar-accent-foreground: #fafafa;
   --sidebar-border: #29312c;
 }
 
@@ -247,45 +247,41 @@ h3 {
   gap: 0.75rem;
 }
 
+.metric-panel {
+  display: flex;
+  flex-direction: column;
+}
+.metric-panel > :first-child {
+  padding: 0;
+}
+.metric-panel > :first-child h3 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.metric-panel > :first-child p {
+  padding: 16px 20px 0;
+}
+.metric-panel > :last-child {
+  padding: 0;
+  display: flex;
+  flex: 1;
+}
+.metric-strip {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  gap: 1px;
+  background: var(--border);
+}
 .metric-tile {
-  --metric-accent: var(--primary);
-  background: color-mix(in srgb, var(--metric-accent) 9%, var(--card));
-  border-top: 3px solid var(--metric-accent);
-}
-.metric-tile[data-tone="info"] {
-  --metric-accent: var(--info);
-}
-.metric-tile[data-tone="warning"] {
-  --metric-accent: var(--warning);
-}
-.metric-tile[data-tone="danger"] {
-  --metric-accent: var(--destructive);
-}
-.metric-tile[data-tone="neutral"] {
-  --metric-accent: var(--muted-foreground);
-}
-.metric-tile .text-muted-foreground {
-  color: var(--foreground);
-}
-.metric-tile:first-child {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-.metric-tile:first-child .text-muted-foreground,
-.metric-tile:first-child .text-foreground,
-.metric-tile:first-child .text-positive-foreground,
-.metric-tile:first-child .text-destructive {
-  color: inherit;
-}
-.metric-tile:first-child .rounded-full {
-  background: currentColor;
+  flex: 1 0 min(100%, 8rem);
+  background: var(--card);
 }
 .zaati-block {
   container-type: inline-size;
-}
-.zaati-block[data-kind="line-chart"],
-.zaati-block[data-kind="bar-chart"] {
-  border-top: 3px solid var(--chart-1);
 }
 .chart-scroll {
   overflow-x: auto;
@@ -294,7 +290,7 @@ h3 {
 .chart-cartesian {
   display: block;
   width: 100%;
-  min-width: 480px;
+  min-width: 240px;
   height: auto;
 }
 @container (min-width: 480px) {
@@ -415,13 +411,6 @@ h3 {
     transform 180ms ease;
 }
 
-@media (hover: hover) {
-  .zaati-block:hover {
-    border-color: color-mix(in srgb, var(--primary) 24%, var(--border));
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--foreground) 7%, transparent);
-  }
-}
-
 .chart-series-reveal {
   animation: zaati-chart-reveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
   transform-box: fill-box;
@@ -492,5 +481,14 @@ h3 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@container (max-width: 420px) {
+  .metric-tile {
+    padding: 16px 12px;
+  }
+  .metric-value {
+    font-size: clamp(1.25rem, 6.5cqi, 1.5rem);
   }
 }

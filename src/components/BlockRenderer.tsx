@@ -1,10 +1,12 @@
-import { lazy, Suspense } from "react"
+import { lazy, Suspense, useState } from "react"
 import { ArrowUpRight, CalendarDays, CheckCircle2, ChevronDown, Info, TriangleAlert } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { DashboardBlock, InstanceConfig, ListBlock, Span, TableBlock, Tone, ValueFormat } from "@/types"
+import type { DashboardBlock, InstanceConfig, ListBlock, MetricGroupBlock, Span, TableBlock, Tone, ValueFormat } from "@/types"
 
 const toneDot: Record<Tone, string> = {
   neutral: "bg-muted-foreground",
@@ -20,7 +22,7 @@ const toneBadge: Record<Tone, "outline" | "positive" | "warning" | "danger" | "i
   danger: "danger",
   info: "info",
 }
-const spanClass: Record<Span, string> = { one: "lg:col-span-1", two: "lg:col-span-2", full: "lg:col-span-3" }
+const spanClass: Record<Span, string> = { one: "xl:col-span-1", two: "xl:col-span-2", full: "xl:col-span-3" }
 const ChartVisual = lazy(() => import("@/components/ChartVisual"))
 type Layout = "dashboard" | "focus" | "timeline"
 
@@ -71,7 +73,7 @@ function ListRows({ items }: { items: ListBlock["items"] }) {
     )
     return item.href ? (
       <a
-        className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
+        className="group flex gap-3 rounded-none px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
         href={item.href}
         key={item.id}
         rel="noreferrer"
@@ -80,11 +82,58 @@ function ListRows({ items }: { items: ListBlock["items"] }) {
         {content}
       </a>
     ) : (
-      <div className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/45" key={item.id}>
+      <div className="group flex gap-3 rounded-none px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/45" key={item.id}>
         {content}
       </div>
     )
   })
+}
+
+function MetricTrend({ metric, instance }: { metric: MetricGroupBlock["metrics"][number]; instance: InstanceConfig }) {
+  if (!metric.trend) return null
+  const { points, label } = metric.trend
+  const values = points.map((p) => p.value)
+  const min = Math.min(...values),
+    max = Math.max(...values)
+  const coordinates = points
+    .map((p, i) => `${(i / (points.length - 1)) * 240},${max === min ? 24 : 42 - ((p.value - min) / (max - min)) * 36}`)
+    .join(" ")
+  const color = metric.tone === "danger" ? "var(--destructive)" : metric.tone === "positive" ? "var(--positive)" : "var(--chart-1)"
+  return (
+    <div className="mt-3">
+      <svg
+        aria-label={`${metric.label}: ${label}`}
+        role="img"
+        viewBox="0 0 240 48"
+        className="h-12 w-full"
+        preserveAspectRatio="none"
+        style={{ color }}
+      >
+        <polygon points={`0,48 ${coordinates} 240,48`} fill="currentColor" opacity=".08" />
+        <polyline
+          className="chart-series-reveal"
+          points={coordinates}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <details className="mt-1 text-xs text-muted-foreground">
+        <summary className="min-h-8 cursor-pointer py-1" aria-label={`${metric.label} trend values`}>
+          {label}
+        </summary>
+        <dl className="mt-2 max-h-36 overflow-y-auto divide-y divide-border">
+          {points.map((point, i) => (
+            <div className="flex justify-between gap-2 py-1" key={i}>
+              <dt>{point.label}</dt>
+              <dd className="tabular-nums text-foreground">{formatValue(point.value, metric.format, instance)}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    </div>
+  )
 }
 
 function DataTable({
@@ -98,40 +147,168 @@ function DataTable({
   rows: TableBlock["rows"]
   suffix?: string
 }) {
+  const [query, setQuery] = useState("")
+  const [filters, setFilters] = useState<Record<string, string>>({})
+  const [sort, setSort] = useState<{ key: string; descending: boolean } | null>(null)
+  const [page, setPage] = useState(0)
+  const matched = rows.filter(
+    (row) =>
+      block.columns.some((col) =>
+        String(row[col.key] ?? "")
+          .toLocaleLowerCase()
+          .includes(query.toLocaleLowerCase()),
+      ) && Object.entries(filters).every(([key, value]) => !value || String(row[key]) === value),
+  )
+  if (sort)
+    matched.sort(
+      (a, b) =>
+        (typeof a[sort.key] === "number" && typeof b[sort.key] === "number"
+          ? Number(a[sort.key]) - Number(b[sort.key])
+          : String(a[sort.key] ?? "").localeCompare(String(b[sort.key] ?? ""), instance.locale, { numeric: true })) *
+        (sort.descending ? -1 : 1),
+    )
+  const pages = Math.max(1, Math.ceil(matched.length / 10))
+  const currentPage = Math.min(page, pages - 1)
+  const visible = block.searchable ? matched.slice(currentPage * 10, currentPage * 10 + 10) : rows
   return (
-    <div
-      aria-label={`${block.title}${suffix} table`}
-      className="overflow-x-auto rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
-      role="region"
-      tabIndex={0}
-    >
-      <table className="w-full min-w-[520px] border-collapse text-left text-sm">
-        <caption className="sr-only">
-          {block.title}
-          {suffix}
-        </caption>
-        <thead className="bg-muted/70 text-xs text-foreground">
-          <tr>
-            {block.columns.map((column) => (
-              <th className="px-3 py-2.5 font-medium" key={column.key}>
-                {column.label}
-              </th>
+    <>
+      {block.searchable ? (
+        <div className="mb-4 flex flex-wrap items-end gap-2" role="search" aria-label={`${block.title} filters`}>
+          <label className="min-w-40 flex-1 text-xs text-muted-foreground">
+            Search
+            <Input
+              className="mt-1"
+              placeholder="Search items…"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setPage(0)
+              }}
+            />
+          </label>
+          {block.columns
+            .filter((col) => col.filterable)
+            .map((col) => (
+              <label className="text-xs text-muted-foreground" key={col.key}>
+                {col.label}
+                <select
+                  className="mt-1 block h-10 max-w-48 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                  value={filters[col.key] || ""}
+                  onChange={(e) => {
+                    setFilters({ ...filters, [col.key]: e.target.value })
+                    setPage(0)
+                  }}
+                >
+                  <option value="">All</option>
+                  {[...new Set(rows.map((row) => String(row[col.key] ?? "")))]
+                    .filter(Boolean)
+                    .sort()
+                    .map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                </select>
+              </label>
             ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {rows.map((row, index) => (
-            <tr className="transition-colors hover:bg-muted/55" key={index}>
-              {block.columns.map((column) => (
-                <td className="max-w-64 break-words px-3 py-3 align-top tabular-nums" key={column.key}>
-                  {formatValue(row[column.key] ?? null, column.format, instance)}
-                </td>
+          {query || Object.values(filters).some(Boolean) ? (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setQuery("")
+                setFilters({})
+                setPage(0)
+              }}
+            >
+              Clear
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      <div
+        aria-label={`${block.title}${suffix} table`}
+        className="overflow-x-auto rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
+        role="region"
+        tabIndex={0}
+      >
+        <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+          <caption className="sr-only">
+            {block.title}
+            {suffix}
+          </caption>
+          <thead className="bg-muted/70 text-xs text-foreground">
+            <tr>
+              {block.columns.map((col) => (
+                <th
+                  className="px-3 py-2.5 font-medium"
+                  key={col.key}
+                  aria-sort={sort?.key === col.key ? (sort.descending ? "descending" : "ascending") : undefined}
+                >
+                  {block.searchable ? (
+                    <button
+                      className="min-h-8 text-left"
+                      onClick={() => {
+                        setSort({ key: col.key, descending: sort?.key === col.key && !sort.descending })
+                        setPage(0)
+                      }}
+                    >
+                      {col.label}{" "}
+                      <span aria-hidden="true" className="ml-1 text-muted-foreground">
+                        {sort?.key === col.key ? (sort.descending ? "↓" : "↑") : "↕"}
+                      </span>
+                    </button>
+                  ) : (
+                    col.label
+                  )}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {visible.map((row, index) => (
+              <tr className="transition-colors hover:bg-muted/55" key={index}>
+                {block.columns.map((col) => (
+                  <td className="max-w-64 break-words px-3 py-3 align-top tabular-nums" key={col.key}>
+                    {col.tones && Object.hasOwn(col.tones, String(row[col.key])) ? (
+                      <Badge variant={toneBadge[col.tones[String(row[col.key])]]}>
+                        {formatValue(row[col.key] ?? null, col.format, instance)}
+                      </Badge>
+                    ) : (
+                      formatValue(row[col.key] ?? null, col.format, instance)
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {!visible.length ? (
+              <tr>
+                <td colSpan={block.columns.length} className="p-8 text-center text-muted-foreground">
+                  No matching items. Clear the filters to see all items.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+      {block.searchable ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span role="status">
+            {matched.length} of {rows.length} items
+          </span>
+          {pages > 1 ? (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>
+                Previous
+              </Button>
+              <span>
+                {currentPage + 1} / {pages}
+              </span>
+              <Button variant="outline" size="sm" disabled={currentPage === pages - 1} onClick={() => setPage(currentPage + 1)}>
+                Next
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </>
   )
 }
 
@@ -180,16 +357,13 @@ export function BlockRenderer({
 }) {
   if (block.kind === "metric-group") {
     return (
-      <Panel block={block} className="bg-card/80" emphasized={emphasized} layout={layout}>
-        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 11rem), 1fr))" }}>
+      <Panel block={block} className="metric-panel" emphasized={emphasized} layout={layout}>
+        <div className="metric-strip">
           {block.metrics.map((metric) => (
-            <div className="metric-tile min-w-0 rounded-lg px-4 py-4" data-tone={metric.tone || "neutral"} key={metric.label}>
-              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <span aria-hidden="true" className={cn("size-1.5 rounded-full", toneDot[metric.tone || "neutral"])} />
-                {metric.label}
-              </div>
+            <div className="metric-tile min-w-0 px-5 py-5" data-tone={metric.tone || "neutral"} key={metric.label}>
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">{metric.label}</div>
               <div className="flex min-w-0 items-end gap-2">
-                <span className="min-w-0 break-words text-[clamp(1.5rem,2.4vw,2rem)] font-semibold leading-tight tracking-tight tabular-nums">
+                <span className="metric-value min-w-0 break-words text-[clamp(1.5rem,2.4vw,2rem)] font-medium leading-tight tracking-tight tabular-nums">
                   {formatValue(metric.value, metric.format, instance)}
                   {metric.unit ? <span className="ml-1 text-sm font-medium text-muted-foreground">{metric.unit}</span> : null}
                 </span>
@@ -198,11 +372,12 @@ export function BlockRenderer({
                 <p className="mt-1 text-xs text-foreground">
                   <span>
                     {metric.change > 0 ? "+" : ""}
-                    {formatValue(metric.change, metric.format === "percent" ? "percent" : "number", instance)}
+                    {formatValue(metric.change, metric.format || "number", instance)}
                   </span>
                   {metric.change_label ? <span className="ml-1 text-muted-foreground">{metric.change_label}</span> : null}
                 </p>
               ) : null}
+              <MetricTrend metric={metric} instance={instance} />
             </div>
           ))}
         </div>
@@ -302,6 +477,12 @@ export function BlockRenderer({
   }
 
   if (block.kind === "table") {
+    if (block.searchable)
+      return (
+        <Panel block={block} emphasized={emphasized} layout={layout}>
+          <DataTable block={block} instance={instance} rows={block.rows} />
+        </Panel>
+      )
     const visibleRows = block.rows.slice(0, 10)
     const remainingRows = block.rows.slice(10)
     return (

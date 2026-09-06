@@ -32,7 +32,7 @@ const localInstance = await readFile(path.join(root, "config/instance.local.json
   .then(() => true)
   .catch(() => false)
 const rawInstance = await readJson(localInstance && !showcase ? "config/instance.local.json" : "config/instance.example.json")
-if (showcase) rawInstance.enabled_sources = ["overview:daily", "money:pulse", "work:focus"]
+
 const instance = {
   ...rawInstance,
   experience: resolvedExperience(rawInstance, {
@@ -62,7 +62,9 @@ const demoMode = usingExamples
 const syntheticData = snapshots.length > 0 && snapshots.every((snapshot) => snapshot.privacy?.synthetic === true)
 const registry = await readJson("config/sources.json")
 const enabled = new Set(instance.enabled_sources)
-const sourceDefinitions = registry.sources.filter((source) => enabled.has(source.id))
+const sourceDefinitions = registry.sources
+  .filter((source) => enabled.has(source.id))
+  .sort((a, b) => instance.enabled_sources.indexOf(a.id) - instance.enabled_sources.indexOf(b.id))
 const bySource = Object.fromEntries(sourceDefinitions.map((source) => [source.id, []]))
 for (const snapshot of snapshots) if (enabled.has(snapshot.source_id)) bySource[snapshot.source_id].push(snapshot)
 for (const values of Object.values(bySource)) values.sort((a, b) => a.generated_at.localeCompare(b.generated_at))
@@ -107,14 +109,18 @@ const demoPromptsBySource = demoMode
     )
   : {}
 const exampleKinds = new Set()
+const catalogBlocks = demoMode ? await readJson("data/component-examples.json") : []
 const componentExamples = demoMode
-  ? snapshots
-      .flatMap((snapshot) => (snapshot.data?.presentation?.blocks || []).map((block) => ({ sourceId: snapshot.source_id, block })))
-      .filter(({ block }) => {
-        if (exampleKinds.has(block.kind)) return false
-        exampleKinds.add(block.kind)
-        return true
-      })
+  ? [
+      ...snapshots.flatMap((snapshot) =>
+        (snapshot.data?.presentation?.blocks || []).map((block) => ({ sourceId: snapshot.source_id, block })),
+      ),
+      ...catalogBlocks.map((block) => ({ sourceId: "Component catalog", block })),
+    ].filter(({ block }) => {
+      if (exampleKinds.has(block.kind)) return false
+      exampleKinds.add(block.kind)
+      return true
+    })
   : []
 const output = {
   generatedAt: new Date().toISOString(),
