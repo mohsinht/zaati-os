@@ -6,6 +6,7 @@ import { snapshotFreshness } from "./lib/freshness.mjs"
 import { resolvedExperience } from "./lib/setup-options.mjs"
 
 const root = process.cwd()
+const showcase = process.env.ZAATI_EXAMPLES === "true"
 async function snapshotFiles(directory) {
   try {
     const entries = await readdir(path.join(root, directory), { withFileTypes: true })
@@ -30,21 +31,22 @@ const readJson = async (file) => JSON.parse(await readFile(path.join(root, file)
 const localInstance = await readFile(path.join(root, "config/instance.local.json"), "utf8")
   .then(() => true)
   .catch(() => false)
-const rawInstance = await readJson(localInstance ? "config/instance.local.json" : "config/instance.example.json")
+const rawInstance = await readJson(localInstance && !showcase ? "config/instance.local.json" : "config/instance.example.json")
+if (showcase) rawInstance.enabled_sources = ["overview:daily", "money:pulse", "work:focus"]
 const instance = {
   ...rawInstance,
   experience: resolvedExperience(rawInstance, {
-    hasLocalConfig: localInstance,
-    demoOverride: process.env.ZAATI_DEMO_MODE === "true",
+    hasLocalConfig: localInstance && !showcase,
+    demoOverride: showcase || process.env.ZAATI_DEMO_MODE === "true",
   }),
 }
 const privateRoot = process.env.ZAATI_DATA_DIR || "data/snapshots"
 const tutorialMode = process.env.ZAATI_TUTORIAL_MODE === "true"
 const historyLimit = Math.min(366, Math.max(1, Number(process.env.ZAATI_HISTORY_LIMIT || 31)))
 if (!Number.isInteger(historyLimit)) throw new Error("ZAATI_HISTORY_LIMIT must be an integer from 1 to 366.")
-const privateFiles = await snapshotFiles(privateRoot)
+const privateFiles = showcase ? [] : await snapshotFiles(privateRoot)
 const usingExamples = privateFiles.length === 0 && instance.experience.mode === "demo"
-const files = usingExamples ? await snapshotFiles("data/examples") : privateFiles
+const files = usingExamples ? await snapshotFiles(showcase ? "examples/snapshots" : "data/examples") : privateFiles
 const encryptedFiles = files.filter((file) => file.endsWith(".enc"))
 if (!usingExamples && !tutorialMode && instance.storage.snapshot_encryption && files.some((file) => !file.endsWith(".enc")))
   throw new Error("Snapshot encryption is enabled, but plaintext private snapshots were found.")

@@ -37,7 +37,35 @@ Charts are explorable rather than decorative. Line points and bars expose the sa
 
 Use semantic tokens such as `background`, `card`, `muted`, `primary`, `warning`, and chart tokens. Do not hardcode provider or source colors inside components.
 
-## Accessibility
+## Dashboard composition recipes
+
+The [populated examples](../examples/README.md) are executable composition references. They use the production renderer and existing snapshot schema. Personal data never belongs in examples or screenshots.
+
+| Element            | Rule                                                                                    | Reason                                               |
+| ------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Primary metric     | First metric uses `primary` / `primary-foreground`; values use 24–32px tabular numerals | Establish one visual anchor without a marketing hero |
+| Supporting metrics | Semantic accent edge, 9% tinted surface, full-contrast labels                           | Separate measures while preserving legibility        |
+| Cartesian charts   | Two-column span preferred; 480px minimum canvas with contained horizontal scroll        | Keep tick labels readable at 320px                   |
+| Donut              | Stack inside narrow cards; switch to side-by-side at a 480px container                  | Respond to the card rather than viewport width       |
+| Exact values       | Native `View data` disclosure, formatted table; full donut legend values                | Make precision available to touch and keyboard users |
+| Evidence           | Keep dates, stale status, and assumptions adjacent to the decision                      | Avoid implying live or complete data                 |
+| Tables             | Prefer two columns or full width for prose-heavy rows                                   | Avoid unreadable evidence columns                    |
+
+Categorical chart colors distinguish series, not good and bad. Line styles also differ so color is not the only encoding. A numeric increase is not automatically a favorable outcome; producers should supply a change only when its meaning is clear. Metric emphasis indicates priority, not health.
+
+### Motion and interaction
+
+Entrance motion runs once, with no perpetual pulsing or autoplay. Blocks settle over 320ms; line and progress reveals use a 520ms clip wipe so the data's geometry never stretches sideways; bars grow over 480ms. Chart interaction changes emphasis without moving the measured endpoint. Static cards remain in place on hover. Reduced-motion preference reduces animations and transitions to 0.01ms.
+
+Donut legend buttons toggle persistent selection with click, tap, Enter, or Space. Hover and focus provide temporary inspection; `aria-pressed` describes selection only. Long category names wrap. The center uses compact notation; full values remain in the legend. Cartesian data is also available through a native disclosure, with no pointer precision required.
+
+### References and boundaries
+
+Composition research: [shadcn dashboard-01](https://ui.shadcn.com/blocks), [chart gallery](https://ui.shadcn.com/charts/area), and [chart documentation](https://ui.shadcn.com/docs/components/chart), reviewed September 5, 2026. Adopted the strong metric row, dominant visualization, contextual table, and progressive disclosure patterns. Zaati retains its owned shadcn-compatible primitives and lightweight SVG renderer; it does not add Recharts or copy reference code.
+
+Palette changes belong in semantic tokens or validated instance themes. Snapshots select content, spans, and audited block kinds, never CSS, JavaScript, SVG, or arbitrary component trees. The showcase build is explicit and ignores local private configuration. Normal personal builds retain the existing behavior.
+
+## Accessibility verification
 
 All controls need accessible names, keyboard focus, usable touch targets, and sufficient contrast. Color cannot be the only status signal. Charts need an accessible label and should have table or narrative evidence in the snapshot when exact values matter.
 

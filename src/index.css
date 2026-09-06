@@ -247,6 +247,93 @@ h3 {
   gap: 0.75rem;
 }
 
+.metric-tile {
+  --metric-accent: var(--primary);
+  background: color-mix(in srgb, var(--metric-accent) 9%, var(--card));
+  border-top: 3px solid var(--metric-accent);
+}
+.metric-tile[data-tone="info"] {
+  --metric-accent: var(--info);
+}
+.metric-tile[data-tone="warning"] {
+  --metric-accent: var(--warning);
+}
+.metric-tile[data-tone="danger"] {
+  --metric-accent: var(--destructive);
+}
+.metric-tile[data-tone="neutral"] {
+  --metric-accent: var(--muted-foreground);
+}
+.metric-tile .text-muted-foreground {
+  color: var(--foreground);
+}
+.metric-tile:first-child {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.metric-tile:first-child .text-muted-foreground,
+.metric-tile:first-child .text-foreground,
+.metric-tile:first-child .text-positive-foreground,
+.metric-tile:first-child .text-destructive {
+  color: inherit;
+}
+.metric-tile:first-child .rounded-full {
+  background: currentColor;
+}
+.zaati-block {
+  container-type: inline-size;
+}
+.zaati-block[data-kind="line-chart"],
+.zaati-block[data-kind="bar-chart"] {
+  border-top: 3px solid var(--chart-1);
+}
+.chart-scroll {
+  overflow-x: auto;
+  padding-block: 8px;
+}
+.chart-cartesian {
+  display: block;
+  width: 100%;
+  min-width: 480px;
+  height: auto;
+}
+@container (min-width: 480px) {
+  .chart-donut {
+    grid-template-columns: minmax(190px, 0.8fr) minmax(0, 1.2fr);
+    align-items: center;
+  }
+}
+.chart-values {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+}
+.chart-values summary {
+  padding: 12px 4px;
+  cursor: pointer;
+  color: var(--muted-foreground);
+}
+.chart-values summary:hover {
+  color: var(--foreground);
+}
+.chart-values table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.chart-values th,
+.chart-values td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.chart-values caption {
+  text-align: left;
+  padding: 8px;
+  font-weight: 600;
+}
+
 .palette-dot {
   display: block;
   width: 1.15rem;
@@ -282,12 +369,10 @@ h3 {
 
 @keyframes zaati-chart-reveal {
   from {
-    opacity: 0;
-    transform: scaleX(0.08);
+    clip-path: inset(0 100% 0 0);
   }
   to {
-    opacity: 1;
-    transform: scaleX(1);
+    clip-path: inset(0 0 0 0);
   }
 }
 
@@ -334,7 +419,6 @@ h3 {
   .zaati-block:hover {
     border-color: color-mix(in srgb, var(--primary) 24%, var(--border));
     box-shadow: 0 8px 24px color-mix(in srgb, var(--foreground) 7%, transparent);
-    transform: translateY(-2px);
   }
 }
 
@@ -357,7 +441,6 @@ h3 {
 .chart-data-target:hover .chart-bar,
 .chart-data-target:focus .chart-bar {
   filter: brightness(1.06);
-  transform: translateY(-2px) scaleY(1.015);
 }
 
 .chart-point {
