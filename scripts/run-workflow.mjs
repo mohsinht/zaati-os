@@ -29,7 +29,9 @@ function parseOptions(argv) {
 export function commandAdapter(command, prompt, timeoutMs = 120000) {
   if (!command.length) throw new Error("The command adapter requires an executable after --.")
   return new Promise((resolve, reject) => {
-    const child = spawn(command[0], command.slice(1), { shell: false, stdio: ["pipe", "pipe", "pipe"], env: process.env })
+    const childEnv = { ...process.env }
+    delete childEnv.NODE_V8_COVERAGE
+    const child = spawn(command[0], command.slice(1), { shell: false, stdio: ["pipe", "pipe", "pipe"], env: childEnv })
     const output = []
     let bytes = 0
     let timedOut = false

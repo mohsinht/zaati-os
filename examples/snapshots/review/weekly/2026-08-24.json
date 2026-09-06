@@ -70,7 +70,7 @@
   },
   "data": {
     "title": "Weekly review",
-    "summary": "Review August 17\u201323 before planning the next week. You recorded 18 focus blocks and 19 interruptions. Thursday had the most focus blocks; this alone does not establish what caused the difference.",
+    "summary": "Review August 17–23 before planning the next week. You recorded 18 focus blocks and 19 interruptions. Thursday had the most focus blocks; this alone does not establish what caused the difference.",
     "attention": "low",
     "facts": {
       "outcomes": [
@@ -104,7 +104,7 @@
         },
         {
           "id": "two-reply-windows",
-          "label": "Try reply windows at 08:00 and 16:00",
+          "label": "Try two reply windows, adjusted around explicit deadlines",
           "status": "neutral",
           "evidence_snapshot_ids": ["inbox:attention:2026-08-24", "overview:daily:2026-08-24"]
         }
@@ -137,7 +137,7 @@
           "id": "focus-trend",
           "kind": "line-chart",
           "title": "Focus through the week",
-          "description": "Daily recorded counts, August 17\u201323. Focus blocks and interruptions are different measures, not hours.",
+          "description": "Daily recorded counts, August 17–23. Focus blocks and interruptions are different measures, not hours.",
           "span": "two",
           "series": [
             {
@@ -210,14 +210,14 @@
             {
               "id": "n1",
               "title": "Reserve Monday, Wednesday, and Friday mornings",
-              "description": "Try keeping two hours free on three mornings, then compare next week\u2019s recorded focus.",
+              "description": "Try keeping two hours free on three mornings, then compare next week’s recorded focus.",
               "status": "Calendar",
               "tone": "positive"
             },
             {
               "id": "n2",
               "title": "Set two inbox windows",
-              "description": "Reply at 08:00 and 16:00 so messages do not interrupt the 08:30 focus block.",
+              "description": "Use two bounded reply windows, moving one earlier whenever a message has an explicit deadline. Today’s renewal answer is due at 15:00 UTC.",
               "status": "Boundary",
               "tone": "info"
             }

@@ -4,18 +4,20 @@ Zaati OS helps someone understand their day and decide what deserves attention. 
 
 ## Shared frame
 
-All pages use the same available content width and 16/24/32px responsive gutters. The sidebar is 256px wide on desktop. `dashboard`, `focus`, and `timeline` change the internal column arrangement, never the outer page width. Three-column dashboards begin at 1280px; smaller screens stack blocks to protect readable card widths. Long paragraphs can have a readable line length inside that frame.
+All pages use the same content frame, capped at 1600px, with 16/24/32px responsive gutters. The sidebar is 256px wide on desktop. `dashboard`, `focus`, and `timeline` change the internal column arrangement, never the outer page width. Three-column dashboards begin at 1280px; smaller screens stack blocks to protect readable card widths. Long paragraphs can have a readable line length inside that frame.
 
 The instance's `enabled_sources` order controls navigation. The daily overview comes first in the example instance. Setup and Component lab sit below the everyday pages. The demo opens on Today and offers the tour from Start here instead of interrupting the first visit. Demo freshness is evaluated at the clearly labeled example date; personal instances continue using the real clock.
 
 ## Visual language
 
-- Neutral white/charcoal surfaces, quiet gray borders, and flat cards.
+- White/charcoal cards on a quiet neutral workspace surface, subtle borders, and flat content panels.
 - Palette colors belong to charts, actions, and meaningful status indicators. Do not tint the entire workspace.
 - Page titles: 24–30px, medium weight. Section titles: 16px, medium. Body: 14px with comfortable line height. Metrics: 24–32px tabular numerals.
 - A connected metric strip uses separators, not a stack of colored cards. Values get emphasis through size, not a different background per metric.
 - Keep the page title and summary concise. Use ordinary labels such as Agenda, Inbox, and Money. Avoid slogans and motivational claims.
 - Static cards do not lift or cast hover shadows. Controls retain obvious focus and hover states.
+
+The editorial font option applies serif typography to headings while retaining sans-serif navigation, controls, and data. Short supporting lists, progress panels, and text fit their content instead of stretching to the height of a neighboring chart or calendar. Metric panels can still share the height of their paired chart.
 
 Owned shadcn-compatible primitives live in `src/components/ui/`. Use their shared Card, Button, Input, Dialog, Tabs, Badge, and Progress composition. Preserve semantic tokens and the component generator contract.
 
@@ -83,3 +85,19 @@ Reviewed September 6, 2026. These are composition references and published guida
 | [PatternFly dashboard guidelines](https://www.patternfly.org/patterns/dashboard/design-guidelines/)                      | Start from requirements and user tasks                                             | Define the question each page answers before choosing its components                                 |
 
 The specific widths, typography, and page recipes above are Zaati design decisions informed by those references. No paid template code, third-party fonts, telemetry, new chart library, or snapshot-controlled markup is introduced.
+
+## Page review, September 6
+
+| Page          | Treatment                                                             | Content check                                                                  |
+| ------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Today         | Connected metrics, chronological agenda, numbered attention queue     | Deadlines remain visible beside the requested response                         |
+| Agenda        | Date tile, timezone, separate start/end labels, duration and location | All-day events stay separate from timed durations; events sort chronologically |
+| Inbox         | Numbered response queue, count badges, compact waiting panel          | Waiting does not imply a reply is needed                                       |
+| Work          | Spacious task rows with stronger item names and status filters        | Exact next steps remain beside the task                                        |
+| Money         | Balance history with shared metric panel, compact supporting goals    | Provisional prices and balance-versus-return distinction remain visible        |
+| Briefing      | Ranked reading rows and a separate questions list                     | Questions are not presented as a chronological sequence                        |
+| Weekly review | Recorded counts, chart, bounded experiments and evidence              | Reply-window suggestions defer to explicit deadlines                           |
+| Start here    | Same frame and active navigation treatment                            | Three setup steps remain the entry point                                       |
+| Component lab | shadcn category tabs, intersecting text search, visible result count  | Empty results and clipboard failure have explicit feedback                     |
+
+Queue numbering continues through expanded items. Static notices, calendar events, and timeline markers do not lift or grow on hover. The component catalog uses the existing shadcn Tabs and Input primitives; no new runtime dependencies or snapshot fields are required.

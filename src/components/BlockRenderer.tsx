@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react"
-import { ArrowUpRight, CalendarDays, CheckCircle2, ChevronDown, Info, TriangleAlert } from "lucide-react"
+import { ArrowUpRight, CheckCircle2, ChevronDown, Clock3, Info, MapPin, TriangleAlert } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -55,11 +55,17 @@ function formatValue(value: string | number | boolean | null, format: ValueForma
   return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(value)
 }
 
-function ListRows({ items }: { items: ListBlock["items"] }) {
-  return items.map((item) => {
+function ListRows({ items, offset = 0 }: { items: ListBlock["items"]; offset?: number }) {
+  return items.map((item, index) => {
     const content = (
       <>
-        <span aria-hidden="true" className={cn("mt-2 size-1.5 shrink-0 rounded-full", toneDot[item.tone || "neutral"])} />
+        <span
+          aria-hidden="true"
+          className="relative mt-0.5 grid size-7 shrink-0 place-items-center rounded-md border border-border bg-muted/50 text-[11px] font-medium tabular-nums text-muted-foreground"
+        >
+          {String(index + offset + 1).padStart(2, "0")}
+          <span className={cn("absolute -right-0.5 -top-0.5 size-1.5 rounded-full ring-2 ring-card", toneDot[item.tone || "neutral"])} />
+        </span>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-start justify-between gap-2">
             <span className="font-medium leading-6">{item.title}</span>
@@ -73,7 +79,7 @@ function ListRows({ items }: { items: ListBlock["items"] }) {
     )
     return item.href ? (
       <a
-        className="group flex gap-3 rounded-none px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
+        className="group flex gap-3 rounded-none px-1 py-4 transition-colors hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
         href={item.href}
         key={item.id}
         rel="noreferrer"
@@ -82,7 +88,7 @@ function ListRows({ items }: { items: ListBlock["items"] }) {
         {content}
       </a>
     ) : (
-      <div className="group flex gap-3 rounded-none px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/45" key={item.id}>
+      <div className="group flex gap-3 rounded-none px-1 py-4 transition-colors hover:bg-muted/45" key={item.id}>
         {content}
       </div>
     )
@@ -238,7 +244,7 @@ function DataTable({
             <tr>
               {block.columns.map((col) => (
                 <th
-                  className="px-3 py-2.5 font-medium"
+                  className="px-4 py-2.5 font-medium"
                   key={col.key}
                   aria-sort={sort?.key === col.key ? (sort.descending ? "descending" : "ascending") : undefined}
                 >
@@ -266,7 +272,7 @@ function DataTable({
             {visible.map((row, index) => (
               <tr className="transition-colors hover:bg-muted/55" key={index}>
                 {block.columns.map((col) => (
-                  <td className="max-w-64 break-words px-3 py-3 align-top tabular-nums" key={col.key}>
+                  <td className="max-w-64 break-words px-4 py-4 align-top leading-6 tabular-nums first:font-medium" key={col.key}>
                     {col.tones && Object.hasOwn(col.tones, String(row[col.key])) ? (
                       <Badge variant={toneBadge[col.tones[String(row[col.key])]]}>
                         {formatValue(row[col.key] ?? null, col.format, instance)}
@@ -332,11 +338,20 @@ function Panel({
         "zaati-block min-w-0 overflow-hidden",
         layoutSpan(block, layout, emphasized),
         emphasized && "border-primary/35",
+        ["list", "progress", "text", "timeline", "bar-chart"].includes(block.kind) && "self-start",
         className,
       )}
     >
       <CardHeader>
-        <CardTitle>{block.title}</CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle>{block.title}</CardTitle>
+          {block.kind === "list" || block.kind === "table" ? (
+            <Badge variant="outline" className="shrink-0 tabular-nums">
+              {block.kind === "list" ? block.items.length : block.rows.length}{" "}
+              {(block.kind === "list" ? block.items.length : block.rows.length) === 1 ? "item" : "items"}
+            </Badge>
+          ) : null}
+        </div>
         {"description" in block && block.description ? <CardDescription>{block.description}</CardDescription> : null}
       </CardHeader>
       <CardContent>{children}</CardContent>
@@ -402,7 +417,7 @@ export function BlockRenderer({
                   <ChevronDown className="size-3.5 transition-transform group-open/more:rotate-180" />
                 </summary>
                 <div className="mt-1 divide-y divide-border">
-                  <ListRows items={remainingItems} />
+                  <ListRows items={remainingItems} offset={8} />
                 </div>
               </details>
             ) : null}
@@ -439,36 +454,63 @@ export function BlockRenderer({
       new Intl.DateTimeFormat(instance.locale, { hour: "numeric", minute: "2-digit", timeZone: instance.timezone }).format(new Date(value))
     return (
       <Panel block={block} emphasized={emphasized} layout={layout}>
-        <div className="mb-4 flex items-center gap-2 rounded-lg bg-muted/70 px-3 py-2 text-xs font-medium text-foreground">
-          <CalendarDays className="size-4" />
-          {new Intl.DateTimeFormat(instance.locale, { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" }).format(
-            new Date(`${block.date}T12:00:00Z`),
-          )}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+          <div className="flex items-center gap-3">
+            <div className="grid size-12 place-items-center rounded-lg border border-border bg-muted/50 text-xl font-medium tabular-nums">
+              {new Intl.DateTimeFormat(instance.locale, { day: "numeric", timeZone: "UTC" }).format(new Date(`${block.date}T12:00:00Z`))}
+            </div>
+            <div>
+              <p className="text-sm font-medium">
+                {new Intl.DateTimeFormat(instance.locale, { weekday: "long", timeZone: "UTC" }).format(new Date(`${block.date}T12:00:00Z`))}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {new Intl.DateTimeFormat(instance.locale, { month: "long", year: "numeric", timeZone: "UTC" }).format(
+                  new Date(`${block.date}T12:00:00Z`),
+                )}
+              </p>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock3 className="size-3.5" />
+            {instance.timezone}
+          </span>
         </div>
         {block.events.length ? (
-          <div className="space-y-1">
-            {block.events.map((event) => (
-              <div
-                className="group flex gap-3 rounded-lg px-2 py-2.5 transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-muted/60"
-                key={event.id}
-              >
-                <div className="w-16 shrink-0 pt-0.5 text-xs font-medium text-muted-foreground">
-                  {event.all_day ? "All day" : time(event.start)}
-                </div>
-                <span className={cn("mt-1.5 h-8 w-0.5 rounded-full", toneDot[event.tone || "neutral"])} />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium leading-5">{event.title}</p>
-                  {(!event.all_day && event.end) || event.location ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {!event.all_day && event.end ? `Until ${time(event.end)}` : ""}
-                      {!event.all_day && event.end && event.location ? " · " : ""}
-                      {event.location || ""}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
+          <ol className="space-y-3" aria-label={`${block.title} events`}>
+            {[...block.events]
+              .sort((a, b) => Number(Boolean(b.all_day)) - Number(Boolean(a.all_day)) || Date.parse(a.start) - Date.parse(b.start))
+              .map((event) => {
+                const minutes = event.end ? Math.round((Date.parse(event.end) - Date.parse(event.start)) / 60000) : 0
+                return (
+                  <li className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3" key={event.id}>
+                    <div className="pt-3 text-xs font-medium tabular-nums">
+                      <span className="block">{event.all_day ? "All day" : time(event.start)}</span>
+                      {!event.all_day && event.end ? <span className="mt-1 block text-muted-foreground">{time(event.end)}</span> : null}
+                    </div>
+                    <div className="relative overflow-hidden rounded-lg border border-border bg-muted/25 px-4 py-3">
+                      <span aria-hidden="true" className={cn("absolute inset-y-0 left-0 w-0.5", toneDot[event.tone || "neutral"])} />
+                      <p className="text-sm font-medium leading-6">{event.title}</p>
+                      {event.location || (!event.all_day && minutes > 0) ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          {!event.all_day && minutes > 0 ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Clock3 className="size-3" />
+                              {minutes} min
+                            </span>
+                          ) : null}
+                          {event.location ? (
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="size-3 shrink-0" />
+                              {event.location}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  </li>
+                )
+              })}
+          </ol>
         ) : (
           <EmptyState label="No timed events." />
         )}
@@ -544,7 +586,7 @@ export function BlockRenderer({
     return (
       <div
         className={cn(
-          "zaati-block rounded-xl border p-5 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-sm",
+          "zaati-block rounded-xl border p-5",
           layoutSpan(block, layout, emphasized),
           block.tone === "warning" && "border-warning/30 bg-warning/10",
           block.tone === "danger" && "border-destructive/30 bg-destructive/10",
@@ -553,7 +595,7 @@ export function BlockRenderer({
         )}
       >
         <div className="flex items-start gap-3">
-          <div className="rounded-full bg-background p-2 shadow-sm">
+          <div className="rounded-md bg-background p-2">
             <Icon className="size-4" />
           </div>
           <div className="min-w-0">
@@ -587,12 +629,7 @@ export function BlockRenderer({
                 key={`${item.label}-${item.title}`}
               >
                 <div className="flex w-3 shrink-0 flex-col items-center">
-                  <span
-                    className={cn(
-                      "mt-1.5 size-2.5 rounded-full ring-4 ring-background transition-transform duration-200 group-hover:scale-125",
-                      toneDot[item.tone || "neutral"],
-                    )}
-                  />
+                  <span className={cn("mt-1.5 size-2.5 rounded-full ring-4 ring-card", toneDot[item.tone || "neutral"])} />
                   {index < block.items.length - 1 ? <span className="mt-1 h-full w-px bg-border" /> : null}
                 </div>
                 <div className="min-w-0">
