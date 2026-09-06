@@ -1,10 +1,12 @@
-import { lazy, Suspense } from "react"
-import { ArrowUpRight, CalendarDays, CheckCircle2, Clock3, Info, TriangleAlert } from "lucide-react"
+import { lazy, Suspense, useState } from "react"
+import { ArrowUpRight, CalendarDays, CheckCircle2, ChevronDown, Info, TriangleAlert } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { DashboardBlock, InstanceConfig, Span, Tone, ValueFormat } from "@/types"
+import type { DashboardBlock, InstanceConfig, ListBlock, MetricGroupBlock, Span, TableBlock, Tone, ValueFormat } from "@/types"
 
 const toneDot: Record<Tone, string> = {
   neutral: "bg-muted-foreground",
@@ -20,7 +22,7 @@ const toneBadge: Record<Tone, "outline" | "positive" | "warning" | "danger" | "i
   danger: "danger",
   info: "info",
 }
-const spanClass: Record<Span, string> = { one: "lg:col-span-1", two: "lg:col-span-2", full: "lg:col-span-3" }
+const spanClass: Record<Span, string> = { one: "xl:col-span-1", two: "xl:col-span-2", full: "xl:col-span-3" }
 const ChartVisual = lazy(() => import("@/components/ChartVisual"))
 type Layout = "dashboard" | "focus" | "timeline"
 
@@ -44,10 +46,270 @@ function formatValue(value: string | number | boolean | null, format: ValueForma
     return new Intl.NumberFormat(instance.locale, { style: "currency", currency: instance.currency, maximumFractionDigits: 0 }).format(
       value,
     )
-  if (format === "percent") return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(value)}%`
+  if (format === "percent") {
+    const rounded = Math.round(value * 10) / 10
+    return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(Object.is(rounded, -0) ? 0 : rounded)}%`
+  }
   if (format === "compact-number")
     return new Intl.NumberFormat(instance.locale, { notation: "compact", maximumFractionDigits: 1 }).format(value)
   return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(value)
+}
+
+function ListRows({ items }: { items: ListBlock["items"] }) {
+  return items.map((item) => {
+    const content = (
+      <>
+        <span aria-hidden="true" className={cn("mt-2 size-1.5 shrink-0 rounded-full", toneDot[item.tone || "neutral"])} />
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-start justify-between gap-2">
+            <span className="font-medium leading-6">{item.title}</span>
+            {item.status ? <Badge variant={toneBadge[item.tone || "neutral"]}>{item.status}</Badge> : null}
+          </span>
+          {item.description ? <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{item.description}</span> : null}
+          {item.meta ? <span className="mt-2 block text-xs font-medium text-muted-foreground">{item.meta}</span> : null}
+        </span>
+        {item.href ? <ArrowUpRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-muted-foreground" /> : null}
+      </>
+    )
+    return item.href ? (
+      <a
+        className="group flex gap-3 rounded-none px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
+        href={item.href}
+        key={item.id}
+        rel="noreferrer"
+        target="_blank"
+      >
+        {content}
+      </a>
+    ) : (
+      <div className="group flex gap-3 rounded-none px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/45" key={item.id}>
+        {content}
+      </div>
+    )
+  })
+}
+
+function MetricTrend({ metric, instance }: { metric: MetricGroupBlock["metrics"][number]; instance: InstanceConfig }) {
+  if (!metric.trend) return null
+  const { points, label } = metric.trend
+  const values = points.map((p) => p.value)
+  const min = Math.min(...values),
+    max = Math.max(...values)
+  const coordinates = points
+    .map((p, i) => `${(i / (points.length - 1)) * 240},${max === min ? 24 : 42 - ((p.value - min) / (max - min)) * 36}`)
+    .join(" ")
+  const color = metric.tone === "danger" ? "var(--destructive)" : metric.tone === "positive" ? "var(--positive)" : "var(--chart-1)"
+  return (
+    <div className="mt-3">
+      <svg
+        aria-label={`${metric.label}: ${label}`}
+        role="img"
+        viewBox="0 0 240 48"
+        className="h-12 w-full"
+        preserveAspectRatio="none"
+        style={{ color }}
+      >
+        <polygon points={`0,48 ${coordinates} 240,48`} fill="currentColor" opacity=".08" />
+        <polyline
+          className="chart-series-reveal"
+          points={coordinates}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <details className="mt-1 text-xs text-muted-foreground">
+        <summary className="min-h-8 cursor-pointer py-1" aria-label={`${metric.label} trend values`}>
+          {label}
+        </summary>
+        <dl className="mt-2 max-h-36 overflow-y-auto divide-y divide-border">
+          {points.map((point, i) => (
+            <div className="flex justify-between gap-2 py-1" key={i}>
+              <dt>{point.label}</dt>
+              <dd className="tabular-nums text-foreground">{formatValue(point.value, metric.format, instance)}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    </div>
+  )
+}
+
+function DataTable({
+  block,
+  instance,
+  rows,
+  suffix = "",
+}: {
+  block: TableBlock
+  instance: InstanceConfig
+  rows: TableBlock["rows"]
+  suffix?: string
+}) {
+  const [query, setQuery] = useState("")
+  const [filters, setFilters] = useState<Record<string, string>>({})
+  const [sort, setSort] = useState<{ key: string; descending: boolean } | null>(null)
+  const [page, setPage] = useState(0)
+  const matched = rows.filter(
+    (row) =>
+      block.columns.some((col) =>
+        String(row[col.key] ?? "")
+          .toLocaleLowerCase()
+          .includes(query.toLocaleLowerCase()),
+      ) && Object.entries(filters).every(([key, value]) => !value || String(row[key]) === value),
+  )
+  if (sort)
+    matched.sort(
+      (a, b) =>
+        (typeof a[sort.key] === "number" && typeof b[sort.key] === "number"
+          ? Number(a[sort.key]) - Number(b[sort.key])
+          : String(a[sort.key] ?? "").localeCompare(String(b[sort.key] ?? ""), instance.locale, { numeric: true })) *
+        (sort.descending ? -1 : 1),
+    )
+  const pages = Math.max(1, Math.ceil(matched.length / 10))
+  const currentPage = Math.min(page, pages - 1)
+  const visible = block.searchable ? matched.slice(currentPage * 10, currentPage * 10 + 10) : rows
+  return (
+    <>
+      {block.searchable ? (
+        <div className="mb-4 flex flex-wrap items-end gap-2" role="search" aria-label={`${block.title} filters`}>
+          <label className="min-w-40 flex-1 text-xs text-muted-foreground">
+            Search
+            <Input
+              className="mt-1"
+              placeholder="Search items…"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setPage(0)
+              }}
+            />
+          </label>
+          {block.columns
+            .filter((col) => col.filterable)
+            .map((col) => (
+              <label className="text-xs text-muted-foreground" key={col.key}>
+                {col.label}
+                <select
+                  className="mt-1 block h-10 max-w-48 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                  value={filters[col.key] || ""}
+                  onChange={(e) => {
+                    setFilters({ ...filters, [col.key]: e.target.value })
+                    setPage(0)
+                  }}
+                >
+                  <option value="">All</option>
+                  {[...new Set(rows.map((row) => String(row[col.key] ?? "")))]
+                    .filter(Boolean)
+                    .sort()
+                    .map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                </select>
+              </label>
+            ))}
+          {query || Object.values(filters).some(Boolean) ? (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setQuery("")
+                setFilters({})
+                setPage(0)
+              }}
+            >
+              Clear
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      <div
+        aria-label={`${block.title}${suffix} table`}
+        className="overflow-x-auto rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
+        role="region"
+        tabIndex={0}
+      >
+        <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+          <caption className="sr-only">
+            {block.title}
+            {suffix}
+          </caption>
+          <thead className="bg-muted/70 text-xs text-foreground">
+            <tr>
+              {block.columns.map((col) => (
+                <th
+                  className="px-3 py-2.5 font-medium"
+                  key={col.key}
+                  aria-sort={sort?.key === col.key ? (sort.descending ? "descending" : "ascending") : undefined}
+                >
+                  {block.searchable ? (
+                    <button
+                      className="min-h-8 text-left"
+                      onClick={() => {
+                        setSort({ key: col.key, descending: sort?.key === col.key && !sort.descending })
+                        setPage(0)
+                      }}
+                    >
+                      {col.label}{" "}
+                      <span aria-hidden="true" className="ml-1 text-muted-foreground">
+                        {sort?.key === col.key ? (sort.descending ? "↓" : "↑") : "↕"}
+                      </span>
+                    </button>
+                  ) : (
+                    col.label
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {visible.map((row, index) => (
+              <tr className="transition-colors hover:bg-muted/55" key={index}>
+                {block.columns.map((col) => (
+                  <td className="max-w-64 break-words px-3 py-3 align-top tabular-nums" key={col.key}>
+                    {col.tones && Object.hasOwn(col.tones, String(row[col.key])) ? (
+                      <Badge variant={toneBadge[col.tones[String(row[col.key])]]}>
+                        {formatValue(row[col.key] ?? null, col.format, instance)}
+                      </Badge>
+                    ) : (
+                      formatValue(row[col.key] ?? null, col.format, instance)
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {!visible.length ? (
+              <tr>
+                <td colSpan={block.columns.length} className="p-8 text-center text-muted-foreground">
+                  No matching items. Clear the filters to see all items.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+      {block.searchable ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span role="status">
+            {matched.length} of {rows.length} items
+          </span>
+          {pages > 1 ? (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>
+                Previous
+              </Button>
+              <span>
+                {currentPage + 1} / {pages}
+              </span>
+              <Button variant="outline" size="sm" disabled={currentPage === pages - 1} onClick={() => setPage(currentPage + 1)}>
+                Next
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </>
+  )
 }
 
 function Panel({
@@ -65,6 +327,7 @@ function Panel({
 }) {
   return (
     <Card
+      data-kind={block.kind}
       className={cn(
         "zaati-block min-w-0 overflow-hidden",
         layoutSpan(block, layout, emphasized),
@@ -94,37 +357,27 @@ export function BlockRenderer({
 }) {
   if (block.kind === "metric-group") {
     return (
-      <Panel block={block} className="bg-card/80" emphasized={emphasized} layout={layout}>
-        <div
-          className={cn(
-            "grid gap-px overflow-hidden rounded-lg bg-border sm:grid-cols-2",
-            block.metrics.length === 3 && "xl:grid-cols-3",
-            block.metrics.length === 4 && "xl:grid-cols-4",
-            block.metrics.length === 5 && "xl:grid-cols-5",
-            block.metrics.length === 6 && "xl:grid-cols-3",
-          )}
-        >
+      <Panel block={block} className="metric-panel" emphasized={emphasized} layout={layout}>
+        <div className="metric-strip">
           {block.metrics.map((metric) => (
-            <div className="group min-w-0 bg-card px-4 py-3 transition-colors hover:bg-accent/45" key={metric.label}>
-              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <span aria-hidden="true" className={cn("size-1.5 rounded-full", toneDot[metric.tone || "neutral"])} />
-                {metric.label}
-              </div>
-              <div className="flex items-end gap-2">
-                <span className="truncate text-2xl font-semibold tracking-tight transition-transform duration-200 group-hover:translate-x-0.5">
+            <div className="metric-tile min-w-0 px-5 py-5" data-tone={metric.tone || "neutral"} key={metric.label}>
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">{metric.label}</div>
+              <div className="flex min-w-0 items-end gap-2">
+                <span className="metric-value min-w-0 break-words text-[clamp(1.5rem,2.4vw,2rem)] font-medium leading-tight tracking-tight tabular-nums">
                   {formatValue(metric.value, metric.format, instance)}
                   {metric.unit ? <span className="ml-1 text-sm font-medium text-muted-foreground">{metric.unit}</span> : null}
                 </span>
               </div>
               {metric.change !== undefined ? (
-                <p className={cn("mt-1 text-xs", metric.change >= 0 ? "text-positive-foreground" : "text-destructive")}>
+                <p className="mt-1 text-xs text-foreground">
                   <span>
                     {metric.change > 0 ? "+" : ""}
-                    {formatValue(metric.change, metric.format === "percent" ? "percent" : "number", instance)}
+                    {formatValue(metric.change, metric.format || "number", instance)}
                   </span>
                   {metric.change_label ? <span className="ml-1 text-muted-foreground">{metric.change_label}</span> : null}
                 </p>
               ) : null}
+              <MetricTrend metric={metric} instance={instance} />
             </div>
           ))}
         </div>
@@ -133,46 +386,26 @@ export function BlockRenderer({
   }
 
   if (block.kind === "list") {
+    const visibleItems = block.items.slice(0, 8)
+    const remainingItems = block.items.slice(8)
     return (
       <Panel block={block} emphasized={emphasized} layout={layout}>
         {block.items.length ? (
-          <div className="divide-y divide-border">
-            {block.items.map((item) => {
-              const content = (
-                <>
-                  <span aria-hidden="true" className={cn("mt-2 size-1.5 shrink-0 rounded-full", toneDot[item.tone || "neutral"])} />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-start justify-between gap-2">
-                      <span className="font-medium leading-6">{item.title}</span>
-                      {item.status ? <Badge variant={toneBadge[item.tone || "neutral"]}>{item.status}</Badge> : null}
-                    </span>
-                    {item.description ? (
-                      <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{item.description}</span>
-                    ) : null}
-                    {item.meta ? <span className="mt-2 block text-xs font-medium text-muted-foreground">{item.meta}</span> : null}
-                  </span>
-                  {item.href ? <ArrowUpRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-muted-foreground" /> : null}
-                </>
-              )
-              return item.href ? (
-                <a
-                  className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/55 hover:text-primary focus-visible:bg-muted/55"
-                  href={item.href}
-                  key={item.id}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {content}
-                </a>
-              ) : (
-                <div
-                  className="group flex gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/45"
-                  key={item.id}
-                >
-                  {content}
+          <div>
+            <div className="divide-y divide-border">
+              <ListRows items={visibleItems} />
+            </div>
+            {remainingItems.length ? (
+              <details className="group/more mt-2 border-t border-border pt-2">
+                <summary className="flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-lg px-3 text-xs font-medium text-muted-foreground hover:bg-muted/55 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  Show {remainingItems.length} more
+                  <ChevronDown className="size-3.5 transition-transform group-open/more:rotate-180" />
+                </summary>
+                <div className="mt-1 divide-y divide-border">
+                  <ListRows items={remainingItems} />
                 </div>
-              )
-            })}
+              </details>
+            ) : null}
           </div>
         ) : (
           <EmptyState label="Nothing needs attention here." />
@@ -219,15 +452,19 @@ export function BlockRenderer({
                 className="group flex gap-3 rounded-lg px-2 py-2.5 transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-muted/60"
                 key={event.id}
               >
-                <div className="w-16 shrink-0 pt-0.5 text-xs font-medium text-muted-foreground">{time(event.start)}</div>
+                <div className="w-16 shrink-0 pt-0.5 text-xs font-medium text-muted-foreground">
+                  {event.all_day ? "All day" : time(event.start)}
+                </div>
                 <span className={cn("mt-1.5 h-8 w-0.5 rounded-full", toneDot[event.tone || "neutral"])} />
                 <div className="min-w-0">
                   <p className="text-sm font-medium leading-5">{event.title}</p>
-                  <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock3 className="size-3" />
-                    {event.end ? `${time(event.start)} to ${time(event.end)}` : time(event.start)}
-                    {event.location ? `, ${event.location}` : ""}
-                  </p>
+                  {(!event.all_day && event.end) || event.location ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {!event.all_day && event.end ? `Until ${time(event.end)}` : ""}
+                      {!event.all_day && event.end && event.location ? " · " : ""}
+                      {event.location || ""}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -240,38 +477,30 @@ export function BlockRenderer({
   }
 
   if (block.kind === "table") {
+    if (block.searchable)
+      return (
+        <Panel block={block} emphasized={emphasized} layout={layout}>
+          <DataTable block={block} instance={instance} rows={block.rows} />
+        </Panel>
+      )
+    const visibleRows = block.rows.slice(0, 10)
+    const remainingRows = block.rows.slice(10)
     return (
       <Panel block={block} emphasized={emphasized} layout={layout}>
         {block.rows.length ? (
-          <div
-            aria-label={`${block.title} table`}
-            className="overflow-x-auto rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
-            role="region"
-            tabIndex={0}
-          >
-            <table className="w-full min-w-[520px] border-collapse text-left text-sm">
-              <caption className="sr-only">{block.title}</caption>
-              <thead className="bg-muted/70 text-xs text-foreground">
-                <tr>
-                  {block.columns.map((column) => (
-                    <th className="px-3 py-2.5 font-medium" key={column.key}>
-                      {column.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {block.rows.map((row, index) => (
-                  <tr className="transition-colors hover:bg-muted/55" key={index}>
-                    {block.columns.map((column) => (
-                      <td className="max-w-64 px-3 py-3 align-top" key={column.key}>
-                        {formatValue(row[column.key] ?? null, column.format, instance)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            <DataTable block={block} instance={instance} rows={visibleRows} />
+            {remainingRows.length ? (
+              <details className="group/more mt-2">
+                <summary className="flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-lg px-3 text-xs font-medium text-muted-foreground hover:bg-muted/55 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  Show {remainingRows.length} more rows
+                  <ChevronDown className="size-3.5 transition-transform group-open/more:rotate-180" />
+                </summary>
+                <div className="mt-2">
+                  <DataTable block={block} instance={instance} rows={remainingRows} suffix=" continuation" />
+                </div>
+              </details>
+            ) : null}
           </div>
         ) : (
           <EmptyState label="No rows to show." />

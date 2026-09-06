@@ -1,54 +1,85 @@
 # Design system
 
-Zaati OS is a decision interface, not a marketing dashboard.
+Zaati OS helps someone understand their day and decide what deserves attention. Every page needs a clear purpose, evidence for its claims, and a manageable next step.
+
+## Shared frame
+
+All pages use the same available content width and 16/24/32px responsive gutters. The sidebar is 256px wide on desktop. `dashboard`, `focus`, and `timeline` change the internal column arrangement, never the outer page width. Three-column dashboards begin at 1280px; smaller screens stack blocks to protect readable card widths. Long paragraphs can have a readable line length inside that frame.
+
+The instance's `enabled_sources` order controls navigation. The daily overview comes first in the example instance. Setup and Component lab sit below the everyday pages. The demo opens on Today and offers the tour from Start here instead of interrupting the first visit. Demo freshness is evaluated at the clearly labeled example date; personal instances continue using the real clock.
 
 ## Visual language
 
-- shadcn New York composition
-- Tailwind v4 semantic variables
-- flat surfaces, quiet borders, no gradients
-- compact typography with strong hierarchy
-- one dominant visualization with supporting rows, lists, and tables
-- restrained status color used for meaning
-- brief transitions that respect reduced motion
+- Neutral white/charcoal surfaces, quiet gray borders, and flat cards.
+- Palette colors belong to charts, actions, and meaningful status indicators. Do not tint the entire workspace.
+- Page titles: 24–30px, medium weight. Section titles: 16px, medium. Body: 14px with comfortable line height. Metrics: 24–32px tabular numerals.
+- A connected metric strip uses separators, not a stack of colored cards. Values get emphasis through size, not a different background per metric.
+- Keep the page title and summary concise. Use ordinary labels such as Agenda, Inbox, and Money. Avoid slogans and motivational claims.
+- Static cards do not lift or cast hover shadows. Controls retain obvious focus and hover states.
 
-## Page anatomy
+Owned shadcn-compatible primitives live in `src/components/ui/`. Use their shared Card, Button, Input, Dialog, Tabs, Badge, and Progress composition. Preserve semantic tokens and the component generator contract.
 
-1. Source label and effective period
-2. One plain-language answer
-3. Short explanation
-4. Visible freshness or evidence warning
-5. Adaptive block grid
-6. Provenance footer
+## Page composition
 
-Repeated facts belong in a table or row. Empty cards, decorative KPIs, arbitrary bold text, and chart-shaped wallpaper do not belong.
+Start with a purpose statement and a short finding. Follow it with a small metric strip only when the metrics answer useful questions. Put the primary evidence next, then supporting context. Normally use 3–6 blocks; this is guidance, not a quota. A reading page may need only two.
 
-Complexity should come from hierarchy, not ornament. Use `dashboard` for a dominant view plus supporting evidence, `focus` for one leading decision, and `timeline` for a narrow sequence. A block may span one, two, or all dashboard columns. Do not simulate complexity with nested cards, arbitrary component trees, or repeated metrics.
+| Page          | Reader's question                          | Primary evidence                                                   |
+| ------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| Today         | What deserves attention today?             | Commitments and explicit message deadlines                         |
+| Agenda        | What is happening, and how do I prepare?   | Timed events and preparation tasks                                 |
+| Inbox         | What do I need to answer?                  | Deadline-ordered response queue, separate waiting list             |
+| Work          | What should move next?                     | Owned items, current states, concrete next steps                   |
+| Money         | What do I have, and is the plan covered?   | Balance history, budget allocation, holdings, reserve calculation  |
+| Briefing      | What is worth reading, and why?            | Selected summaries, source links, follow-up questions              |
+| Weekly review | What happened, and what should I try next? | Dated observations, explicit limits, a modest next-week experiment |
 
-## Components
+Do not repeat a queue as a list, timeline, and table. Do not add topic-count or status-allocation charts when they add no decision value. Do not invent comparison periods, financial scenarios, shipment claims, or causal explanations to make a page look complete. Missing evidence is a valid finding.
 
-Owned shadcn-compatible primitives live under `src/components/ui/`. Domain rendering goes through `BlockRenderer`. Add a primitive only when an existing one cannot express the interaction cleanly.
+## Data display
 
-The synthetic **Component lab** is the executable catalog: validated JSON appears on the left and the production renderer appears on the right. A new block is not complete until it appears there through a public synthetic fixture, with schema, type, renderer, tests, privacy review, and documentation.
+| Element   | Rule                                                                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Metrics   | Usually 3–4; label the unit and period. A change requires a real comparison. Its sign alone does not establish whether it is good or bad. |
+| Tables    | Use two columns or full width for prose-heavy rows. Preserve the exact next step beside its item.                                         |
+| Lines     | Use for ordered observations; keep comparison units compatible. Explain what the data does and does not establish.                        |
+| Bars      | Use for meaningful category comparisons with a zero baseline.                                                                             |
+| Donuts    | Use only for parts of a meaningful total. The money allocation must reconcile to tracked balances.                                        |
+| Calendars | Retain start/end times, all-day state, and the instance time zone. Do not infer available hours without a workday boundary.               |
+| Evidence  | Keep freshness visible; disclose source timestamps and caveats without surrounding every section with warning cards.                      |
 
-Charts are explorable rather than decorative. Line points and bars expose the same exact-value callout on pointer hover and keyboard focus. Donut legends act as controls that highlight the matching segment and update its center value. Supporting blocks use quiet hover feedback and brief entrance motion; interaction must never be required to recover a fact that is absent from the accessible table, list, or text equivalent.
+Cartesian charts measure their container so the complete trend remains visible on phones with readable axis labels. Exact data lives in a native `View data` table; only dense data tables scroll horizontally. Donuts adapt to their container width, expose full values in the legend, and support persistent click/tap/keyboard selection. The compact center is a summary, not the only value representation.
 
-Use semantic tokens such as `background`, `card`, `muted`, `primary`, `warning`, and chart tokens. Do not hardcode provider or source colors inside components.
+Component lab demonstrates all eleven safe block kinds. Small catalog-only examples live in `data/component-examples.json` and are schema-validated. A consumer page should never carry filler just to demonstrate the renderer's capabilities.
 
-## Accessibility
+## Evidence-rich overview and task tables
 
-All controls need accessible names, keyboard focus, usable touch targets, and sufficient contrast. Color cannot be the only status signal. Charts need an accessible label and should have table or narrative evidence in the snapshot when exact values matter.
+Money uses a compact two-by-two metric panel beside the dominant balance-history chart. This puts the current position, comparison, and trajectory in the first section. The next row explains the monthly allocation and asset mix; holdings and reserve goals follow. This is a reusable composition of existing block spans, not a finance-specific React page.
 
-Review every interface change at desktop and mobile widths in light and dark modes.
+Optional `metric.trend` accepts a period `label` and 2–24 labeled numeric `points`. Sparklines use a restrained area fill and an expandable exact-value list. Supply recorded observations, never generated decorative curves. In the synthetic Money example, `facts.balance_history` is the source for all three sparklines and the main chart; the final observation reconciles to accounts. Balance change includes cash flows and is explicitly not described as return. Omit trends when history is unavailable. All points use the metric's unit and format; different sparklines have independent scales and should not be compared by slope.
 
-`npm run accessibility:check` runs axe against the production build in desktop light, desktop dark, and mobile layouts. It is a floor, not a substitute for keyboard, screen-reader, zoom, reduced-motion, and real-device review.
+Optional `table.searchable` enables text search, sortable headers, a matching-item count, and ten-row pagination. Set a column's `filterable: true` to add an exact-value filter. Optional column `tones` maps up to twelve literal cell values to semantic badge tones. Filters combine with search and Clear resets them. Empty results state what happened. Work uses a full-width table for task, status, priority, deadline, and next step. These controls explore the current snapshot; they never imply that a task or account was edited.
 
-## Performance
+These are additive optional fields on existing safe blocks. Existing snapshots remain valid. Forkers must update their schema and renderer together before producing snapshots with these fields. No arbitrary component names, markup, styling, or event handlers are accepted from data.
 
-- keep the dashboard payload separate from cached application JavaScript
-- lazy-load charts and onboarding code
-- use local system font stacks with no third-party requests
-- keep navigation and empty states useful before charts load
-- enforce compressed JavaScript, CSS, and data budgets with `npm run performance:check`
+## Motion and accessibility
 
-Responsiveness starts at 320 CSS pixels. Touch controls should be at least 40 pixels in the application shell and preserve a visible focus state.
+Use brief entrance motion, never continuous activity. Charts reveal without changing their final measured coordinates. Existing reduced-motion preferences disable perceptible animation. Controls need usable touch targets, readable contrast, accessible names, and visible keyboard focus. Preserve data equivalents for charts and scroll containment for wide tables.
+
+Review every source page in desktop/mobile and light/dark. `npm run accessibility:check` covers the responsive matrix, contrast, overflow, chart interactions, reduced motion, and built-in palettes. Automated checks do not replace a human screen-reader or physical-device review.
+
+## Research and design decisions
+
+Reviewed September 6, 2026. These are composition references and published guidance, not claims that a template alone proves usability.
+
+| Source                                                                                                                   | Observation or guidance                                                            | Application to Zaati                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [Studio Admin analytics](https://next-shadcn-admin-dashboard.vercel.app/dashboard/analytics) and the supplied screenshot | Connected metric row; clear comparison periods; detailed data follows summaries    | Neutral metric strip, consistent header and gutters, evidence before decoration                      |
+| [Studio Admin tasks](https://next-shadcn-admin-dashboard.vercel.app/dashboard/tasks)                                     | Search, status and priority filters, sorting and pagination                        | Full-width, filterable Work table with meaningful task content                                       |
+| [Studio Admin finance](https://next-shadcn-admin-dashboard.vercel.app/dashboard/finance)                                 | Balance comparisons, spending history, allocation, and account detail              | Dense overview with measured history and restrained color                                            |
+| [Shadcn UI Kit finance](https://shadcnuikit.com/dashboard/finance)                                                       | Balances, expenses, goals, and transactions are distinct sections                  | Balance and plan views remain distinct; do not copy commercial actions into a read-only snapshot app |
+| [Shadcn UI Kit project management](https://shadcnuikit.com/dashboard/project-management)                                 | Project-level information and a detailed project table                             | Pair each item with its state and next step; skip unrelated revenue and lead metrics                 |
+| [Carbon dashboards](https://carbondesignsystem.com/data-visualization/dashboards/)                                       | Limit nonessential metrics; use hierarchy and consistent spacing/color assignments | Reduce redundant blocks and keep one stable page frame                                               |
+| [NN/g complex applications](https://www.nngroup.com/articles/complex-application-design/)                                | Reduce clutter while preserving access to secondary information                    | Keep source details and chart values available through disclosure                                    |
+| [PatternFly dashboard guidelines](https://www.patternfly.org/patterns/dashboard/design-guidelines/)                      | Start from requirements and user tasks                                             | Define the question each page answers before choosing its components                                 |
+
+The specific widths, typography, and page recipes above are Zaati design decisions informed by those references. No paid template code, third-party fonts, telemetry, new chart library, or snapshot-controlled markup is introduced.

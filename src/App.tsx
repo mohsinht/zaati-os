@@ -72,12 +72,18 @@ function initialView(data: DashboardData, fallback: string) {
   if (requested === "start") return START_ID
   if (requested === "components" && data.demoMode) return COMPONENTS_ID
   if (data.sources.some((item) => item.definition.id === requested)) return requested as string
-  return data.demoMode || data.sources.every((item) => !item.snapshot) ? START_ID : fallback
+  return data.sources.every((item) => !item.snapshot) ? START_ID : fallback
 }
 
 function initialNow(data: DashboardData) {
   const injected = data.demoMode ? new URL(window.location.href).searchParams.get("at") : null
-  const parsed = injected ? Date.parse(injected) : Number.NaN
+  const exampleDate = data.demoMode
+    ? data.sources
+        .flatMap(({ snapshot }) => (snapshot ? [snapshot.generated_at] : []))
+        .sort()
+        .at(-1)
+    : undefined
+  const parsed = injected || exampleDate ? Date.parse(injected || exampleDate!) : Number.NaN
   return Number.isFinite(parsed) ? parsed : Date.now()
 }
 
@@ -212,9 +218,10 @@ function DashboardApp({ data }: { data: DashboardData }) {
   }, [data, overviewId])
 
   useEffect(() => {
+    if (data.demoMode) return
     const timer = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [data.demoMode])
 
   const select = (id: string) => {
     setSelectedId(id)
@@ -276,7 +283,6 @@ function DashboardApp({ data }: { data: DashboardData }) {
             </Button>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{selectedLabel}</p>
-              <p className="hidden truncate text-xs text-muted-foreground sm:block">{data.instance.tagline}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -284,9 +290,9 @@ function DashboardApp({ data }: { data: DashboardData }) {
               <Badge variant="info">
                 <Sparkles className="size-3 min-[360px]:mr-1" />
                 <span aria-hidden="true" className="hidden min-[360px]:inline">
-                  {data.demoMode ? "Synthetic demo" : "Synthetic test data"}
+                  {data.demoMode ? "Sample data" : "Synthetic test data"}
                 </span>
-                <span className="sr-only">{data.demoMode ? "Synthetic demo" : "Synthetic test data"}</span>
+                <span className="sr-only">{data.demoMode ? "Sample data" : "Synthetic test data"}</span>
               </Badge>
             ) : (
               <Badge className="hidden sm:inline-flex" variant="positive">
@@ -328,7 +334,7 @@ function DashboardApp({ data }: { data: DashboardData }) {
             </Dialog>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
+        <main className="mx-auto w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-8" id="main-content" tabIndex={-1}>
           {selectedId === START_ID ? (
             <Suspense fallback={<InlineLoading />}>
               <Onboarding
@@ -446,10 +452,35 @@ function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, select
         </Button>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="Dashboard sections">
+        <p className={cn("px-3 pb-2 pt-5 text-xs font-medium text-sidebar-foreground/70", compact && "md:hidden")}>Workspace</p>
+        {data.sources.map(({ definition, snapshot }) => {
+          const Icon = Object.hasOwn(domainIcons, definition.domain) ? domainIcons[definition.domain as keyof typeof domainIcons] : Activity
+          const active = definition.id === selectedId
+          const status = snapshotFreshness(snapshot, now)
+          return (
+            <button
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "group flex min-h-10 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+                compact && "md:justify-center md:px-2",
+              )}
+              key={definition.id}
+              onClick={() => onSelect(definition.id)}
+              title={`${definition.label}, ${health[status].label}`}
+            >
+              <Icon className={cn("size-4 shrink-0 text-sidebar-foreground/55", active && "text-sidebar-primary")} />
+              <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>{definition.label}</span>
+              <span aria-hidden="true" className={cn("size-1.5 rounded-full", health[status].dot, compact && "md:hidden")} />
+              <span className="sr-only">{health[status].label}</span>
+            </button>
+          )
+        })}
+        <p className={cn("px-3 pb-2 pt-5 text-xs text-muted-foreground", compact && "md:hidden")}>Setup & customization</p>
         <button
           aria-current={selectedId === START_ID ? "page" : undefined}
           className={cn(
-            "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            "group flex min-h-10 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             selectedId === START_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
             compact && "md:justify-center md:px-2",
           )}
@@ -459,19 +490,11 @@ function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, select
           <Rocket className={cn("size-4 shrink-0 text-sidebar-foreground/55", selectedId === START_ID && "text-sidebar-primary")} />
           <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>Start here</span>
         </button>
-        <p
-          className={cn(
-            "px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/70",
-            compact && "md:hidden",
-          )}
-        >
-          Your system
-        </p>
         {data.demoMode ? (
           <button
             aria-current={selectedId === COMPONENTS_ID ? "page" : undefined}
             className={cn(
-              "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              "group flex min-h-10 w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               selectedId === COMPONENTS_ID && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
               compact && "md:justify-center md:px-2",
             )}
@@ -482,29 +505,6 @@ function SidebarPanel({ compact, data, now, onClose, onCompact, onSelect, select
             <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>Component lab</span>
           </button>
         ) : null}
-        {data.sources.map(({ definition, snapshot }) => {
-          const Icon = Object.hasOwn(domainIcons, definition.domain) ? domainIcons[definition.domain as keyof typeof domainIcons] : Activity
-          const active = definition.id === selectedId
-          const status = snapshotFreshness(snapshot, now)
-          return (
-            <button
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "group flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                active && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
-                compact && "md:justify-center md:px-2",
-              )}
-              key={definition.id}
-              onClick={() => onSelect(definition.id)}
-              title={compact ? `${definition.label}, ${status}` : undefined}
-            >
-              <Icon className={cn("size-4 shrink-0 text-sidebar-foreground/55", active && "text-sidebar-primary")} />
-              <span className={cn("min-w-0 flex-1 truncate", compact && "md:hidden")}>{definition.label}</span>
-              <span aria-hidden="true" className={cn("size-1.5 rounded-full", health[status].dot, compact && "md:hidden")} />
-              <span className="sr-only">{health[status].label}</span>
-            </button>
-          )
-        })}
       </nav>
       <div className="hidden border-t border-sidebar-border p-3 md:block">
         <button
@@ -558,9 +558,9 @@ function DashboardPage({
   const freshness = snapshotFreshness(snapshot, now)
   const layout = snapshot.data.presentation.layout
   const blockGrid = {
-    dashboard: "lg:grid-cols-3",
-    focus: "mx-auto max-w-5xl lg:grid-cols-2",
-    timeline: "mx-auto max-w-3xl lg:grid-cols-1",
+    dashboard: "xl:grid-cols-3",
+    focus: "lg:grid-cols-2",
+    timeline: "lg:grid-cols-1",
   }[layout]
   return (
     <section>
@@ -590,18 +590,36 @@ function DashboardPage({
           {prompt ? <PromptDrawer prompt={prompt} sourceLabel={definition.label} /> : null}
         </div>
       </div>
-      <div className="mt-5 flex flex-col justify-between gap-5 border-b border-border pb-7 lg:flex-row lg:items-end">
+      <div className="mt-4 flex flex-col justify-between gap-4 border-b border-border pb-6 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
-          <h1 className="text-pretty text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{snapshot.data.title}</h1>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">{snapshot.data.summary}</p>
+          <h1 className="text-pretty text-2xl font-medium tracking-tight sm:text-3xl">{snapshot.data.title}</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{snapshot.data.summary}</p>
         </div>
         <details className="group shrink-0 rounded-lg border border-border bg-card text-xs text-muted-foreground lg:max-w-md">
-          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-3 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <span aria-hidden="true" className={cn("size-2 rounded-full", health[freshness].dot)} />
             <span>{health[freshness].label}</span>
+            {snapshot.quality.warnings.length ? (
+              <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning-foreground">
+                {snapshot.quality.warnings.length} note{snapshot.quality.warnings.length === 1 ? "" : "s"}
+              </span>
+            ) : null}
             <ChevronDown aria-hidden="true" className="size-3.5 opacity-50 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="border-t border-border px-3 py-3">
+          <div className="max-h-[min(70vh,34rem)] overflow-y-auto border-t border-border px-3 py-3">
+            {snapshot.quality.warnings.length ? (
+              <div className="mb-3 rounded-md bg-warning/10 px-3 py-2.5 text-foreground/80">
+                <p className="font-medium text-foreground">Evidence notes</p>
+                <ul className="mt-1.5 space-y-1.5 leading-relaxed">
+                  {snapshot.quality.warnings.map((warning) => (
+                    <li className="flex gap-2" key={warning}>
+                      <span aria-hidden="true" className="mt-1.5 size-1 shrink-0 rounded-full bg-warning" />
+                      <span>{warning}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
               <dt>Generated</dt>
               <dd className="text-foreground">{formatTimestamp(snapshot.generated_at, instance)}</dd>
@@ -640,27 +658,14 @@ function DashboardPage({
           </div>
         </details>
       </div>
-      {snapshot.quality.warnings.length ? (
-        <div className="mt-5 flex gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4">
-          <RefreshCcw className="mt-0.5 size-4 shrink-0 text-warning-foreground" />
-          <div>
-            <p className="text-sm font-medium">Evidence note</p>
-            {snapshot.quality.warnings.map((warning) => (
-              <p className="mt-1 text-sm leading-relaxed text-foreground/80" key={warning}>
-                {warning}
-              </p>
-            ))}
-          </div>
-        </div>
-      ) : null}
-      <div className={cn("mt-5 grid grid-cols-1 gap-4", blockGrid)} data-layout={layout}>
+      <div className={cn("mt-5 grid grid-cols-1 gap-5", blockGrid)} data-layout={layout}>
         {snapshot.data.presentation.blocks.map((block, index) => (
           <BlockRenderer block={block} emphasized={layout === "focus" && index === 0} instance={instance} key={block.id} layout={layout} />
         ))}
       </div>
       <footer className="mt-8 flex flex-col justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground sm:flex-row">
         <span className="inline-flex items-center gap-1.5">
-          <Clock3 className="size-3.5" /> Last successful update {formatTimestamp(snapshot.generated_at, instance)}
+          <Clock3 className="size-3.5" /> Updated {formatTimestamp(snapshot.generated_at, instance)}
         </span>
         <span>
           {snapshot.quality.confidence} confidence, {snapshot.sources.length} source{snapshot.sources.length === 1 ? "" : "s"}, expires{" "}
@@ -742,10 +747,8 @@ function ComponentLab({ data }: { data: DashboardData }) {
   return (
     <section>
       <div className="max-w-3xl border-b border-border pb-7">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Safe presentation contract / Synthetic</p>
-        <h1 className="mt-4 text-pretty text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
-          Build richer pages without shipping UI code
-        </h1>
+        <p className="text-xs font-medium text-muted-foreground">Safe presentation contract / Synthetic</p>
+        <h1 className="mt-4 text-pretty text-2xl font-medium tracking-tight sm:text-3xl">Build richer pages without shipping UI code</h1>
         <p className="mt-3 text-base leading-7 text-muted-foreground">
           Your LLM chooses an audited block, a semantic page layout, and a span. Zaati OS owns rendering, responsive behavior, theme tokens,
           focus handling, and accessibility.
@@ -755,7 +758,7 @@ function ComponentLab({ data }: { data: DashboardData }) {
         {[
           ["dashboard", "Three-column canvas", "Use one dominant two-column block with supporting evidence."],
           ["focus", "Focused decision", "The first block leads; supporting blocks stay quieter."],
-          ["timeline", "Linear narrative", "Sequence and review pages remain deliberately narrow."],
+          ["timeline", "Linear narrative", "A sequential reading order within the same page frame."],
         ].map(([name, label, description]) => (
           <div className="bg-card p-4" key={name}>
             <code className="text-xs font-semibold text-primary">{name}</code>
@@ -771,7 +774,7 @@ function ComponentLab({ data }: { data: DashboardData }) {
             <article className="border-t border-border pt-5" id={`component-${block.kind}`} key={block.kind}>
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{sourceId}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{sourceId}</p>
                   <h2 className="mt-1 text-xl font-semibold">{block.kind}</h2>
                 </div>
                 <Badge variant="outline">Audited JSON only</Badge>
@@ -819,18 +822,18 @@ function PageEyebrow({
 }) {
   const date = snapshot
     ? new Intl.DateTimeFormat(instance.locale, { weekday: "long", month: "long", day: "numeric", timeZone: instance.timezone }).format(
-        new Date(snapshot.effective_period.start),
+        new Date(snapshot.generated_at),
       )
     : "No snapshot yet"
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
       <span>{date}</span>
       <span className="text-border">/</span>
       <span>{definition.domain}</span>
       {snapshot?.privacy.synthetic ? (
         <>
           <span className="text-border">/</span>
-          <span className="text-info-foreground">Synthetic</span>
+          <span className="text-info-foreground">Example date</span>
         </>
       ) : null}
     </div>

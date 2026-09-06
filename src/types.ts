@@ -13,6 +13,7 @@ export type MetricGroupBlock = BlockBase & {
     change?: number
     change_label?: string
     tone?: Tone
+    trend?: { label: string; points: Array<{ label: string; value: number }> }
   }>
 }
 export type ListBlock = BlockBase & {
@@ -40,11 +41,12 @@ export type DonutChartBlock = BlockBase & {
 export type CalendarBlock = BlockBase & {
   kind: "calendar"
   date: string
-  events: Array<{ id: string; title: string; start: string; end?: string; location?: string; tone?: Tone }>
+  events: Array<{ id: string; title: string; start: string; end?: string; all_day?: boolean; location?: string; tone?: Tone }>
 }
 export type TableBlock = BlockBase & {
   kind: "table"
-  columns: Array<{ key: string; label: string; format?: ValueFormat }>
+  searchable?: boolean
+  columns: Array<{ key: string; label: string; format?: ValueFormat; filterable?: boolean; tones?: Record<string, Tone> }>
   rows: Array<Record<string, string | number | boolean | null>>
 }
 export type ProgressBlock = BlockBase & {

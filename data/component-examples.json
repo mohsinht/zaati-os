@@ -1,0 +1,9 @@
+[
+  {
+    "id": "reading-note",
+    "kind": "text",
+    "title": "Reading a snapshot",
+    "body": "A snapshot records what was known at a point in time. Check the source dates before using it to make a decision.",
+    "span": "full"
+  }
+]

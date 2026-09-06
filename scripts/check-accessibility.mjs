@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process"
 import { constants } from "node:fs"
-import { access, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -76,10 +76,21 @@ function cdp(url) {
 }
 
 async function waitForApp(client) {
+  await new Promise((resolve) => setTimeout(resolve, 250))
   const deadline = Date.now() + 20000
   while (Date.now() < deadline) {
-    const result = await client.send("Runtime.evaluate", { expression: "Boolean(document.querySelector('h1'))", returnByValue: true })
-    if (result.result?.value) return
+    const result = await client.send("Runtime.evaluate", {
+      expression:
+        "document.readyState === 'complete' && Boolean(document.querySelector('h1')) && !document.querySelector('[aria-label=\"Loading chart\"]')",
+      returnByValue: true,
+    })
+    if (result.result?.value) {
+      await client.send("Runtime.evaluate", {
+        expression: "Promise.all(document.getAnimations().map(a => a.finished.catch(() => {})))",
+        awaitPromise: true,
+      })
+      return
+    }
     await new Promise((resolve) => setTimeout(resolve, 150))
   }
   throw new Error("The dashboard did not become ready for accessibility validation.")
@@ -113,8 +124,11 @@ async function audit(client, label) {
 
 async function capture(client, name) {
   if (process.env.ZAATI_CAPTURE_SCREENSHOTS !== "true") return
-  const result = await client.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false })
-  await writeFile(path.resolve("docs/assets", name), Buffer.from(result.data, "base64"))
+  if (process.env.ZAATI_SCREENSHOT_DIR && /^(dashboard|onboarding)-/.test(name)) return
+  const directory = process.env.ZAATI_SCREENSHOT_DIR || "docs/assets"
+  await mkdir(directory, { recursive: true })
+  const result = await client.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: true })
+  await writeFile(path.resolve(directory, name), Buffer.from(result.data, "base64"))
 }
 
 async function stop(child) {
@@ -128,7 +142,10 @@ const profile = await mkdtemp(path.join(tmpdir(), "zaati-a11y-"))
 const vite = path.resolve("node_modules/.bin", process.platform === "win32" ? "vite.cmd" : "vite")
 const preview = process.env.ZAATI_A11Y_URL
   ? null
-  : spawn(vite, ["preview", "--host", host, "--port", String(appPort)], { stdio: "ignore", shell: process.platform === "win32" })
+  : spawn(vite, ["preview", "--outDir", process.env.ZAATI_A11Y_DIST || "dist", "--host", host, "--port", String(appPort)], {
+      stdio: "ignore",
+      shell: process.platform === "win32",
+    })
 let chrome
 try {
   await waitForJson(`${appUrl}/data/dashboard-data.json`)
@@ -152,8 +169,17 @@ try {
   await client.send("Runtime.enable")
   await client.send("Page.enable")
   const dashboard = await waitForJson(`${appUrl}/data/dashboard-data.json`)
+  if (process.env.ZAATI_CAPTURE_SCREENSHOTS === "true" && !dashboard.syntheticData)
+    throw new Error("Screenshot capture requires an entirely synthetic dashboard.")
   const views = ["start", ...(dashboard.demoMode ? ["components"] : []), ...dashboard.sources.map((source) => source.definition.id)]
-  const viewUrl = (view) => `${appUrl}?view=${encodeURIComponent(view)}&at=${encodeURIComponent(dashboard.generatedAt)}`
+  const reviewAt = dashboard.demoMode
+    ? dashboard.sources
+        .map((source) => source.snapshot?.generated_at)
+        .filter(Boolean)
+        .sort()
+        .at(-1) || dashboard.generatedAt
+    : dashboard.generatedAt
+  const viewUrl = (view) => `${appUrl}?view=${encodeURIComponent(view)}&at=${encodeURIComponent(reviewAt)}`
   const viewports = [320, 390, 768, 1024, 1440]
   for (const width of viewports) {
     await client.send("Emulation.setDeviceMetricsOverride", {
@@ -169,9 +195,100 @@ try {
       for (const view of views) {
         await client.send("Page.navigate", { url: viewUrl(view) })
         await audit(client, `${width}px ${mode} ${view}`)
+        const overflow = await client.send("Runtime.evaluate", {
+          expression: "document.documentElement.scrollWidth > innerWidth",
+          returnByValue: true,
+        })
+        if (overflow.result?.value) throw new Error(`${width}px ${mode} ${view} overflows the document.`)
+        if ([390, 1440].includes(width) && dashboard.sources.some((source) => source.definition.id === view))
+          await capture(client, `${view.split(":")[0]}-${width}-${mode}.png`)
       }
     }
   }
+
+  const tableSource = dashboard.sources.find(({ snapshot }) =>
+    snapshot?.data.presentation.blocks.some((b) => b.kind === "table" && b.searchable && b.columns.some((c) => c.filterable)),
+  )
+  if (tableSource) {
+    await client.send("Page.navigate", { url: viewUrl(tableSource.definition.id) })
+    await waitForApp(client)
+    await client.send("Runtime.evaluate", { expression: "document.querySelector('[role=search] input').focus()" })
+    await client.send("Input.insertText", { text: "no-matching-example-item-98765" })
+    const tableInteraction = await client.send("Runtime.evaluate", {
+      expression: `(async () => {
+        const wait = () => new Promise(r => setTimeout(r, 80)); await wait();
+        const search = document.querySelector('[role=search]');
+        const panel = search.closest('.zaati-block');
+        const empty = panel.textContent.includes('No matching items');
+        [...search.querySelectorAll('button')].find(b => b.textContent === 'Clear').click(); await wait();
+        const restored = panel.querySelectorAll('tbody tr').length > 1;
+        const select = search.querySelector('select'); select.value = select.options[1].value;
+        select.dispatchEvent(new Event('change', { bubbles: true })); await wait();
+        const filtered = [...panel.querySelectorAll('tbody tr')].every(row => row.textContent.includes(select.value));
+        [...search.querySelectorAll('button')].find(b => b.textContent === 'Clear').click(); await wait();
+        const header = panel.querySelector('th'); header.querySelector('button').click(); await wait();
+        const ascending = header.getAttribute('aria-sort') === 'ascending';
+        header.querySelector('button').click(); await wait();
+        return empty && restored && filtered && ascending && header.getAttribute('aria-sort') === 'descending';
+      })()`,
+      returnByValue: true,
+      awaitPromise: true,
+    })
+    if (!tableInteraction.result?.value) throw new Error("Table search, filters, clear, or sorting failed.")
+    console.log("Table search, empty results, filtering, clearing, and sorting passed.")
+  }
+
+  const chartSource = dashboard.sources.find(({ snapshot }) => {
+    const blocks = snapshot?.data.presentation.blocks || []
+    return blocks.some((block) => block.kind === "donut-chart") && blocks.some((block) => ["line-chart", "bar-chart"].includes(block.kind))
+  })
+  if (chartSource) {
+    await client.send("Page.navigate", { url: viewUrl(chartSource.definition.id) })
+    await waitForApp(client)
+    const interaction = await client.send("Runtime.evaluate", {
+      expression: `(async () => {
+      const button = document.querySelector('.chart-donut button');
+      if (!button) return false;
+      button.click(); await new Promise(r => setTimeout(r, 50)); const selected = button.getAttribute('aria-pressed') === 'true';
+      button.click(); await new Promise(r => setTimeout(r, 50)); const cleared = button.getAttribute('aria-pressed') === 'false';
+      const details = document.querySelector('.chart-values'); details.querySelector('summary').click();
+      return { selected, cleared, data: details.open && details.querySelectorAll('td').length > 0 };
+    })()`,
+      returnByValue: true,
+      awaitPromise: true,
+    })
+    if (!interaction.result?.value?.data || !interaction.result?.value?.selected || !interaction.result?.value?.cleared)
+      throw new Error("Chart selection or data disclosure failed.")
+    await client.send("Runtime.evaluate", { expression: "document.querySelector('.chart-donut button').focus()" })
+    await client.send("Input.dispatchKeyEvent", { type: "keyDown", key: " ", code: "Space", windowsVirtualKeyCode: 32 })
+    await client.send("Input.dispatchKeyEvent", { type: "keyUp", key: " ", code: "Space", windowsVirtualKeyCode: 32 })
+    const keyboard = await client.send("Runtime.evaluate", {
+      expression: "document.activeElement?.getAttribute('aria-pressed') === 'true'",
+      returnByValue: true,
+    })
+    if (!keyboard.result?.value) throw new Error("Keyboard donut selection failed.")
+    console.log("Chart disclosure, selection toggle, and keyboard Space activation passed.")
+  }
+  await client.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] })
+  await client.send("Page.navigate", { url: viewUrl("money:pulse") })
+  await audit(client, "Reduced-motion money dashboard")
+  const motion = await client.send("Runtime.evaluate", {
+    expression:
+      "Array.from(document.querySelectorAll('.zaati-block, .chart-series-reveal, .chart-bar')).every(el => parseFloat(getComputedStyle(el).animationDuration) <= 0.001)",
+    returnByValue: true,
+  })
+  if (!motion.result?.value) throw new Error("Reduced motion is not respected.")
+  await client.send("Emulation.setEmulatedMedia", { features: [] })
+  for (const palette of ["ocean", "plum", "sand"]) {
+    for (const mode of ["light", "dark"]) {
+      await client.send("Runtime.evaluate", {
+        expression: `localStorage.setItem('zaati-palette', '${palette}'); localStorage.setItem('zaati-theme', '${mode}')`,
+      })
+      await client.send("Page.navigate", { url: viewUrl("components") })
+      await audit(client, `${palette} ${mode} component palette`)
+    }
+  }
+  await client.send("Runtime.evaluate", { expression: "localStorage.removeItem('zaati-palette')" })
 
   await client.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
   await client.send("Runtime.evaluate", { expression: `localStorage.setItem("zaati-theme", "light")` })

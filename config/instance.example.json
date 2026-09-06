@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/instance.schema.json",
   "brand_name": "Zaati OS",
-  "brand_mark": "ذ",
+  "brand_mark": "\u0630",
   "tagline": "Your day, with context.",
   "timezone": "UTC",
   "locale": "en-US",
@@ -10,7 +10,7 @@
   "enabled_sources": ["overview:daily", "agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing", "review:weekly"],
   "experience": {
     "mode": "demo",
-    "show_tour": true
+    "show_tour": false
   },
   "theme": {
     "preset": "sage",

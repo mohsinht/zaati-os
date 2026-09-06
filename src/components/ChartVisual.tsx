@@ -1,32 +1,64 @@
-import { useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import type { BarChartBlock, DonutChartBlock, InstanceConfig, LineChartBlock, ValueFormat } from "@/types"
 
 const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
 const dashPatterns = [undefined, "9 5", "2 5", "12 4 2 4", "5 4"]
-const width = 640
 const height = 260
-const plot = { left: 58, right: 18, top: 18, bottom: 48 }
+const plot = { left: 72, right: 18, top: 18, bottom: 48 }
+
+function useChartWidth() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(640)
+  useEffect(() => {
+    if (!ref.current) return
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(240, Math.round(entry.contentRect.width))))
+    observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+  return { ref, width }
+}
 
 function format(value: number, kind: ValueFormat, instance: InstanceConfig) {
   if (kind === "currency")
     return new Intl.NumberFormat(instance.locale, { style: "currency", currency: instance.currency, maximumFractionDigits: 0 }).format(
       value,
     )
-  if (kind === "percent") return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(value)}%`
+  if (kind === "percent") {
+    const rounded = Math.round(value * 10) / 10
+    return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(Object.is(rounded, -0) ? 0 : rounded)}%`
+  }
   if (kind === "compact-number")
     return new Intl.NumberFormat(instance.locale, { notation: "compact", maximumFractionDigits: 1 }).format(value)
   return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(value)
 }
 
-function domain(values: number[]) {
-  let min = Math.min(...values, 0)
-  let max = Math.max(...values, 0)
+function axisFormat(value: number, kind: ValueFormat, instance: InstanceConfig) {
+  const rounded = Object.is(value, -0) ? 0 : value
+  if (kind === "currency")
+    return new Intl.NumberFormat(instance.locale, {
+      style: "currency",
+      currency: instance.currency,
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(rounded)
+  if (kind === "percent") return `${new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 1 }).format(rounded)}%`
+  if (kind === "compact-number" || Math.abs(rounded) >= 10_000)
+    return new Intl.NumberFormat(instance.locale, { notation: "compact", maximumFractionDigits: 1 }).format(rounded)
+  return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(rounded)
+}
+
+function chartDomain(values: number[], includeZero = false) {
+  let min = Math.min(...values, ...(includeZero ? [0] : []))
+  let max = Math.max(...values, ...(includeZero ? [0] : []))
   if (min === max) {
-    min -= 1
-    max += 1
+    const fallback = Math.max(Math.abs(min) * 0.05, 1)
+    min -= fallback
+    max += fallback
   }
-  const padding = (max - min) * 0.08
-  return { min: min - padding, max: max + padding }
+  const rawStep = (max - min) / 4
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep))
+  const step = ([1, 2, 2.5, 5, 10].find((factor) => factor * magnitude >= rawStep) || 10) * magnitude
+  return { min: Math.floor(min / step) * step, max: Math.ceil(max / step) * step, step }
 }
 
 function yPosition(value: number, min: number, max: number) {
@@ -34,7 +66,7 @@ function yPosition(value: number, min: number, max: number) {
   return plot.top + ((max - value) / (max - min)) * available
 }
 
-function ChartTooltip({ x, y, title, value }: { x: number; y: number; title: string; value: string }) {
+function ChartTooltip({ x, y, title, value, width }: { x: number; y: number; title: string; value: string; width: number }) {
   const tooltipWidth = Math.min(220, Math.max(112, Math.max(title.length, value.length) * 7 + 24))
   const tooltipX = Math.max(4, Math.min(width - tooltipWidth - 4, x - tooltipWidth / 2))
   const tooltipY = y < 76 ? y + 18 : y - 58
@@ -66,6 +98,8 @@ export default function ChartVisual({
 
 function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBlock; descriptionId: string; instance: InstanceConfig }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const highlighted = activeIndex ?? selectedIndex
   const valueFormat = block.value_format || "number"
   const total = block.segments.reduce((sum, segment) => sum + segment.value, 0)
   const radius = 76
@@ -76,11 +110,11 @@ function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBloc
     offset: (block.segments.slice(0, index).reduce((sum, previous) => sum + previous.value, 0) / total) * circumference,
   }))
   return (
-    <figure aria-labelledby={descriptionId} className="m-0 grid gap-5 sm:grid-cols-[minmax(190px,0.8fr)_minmax(0,1.2fr)] sm:items-center">
+    <figure aria-labelledby={descriptionId} className="chart-donut m-0 grid gap-5">
       <figcaption className="sr-only" id={descriptionId}>
         {block.title} allocation chart. Exact values follow in a list.
       </figcaption>
-      <div className="relative mx-auto aspect-square w-full max-w-[230px]">
+      <div className="relative mx-auto aspect-square w-full max-w-[190px]">
         <svg aria-hidden="true" className="size-full -rotate-90" viewBox="0 0 200 200">
           <circle cx="100" cy="100" fill="none" r={radius} stroke="var(--muted)" strokeWidth="24" />
           {arcs.map((segment, index) => {
@@ -93,23 +127,23 @@ function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBloc
                 key={segment.label}
                 onPointerEnter={() => setActiveIndex(index)}
                 onPointerLeave={() => setActiveIndex(null)}
-                opacity={activeIndex === null || activeIndex === index ? 1 : 0.38}
+                opacity={highlighted === null || highlighted === index ? 1 : 0.38}
                 r={radius}
                 stroke={colors[index % colors.length]}
                 strokeDasharray={`${Math.max(0, segment.length - 2)} ${circumference}`}
                 strokeDashoffset={-segment.offset}
                 strokeLinecap="butt"
-                strokeWidth={activeIndex === index ? 30 : 24}
+                strokeWidth={highlighted === index ? 30 : 24}
               />
             )
           })}
         </svg>
         <div className="absolute inset-0 grid place-content-center text-center">
           <span aria-live="polite" className="text-xl font-semibold tracking-tight">
-            {format(activeIndex === null ? total : block.segments[activeIndex].value, valueFormat, instance)}
+            {axisFormat(highlighted === null ? total : block.segments[highlighted].value, valueFormat, instance)}
           </span>
           <span className="mt-1 max-w-28 truncate text-xs text-muted-foreground">
-            {activeIndex === null ? block.center_label : block.segments[activeIndex].label}
+            {highlighted === null ? block.center_label : block.segments[highlighted].label}
           </span>
         </div>
       </div>
@@ -117,7 +151,11 @@ function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBloc
         {block.segments.map((segment, index) => (
           <li key={segment.label}>
             <button
-              aria-pressed={activeIndex === index}
+              aria-pressed={selectedIndex === index}
+              onClick={() => {
+                setSelectedIndex(selectedIndex === index ? null : index)
+                setActiveIndex(null)
+              }}
               className="group flex min-h-10 w-full items-center justify-between gap-3 rounded-md px-1 py-2.5 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
               onBlur={() => setActiveIndex(null)}
               onFocus={() => setActiveIndex(index)}
@@ -131,7 +169,7 @@ function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBloc
                   className="size-2 shrink-0 rounded-full transition-transform group-hover:scale-125 group-focus-visible:scale-125"
                   style={{ background: colors[index % colors.length] }}
                 />
-                <span className="truncate">{segment.label}</span>
+                <span className="break-words">{segment.label}</span>
               </span>
               <span className="shrink-0 text-sm font-medium">{format(segment.value, valueFormat, instance)}</span>
             </button>
@@ -143,124 +181,140 @@ function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBloc
 }
 
 function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock; descriptionId: string; instance: InstanceConfig }) {
+  const { ref, width } = useChartWidth()
   const [activePoint, setActivePoint] = useState<{ pointIndex: number; seriesIndex: number } | null>(null)
   const valueFormat = block.y_format || "number"
   const values = block.points.flatMap((point) =>
     block.series.map((series) => point.values[series.key]).filter((value): value is number => Number.isFinite(value)),
   )
-  const range = domain(values)
+  const range = chartDomain(values)
   const x = (index: number) => plot.left + (index / Math.max(1, block.points.length - 1)) * (width - plot.left - plot.right)
-  const ticks = Array.from({ length: 5 }, (_, index) => range.min + ((range.max - range.min) * index) / 4).reverse()
+  const ticks = Array.from(
+    { length: Math.round((range.max - range.min) / range.step) + 1 },
+    (_, index) => range.min + range.step * index,
+  ).reverse()
   return (
     <figure aria-labelledby={descriptionId} className="m-0 w-full">
       <figcaption className="sr-only" id={descriptionId}>
         {block.title} line chart. Exact values follow in an accessible table.
       </figcaption>
-      <svg
-        aria-label={`${block.title} interactive line chart`}
-        className="h-auto w-full overflow-visible"
-        preserveAspectRatio="xMidYMid meet"
-        role="group"
-        viewBox={`0 0 ${width} ${height}`}
-      >
-        {ticks.map((tick) => {
-          const y = yPosition(tick, range.min, range.max)
-          return (
-            <g key={tick}>
-              <line stroke="var(--border)" strokeDasharray="3 4" x1={plot.left} x2={width - plot.right} y1={y} y2={y} />
-              <text fill="var(--muted-foreground)" fontSize="11" textAnchor="end" x={plot.left - 9} y={y + 4}>
-                {format(tick, valueFormat, instance)}
-              </text>
-            </g>
-          )
-        })}
-        <g className="chart-series-reveal">
-          {block.series.map((series, seriesIndex) => {
-            const points = block.points
-              .map((point, index) => `${x(index)},${yPosition(point.values[series.key], range.min, range.max)}`)
-              .join(" ")
+      <div ref={ref} className="chart-scroll" role="region" aria-label={`${block.title} chart`} tabIndex={0}>
+        <svg
+          aria-label={`${block.title} interactive line chart`}
+          className="chart-cartesian"
+          preserveAspectRatio="xMidYMid meet"
+          role="group"
+          viewBox={`0 0 ${width} ${height}`}
+        >
+          {ticks.map((tick) => {
+            const y = yPosition(tick, range.min, range.max)
             return (
-              <polyline
-                className="transition-opacity duration-200"
-                fill="none"
-                key={series.key}
-                opacity={activePoint === null || activePoint.seriesIndex === seriesIndex ? 1 : 0.3}
-                points={points}
-                stroke={colors[seriesIndex % colors.length]}
-                strokeDasharray={dashPatterns[seriesIndex % dashPatterns.length]}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3"
-              />
-            )
-          })}
-        </g>
-        {block.series.flatMap((series, seriesIndex) =>
-          block.points.map((point, pointIndex) => {
-            const pointX = x(pointIndex)
-            const pointY = yPosition(point.values[series.key], range.min, range.max)
-            const active = activePoint?.pointIndex === pointIndex && activePoint.seriesIndex === seriesIndex
-            const label = `${series.label}, ${point.x}: ${format(point.values[series.key], valueFormat, instance)}`
-            return (
-              <g
-                aria-label={label}
-                className="chart-data-target"
-                key={`${series.key}-${point.x}`}
-                onBlur={() => setActivePoint(null)}
-                onFocus={() => setActivePoint({ pointIndex, seriesIndex })}
-                onPointerEnter={() => setActivePoint({ pointIndex, seriesIndex })}
-                onPointerLeave={() => setActivePoint(null)}
-                role="img"
-                tabIndex={0}
-              >
-                <circle cx={pointX} cy={pointY} fill="transparent" r="12" />
-                <circle
-                  className="chart-point"
-                  cx={pointX}
-                  cy={pointY}
-                  fill="var(--card)"
-                  r={active ? 6 : seriesIndex % 2 === 0 ? 3.5 : 2.5}
-                  stroke={colors[seriesIndex % colors.length]}
-                  strokeWidth={active ? 3 : 2}
-                />
+              <g key={tick}>
+                <line stroke="var(--border)" strokeDasharray="3 4" x1={plot.left} x2={width - plot.right} y1={y} y2={y} />
+                <text fill="var(--muted-foreground)" fontSize="11" textAnchor="end" x={plot.left - 9} y={y + 4}>
+                  {axisFormat(tick, valueFormat, instance)}
+                </text>
               </g>
             )
-          }),
-        )}
-        {activePoint
-          ? (() => {
-              const series = block.series[activePoint.seriesIndex]
-              const point = block.points[activePoint.pointIndex]
-              const pointX = x(activePoint.pointIndex)
-              const pointY = yPosition(point.values[series.key], range.min, range.max)
+          })}
+          <g className="chart-series-reveal">
+            {block.series.map((series, seriesIndex) => {
+              const points = block.points
+                .map((point, index) => `${x(index)},${yPosition(point.values[series.key], range.min, range.max)}`)
+                .join(" ")
               return (
-                <>
-                  <line className="chart-guide" x1={pointX} x2={pointX} y1={plot.top} y2={height - plot.bottom} />
-                  <ChartTooltip
-                    title={`${series.label} · ${point.x}`}
-                    value={format(point.values[series.key], valueFormat, instance)}
-                    x={pointX}
-                    y={pointY}
+                <g key={series.key}>
+                  {block.series.length === 1 ? (
+                    <polygon
+                      points={`${x(0)},${height - plot.bottom} ${points} ${x(block.points.length - 1)},${height - plot.bottom}`}
+                      fill={colors[0]}
+                      opacity="0.07"
+                    />
+                  ) : null}
+                  <polyline
+                    className="transition-opacity duration-200"
+                    fill="none"
+                    key={series.key}
+                    opacity={activePoint === null || activePoint.seriesIndex === seriesIndex ? 1 : 0.3}
+                    points={points}
+                    stroke={colors[seriesIndex % colors.length]}
+                    strokeDasharray={dashPatterns[seriesIndex % dashPatterns.length]}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
                   />
-                </>
+                </g>
               )
-            })()
-          : null}
-        {block.points.map((point, index) =>
-          index === 0 || index === block.points.length - 1 || block.points.length <= 8 ? (
-            <text
-              fill="var(--muted-foreground)"
-              fontSize="11"
-              key={point.x}
-              textAnchor={index === 0 ? "start" : index === block.points.length - 1 ? "end" : "middle"}
-              x={x(index)}
-              y={height - 18}
-            >
-              {point.x}
-            </text>
-          ) : null,
-        )}
-      </svg>
+            })}
+          </g>
+          {block.series.flatMap((series, seriesIndex) =>
+            block.points.map((point, pointIndex) => {
+              const pointX = x(pointIndex)
+              const pointY = yPosition(point.values[series.key], range.min, range.max)
+              const active = activePoint?.pointIndex === pointIndex && activePoint.seriesIndex === seriesIndex
+              const label = `${series.label}, ${point.x}: ${format(point.values[series.key], valueFormat, instance)}`
+              return (
+                <g
+                  aria-label={label}
+                  className="chart-data-target"
+                  key={`${series.key}-${point.x}`}
+                  onBlur={() => setActivePoint(null)}
+                  onFocus={() => setActivePoint({ pointIndex, seriesIndex })}
+                  onPointerEnter={() => setActivePoint({ pointIndex, seriesIndex })}
+                  onPointerLeave={() => setActivePoint(null)}
+                  role="img"
+                  tabIndex={0}
+                >
+                  <circle cx={pointX} cy={pointY} fill="transparent" r="12" />
+                  <circle
+                    className="chart-point"
+                    cx={pointX}
+                    cy={pointY}
+                    fill="var(--card)"
+                    r={active ? 6 : seriesIndex % 2 === 0 ? 3.5 : 2.5}
+                    stroke={colors[seriesIndex % colors.length]}
+                    strokeWidth={active ? 3 : 2}
+                  />
+                </g>
+              )
+            }),
+          )}
+          {activePoint
+            ? (() => {
+                const series = block.series[activePoint.seriesIndex]
+                const point = block.points[activePoint.pointIndex]
+                const pointX = x(activePoint.pointIndex)
+                const pointY = yPosition(point.values[series.key], range.min, range.max)
+                return (
+                  <>
+                    <line className="chart-guide" x1={pointX} x2={pointX} y1={plot.top} y2={height - plot.bottom} />
+                    <ChartTooltip
+                      width={width}
+                      title={`${series.label} · ${point.x}`}
+                      value={format(point.values[series.key], valueFormat, instance)}
+                      x={pointX}
+                      y={pointY}
+                    />
+                  </>
+                )
+              })()
+            : null}
+          {block.points.map((point, index) =>
+            index === 0 || index === block.points.length - 1 || block.points.length <= 8 ? (
+              <text
+                fill="var(--muted-foreground)"
+                fontSize="11"
+                key={point.x}
+                textAnchor={index === 0 ? "start" : index === block.points.length - 1 ? "end" : "middle"}
+                x={x(index)}
+                y={height - 18}
+              >
+                {point.x}
+              </text>
+            ) : null,
+          )}
+        </svg>
+      </div>
       <div aria-hidden="true" className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1">
         {block.series.map((series, index) => (
           <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground" key={series.key}>
@@ -279,126 +333,147 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
           </span>
         ))}
       </div>
-      <table className="sr-only">
-        <caption>{block.title}</caption>
-        <thead>
-          <tr>
-            <th>{block.x_label || "Period"}</th>
-            {block.series.map((series) => (
-              <th key={series.key}>{series.label}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {block.points.map((point) => (
-            <tr key={point.x}>
-              <th>{point.x}</th>
-              {block.series.map((series) => (
-                <td key={series.key}>{format(point.values[series.key], valueFormat, instance)}</td>
+      <details className="chart-values">
+        <summary>View data</summary>
+        <div className="overflow-x-auto">
+          <table>
+            <caption>{block.title}</caption>
+            <thead>
+              <tr>
+                <th>{block.x_label || "Period"}</th>
+                {block.series.map((series) => (
+                  <th key={series.key}>{series.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {block.points.map((point) => (
+                <tr key={point.x}>
+                  <th>{point.x}</th>
+                  {block.series.map((series) => (
+                    <td key={series.key}>{format(point.values[series.key], valueFormat, instance)}</td>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </tbody>
+          </table>
+        </div>
+      </details>
     </figure>
   )
 }
 
 function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; descriptionId: string; instance: InstanceConfig }) {
+  const { ref, width } = useChartWidth()
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const valueFormat = block.value_format || "number"
-  const range = domain(block.bars.map((bar) => bar.value))
+  const range = chartDomain(
+    block.bars.map((bar) => bar.value),
+    true,
+  )
   const available = width - plot.left - plot.right
   const slot = available / block.bars.length
   const barWidth = Math.min(44, slot * 0.66)
   const baseline = yPosition(0, range.min, range.max)
-  const ticks = Array.from({ length: 5 }, (_, index) => range.min + ((range.max - range.min) * index) / 4).reverse()
+  const ticks = Array.from(
+    { length: Math.round((range.max - range.min) / range.step) + 1 },
+    (_, index) => range.min + range.step * index,
+  ).reverse()
   const labelEvery = Math.max(1, Math.ceil(block.bars.length / 8))
   return (
     <figure aria-labelledby={descriptionId} className="m-0 w-full">
       <figcaption className="sr-only" id={descriptionId}>
         {block.title} bar chart. Exact values follow in an accessible table.
       </figcaption>
-      <svg
-        aria-label={`${block.title} interactive bar chart`}
-        className="h-auto w-full overflow-visible"
-        preserveAspectRatio="xMidYMid meet"
-        role="group"
-        viewBox={`0 0 ${width} ${height}`}
-      >
-        {ticks.map((tick) => {
-          const y = yPosition(tick, range.min, range.max)
-          return (
-            <g key={tick}>
-              <line stroke="var(--border)" strokeDasharray="3 4" x1={plot.left} x2={width - plot.right} y1={y} y2={y} />
-              <text fill="var(--muted-foreground)" fontSize="11" textAnchor="end" x={plot.left - 9} y={y + 4}>
-                {format(tick, valueFormat, instance)}
-              </text>
-            </g>
-          )
-        })}
-        {block.bars.map((bar, index) => {
-          const valueY = yPosition(bar.value, range.min, range.max)
-          const x = plot.left + index * slot + (slot - barWidth) / 2
-          const y = Math.min(valueY, baseline)
-          const barHeight = Math.max(1, Math.abs(baseline - valueY))
-          return (
-            <g
-              aria-label={`${bar.label}: ${format(bar.value, valueFormat, instance)}`}
-              className="chart-data-target"
-              key={bar.label}
-              onBlur={() => setActiveIndex(null)}
-              onFocus={() => setActiveIndex(index)}
-              onPointerEnter={() => setActiveIndex(index)}
-              onPointerLeave={() => setActiveIndex(null)}
-              role="img"
-              tabIndex={0}
-            >
-              <rect fill="transparent" height={height - plot.top - plot.bottom} width={slot} x={plot.left + index * slot} y={plot.top} />
-              <rect
-                className="chart-bar"
-                fill={colors[index % colors.length]}
-                height={barHeight}
-                opacity={activeIndex === null || activeIndex === index ? 1 : 0.32}
-                rx="4"
-                width={barWidth}
-                x={x}
-                y={y}
-              />
-              {index % labelEvery === 0 ? (
-                <text fill="var(--muted-foreground)" fontSize="10" textAnchor="middle" x={x + barWidth / 2} y={height - 18}>
-                  {bar.label.length > 12 ? `${bar.label.slice(0, 11)}…` : bar.label}
+      <div ref={ref} className="chart-scroll" role="region" aria-label={`${block.title} chart`} tabIndex={0}>
+        <svg
+          aria-label={`${block.title} interactive bar chart`}
+          className="chart-cartesian"
+          preserveAspectRatio="xMidYMid meet"
+          role="group"
+          viewBox={`0 0 ${width} ${height}`}
+        >
+          {ticks.map((tick) => {
+            const y = yPosition(tick, range.min, range.max)
+            return (
+              <g key={tick}>
+                <line stroke="var(--border)" strokeDasharray="3 4" x1={plot.left} x2={width - plot.right} y1={y} y2={y} />
+                <text fill="var(--muted-foreground)" fontSize="11" textAnchor="end" x={plot.left - 9} y={y + 4}>
+                  {axisFormat(tick, valueFormat, instance)}
                 </text>
-              ) : null}
-            </g>
-          )
-        })}
-        {activeIndex !== null
-          ? (() => {
-              const bar = block.bars[activeIndex]
-              const valueY = yPosition(bar.value, range.min, range.max)
-              const pointX = plot.left + activeIndex * slot + slot / 2
-              return <ChartTooltip title={bar.label} value={format(bar.value, valueFormat, instance)} x={pointX} y={valueY} />
-            })()
-          : null}
-      </svg>
-      <table className="sr-only">
-        <caption>{block.title}</caption>
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {block.bars.map((bar) => (
-            <tr key={bar.label}>
-              <th>{bar.label}</th>
-              <td>{format(bar.value, valueFormat, instance)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </g>
+            )
+          })}
+          {block.bars.map((bar, index) => {
+            const valueY = yPosition(bar.value, range.min, range.max)
+            const x = plot.left + index * slot + (slot - barWidth) / 2
+            const y = Math.min(valueY, baseline)
+            const barHeight = Math.max(1, Math.abs(baseline - valueY))
+            return (
+              <g
+                aria-label={`${bar.label}: ${format(bar.value, valueFormat, instance)}`}
+                className="chart-data-target"
+                key={bar.label}
+                onBlur={() => setActiveIndex(null)}
+                onFocus={() => setActiveIndex(index)}
+                onPointerEnter={() => setActiveIndex(index)}
+                onPointerLeave={() => setActiveIndex(null)}
+                role="img"
+                tabIndex={0}
+              >
+                <rect fill="transparent" height={height - plot.top - plot.bottom} width={slot} x={plot.left + index * slot} y={plot.top} />
+                <rect
+                  className="chart-bar"
+                  fill={colors[index % colors.length]}
+                  height={barHeight}
+                  opacity={activeIndex === null || activeIndex === index ? 1 : 0.32}
+                  rx="4"
+                  width={barWidth}
+                  x={x}
+                  y={y}
+                />
+                {index % labelEvery === 0 ? (
+                  <text fill="var(--muted-foreground)" fontSize="10" textAnchor="middle" x={x + barWidth / 2} y={height - 18}>
+                    {bar.label.length > 12 ? `${bar.label.slice(0, 11)}…` : bar.label}
+                  </text>
+                ) : null}
+              </g>
+            )
+          })}
+          {activeIndex !== null
+            ? (() => {
+                const bar = block.bars[activeIndex]
+                const valueY = yPosition(bar.value, range.min, range.max)
+                const pointX = plot.left + activeIndex * slot + slot / 2
+                return (
+                  <ChartTooltip width={width} title={bar.label} value={format(bar.value, valueFormat, instance)} x={pointX} y={valueY} />
+                )
+              })()
+            : null}
+        </svg>
+      </div>
+      <details className="chart-values">
+        <summary>View data</summary>
+        <div className="overflow-x-auto">
+          <table>
+            <caption>{block.title}</caption>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {block.bars.map((bar) => (
+                <tr key={bar.label}>
+                  <th>{bar.label}</th>
+                  <td>{format(bar.value, valueFormat, instance)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
     </figure>
   )
 }
