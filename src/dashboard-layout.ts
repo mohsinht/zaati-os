@@ -1,3 +1,4 @@
+// Preserve intrinsic card heights on wide dashboards while packing later cards into free column space.
 const dashboardSelector = '[data-layout="dashboard"]'
 const wideDashboard = window.matchMedia("(min-width: 1280px)")
 const verticalGap = 20
