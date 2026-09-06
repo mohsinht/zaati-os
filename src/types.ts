@@ -13,6 +13,7 @@ export type MetricGroupBlock = BlockBase & {
     change?: number
     change_label?: string
     tone?: Tone
+    trend?: { label: string; points: Array<{ label: string; value: number }> }
   }>
 }
 export type ListBlock = BlockBase & {
@@ -44,7 +45,8 @@ export type CalendarBlock = BlockBase & {
 }
 export type TableBlock = BlockBase & {
   kind: "table"
-  columns: Array<{ key: string; label: string; format?: ValueFormat }>
+  searchable?: boolean
+  columns: Array<{ key: string; label: string; format?: ValueFormat; filterable?: boolean; tones?: Record<string, Tone> }>
   rows: Array<Record<string, string | number | boolean | null>>
 }
 export type ProgressBlock = BlockBase & {

@@ -6,54 +6,78 @@
   "domain": "work",
   "source": "focus",
   "generated_at": "2026-08-24T07:10:00Z",
-  "effective_period": { "start": "2026-08-24T00:00:00Z", "end": "2026-08-24T23:59:59Z", "timezone": "UTC" },
+  "effective_period": {
+    "start": "2026-08-24T00:00:00Z",
+    "end": "2026-08-24T23:59:59Z",
+    "timezone": "UTC"
+  },
   "status": "success",
-  "producer": { "worker_id": "work-focus-daily", "workflow": "example", "version": "0.1.1" },
-  "sources": [{ "label": "Synthetic task tracker", "status": "ok", "as_of": "2026-08-24T07:10:00Z", "reference": "synthetic://tasks" }],
-  "freshness": { "expires_at": "2026-08-25T19:10:00Z" },
-  "quality": { "confidence": "high", "warnings": [] },
-  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "producer": {
+    "worker_id": "work-focus-daily",
+    "workflow": "example",
+    "version": "0.1.1"
+  },
+  "sources": [
+    {
+      "label": "Synthetic task tracker",
+      "status": "ok",
+      "as_of": "2026-08-24T07:10:00Z",
+      "reference": "synthetic://tasks"
+    }
+  ],
+  "freshness": {
+    "expires_at": "2026-08-25T19:10:00Z"
+  },
+  "quality": {
+    "confidence": "high",
+    "warnings": []
+  },
+  "privacy": {
+    "classification": "public",
+    "contains_personal_data": false,
+    "synthetic": true
+  },
   "data": {
-    "title": "Ship the smallest complete slice",
-    "summary": "One item is ready to build, one awaits a decision, and one is blocked outside your control.",
+    "title": "Work",
+    "summary": "One item is in progress and two are ready. Finish the homepage before starting another item; the usage report remains blocked on access.",
     "attention": "medium",
     "facts": {
       "items": [
         {
           "id": "renderer",
-          "title": "Adaptive block renderer",
+          "title": "Website refresh",
           "status": "in-progress",
           "priority": "high",
-          "next_action": "Complete the table component"
+          "next_action": "Apply the final homepage feedback"
         },
         {
           "id": "deployment",
-          "title": "Private deployment recipe",
+          "title": "Launch checklist",
           "status": "ready",
           "priority": "medium",
-          "next_action": "Verify the Access checklist"
+          "next_action": "Confirm the release owner"
         },
         {
           "id": "connector",
-          "title": "Connector example",
+          "title": "Usage report",
           "status": "blocked",
           "priority": "medium",
-          "next_action": "Wait for source permission"
+          "next_action": "Request read-only reporting access"
         },
         {
           "id": "fixtures",
-          "title": "Renderer fixture coverage",
+          "title": "Mobile review",
           "status": "ready",
           "priority": "high",
-          "next_action": "Add one valid example per audited block",
+          "next_action": "Check the homepage on a phone",
           "due_at": "2026-08-25T16:00:00Z"
         },
         {
           "id": "docs",
-          "title": "Contract extension guide",
+          "title": "Support guide",
           "status": "waiting",
           "priority": "medium",
-          "next_action": "Review after fixtures land"
+          "next_action": "Review after the homepage is approved"
         }
       ]
     },
@@ -63,95 +87,105 @@
         {
           "id": "work-counts",
           "kind": "metric-group",
-          "title": "Current work",
+          "title": "Work status",
           "span": "full",
           "metrics": [
-            { "label": "In progress", "value": 1, "tone": "positive" },
-            { "label": "Ready", "value": 2, "tone": "info" },
-            { "label": "Blocked", "value": 1, "tone": "warning" },
-            { "label": "Waiting", "value": 1, "tone": "neutral" },
-            { "label": "Due this week", "value": 2, "tone": "warning" }
+            {
+              "label": "In progress",
+              "value": 1
+            },
+            {
+              "label": "Ready to start",
+              "value": 2
+            },
+            {
+              "label": "Blocked",
+              "value": 1
+            },
+            {
+              "label": "Waiting",
+              "value": 1
+            }
           ]
         },
         {
           "id": "owned-work",
           "kind": "table",
-          "title": "Owned work",
-          "span": "two",
+          "title": "Active work",
+          "description": "Filter by status or priority, sort a column, and find the next step. This is a read-only snapshot of your task tracker.",
+          "span": "full",
           "columns": [
-            { "key": "item", "label": "Item" },
-            { "key": "state", "label": "State" },
-            { "key": "next", "label": "Next action" }
+            {
+              "key": "item",
+              "label": "Task"
+            },
+            {
+              "key": "state",
+              "label": "Status",
+              "filterable": true,
+              "tones": {
+                "In progress": "info",
+                "Ready": "positive",
+                "Blocked": "warning",
+                "Waiting": "neutral"
+              }
+            },
+            {
+              "key": "priority",
+              "label": "Priority",
+              "filterable": true,
+              "tones": {
+                "High": "warning",
+                "Medium": "neutral"
+              }
+            },
+            {
+              "key": "due",
+              "label": "Due (UTC)"
+            },
+            {
+              "key": "next",
+              "label": "Next step"
+            }
           ],
           "rows": [
-            { "item": "Adaptive block renderer", "state": "In progress", "next": "Complete the table component" },
-            { "item": "Private deployment recipe", "state": "Ready", "next": "Verify Access checklist" },
-            { "item": "Connector example", "state": "Blocked", "next": "Wait for source permission" },
-            { "item": "Renderer fixture coverage", "state": "Ready", "next": "Add one example per audited block" },
-            { "item": "Contract extension guide", "state": "Waiting", "next": "Review after fixtures land" }
-          ]
-        },
-        {
-          "id": "work-next",
-          "kind": "list",
-          "title": "Best next moves",
-          "span": "one",
-          "items": [
             {
-              "id": "w1",
-              "title": "Finish one end-to-end path",
-              "description": "Prefer a complete thin slice over three half-started components.",
-              "meta": "90 minutes",
-              "tone": "positive"
+              "item": "Website refresh",
+              "state": "In progress",
+              "next": "Apply the final homepage feedback",
+              "priority": "High",
+              "due": "No deadline"
             },
             {
-              "id": "w2",
-              "title": "Write the open decision",
-              "description": "Make the blocker answerable in one message.",
-              "meta": "10 minutes",
-              "tone": "info"
-            }
-          ]
-        },
-        {
-          "id": "delivery-progress",
-          "kind": "progress",
-          "title": "Delivery evidence",
-          "span": "one",
-          "items": [
-            { "label": "Complete slice", "value": 7, "max": 10, "value_label": "7 of 10 checks", "tone": "positive" },
-            { "label": "Fixture coverage", "value": 8, "max": 11, "value_label": "8 of 11 blocks", "tone": "info" },
-            { "label": "Release evidence", "value": 3, "max": 5, "value_label": "3 of 5 gates", "tone": "warning" }
-          ]
-        },
-        {
-          "id": "delivery-sequence",
-          "kind": "timeline",
-          "title": "Path to done",
-          "span": "one",
-          "items": [
-            {
-              "label": "Now",
-              "title": "Finish the renderer path",
-              "description": "Implementation, fixture, and test move together.",
-              "tone": "positive"
+              "item": "Launch checklist",
+              "state": "Ready",
+              "next": "Confirm the release owner",
+              "priority": "Medium",
+              "due": "No deadline"
             },
-            { "label": "Next", "title": "Run the full contract gate", "description": "Fix only evidence-backed failures.", "tone": "info" },
             {
-              "label": "Then",
-              "title": "Publish the extension guide",
-              "description": "Document the exact safe boundary.",
-              "tone": "neutral"
+              "item": "Usage report",
+              "state": "Blocked",
+              "next": "Request read-only reporting access",
+              "priority": "Medium",
+              "due": "No deadline"
+            },
+            {
+              "item": "Mobile review",
+              "state": "Ready",
+              "next": "Check the homepage on a phone",
+              "priority": "High",
+              "due": "Aug 25, 16:00"
+            },
+            {
+              "item": "Support guide",
+              "state": "Waiting",
+              "next": "Review after the homepage is approved",
+              "priority": "Medium",
+              "due": "No deadline"
             }
-          ]
-        },
-        {
-          "id": "external-blocker",
-          "kind": "notice",
-          "title": "The connector is not startable",
-          "body": "Source permission is outside the current work boundary. Keep it visible, but do not let it interrupt the complete renderer slice.",
-          "tone": "warning",
-          "span": "full"
+          ],
+          "searchable": true
         }
       ]
     }

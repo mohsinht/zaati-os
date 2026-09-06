@@ -6,20 +6,52 @@
   "domain": "money",
   "source": "pulse",
   "generated_at": "2026-08-24T07:00:00Z",
-  "effective_period": { "start": "2026-08-23T07:00:00Z", "end": "2026-08-24T07:00:00Z", "timezone": "UTC" },
+  "effective_period": {
+    "start": "2026-08-23T07:00:00Z",
+    "end": "2026-08-24T07:00:00Z",
+    "timezone": "UTC"
+  },
   "status": "partial",
-  "producer": { "worker_id": "money-pulse-daily", "workflow": "example", "version": "0.1.1" },
+  "producer": {
+    "worker_id": "money-pulse-daily",
+    "workflow": "example",
+    "version": "0.1.1"
+  },
   "sources": [
-    { "label": "Demo banking connection", "status": "ok", "as_of": "2026-08-24T06:40:00Z", "reference": "synthetic://banking" },
-    { "label": "Demo brokerage summary", "status": "ok", "as_of": "2026-08-24T06:35:00Z", "reference": "synthetic://brokerage" },
-    { "label": "Demo crypto summary", "status": "stale", "as_of": "2026-08-23T18:00:00Z", "reference": "synthetic://crypto" }
+    {
+      "label": "Demo banking connection",
+      "status": "ok",
+      "as_of": "2026-08-24T06:40:00Z",
+      "reference": "synthetic://banking"
+    },
+    {
+      "label": "Demo brokerage summary",
+      "status": "ok",
+      "as_of": "2026-08-24T06:35:00Z",
+      "reference": "synthetic://brokerage"
+    },
+    {
+      "label": "Demo crypto summary",
+      "status": "stale",
+      "as_of": "2026-08-23T18:00:00Z",
+      "reference": "synthetic://crypto"
+    }
   ],
-  "freshness": { "expires_at": "2026-08-25T19:00:00Z" },
-  "quality": { "confidence": "medium", "warnings": ["One synthetic source has not refreshed today."] },
-  "privacy": { "classification": "public", "contains_personal_data": false, "synthetic": true },
+  "freshness": {
+    "expires_at": "2026-08-25T19:00:00Z"
+  },
+  "quality": {
+    "confidence": "medium",
+    "warnings": ["One synthetic source has not refreshed today."]
+  },
+  "privacy": {
+    "classification": "public",
+    "contains_personal_data": false,
+    "synthetic": true
+  },
   "data": {
-    "title": "The plan is funded, with one price still provisional",
-    "summary": "Cash covers 11 months, contributions are ahead of plan, and the baseline five-year scenario reaches 178,000 synthetic dollars. Crypto pricing is stale, so allocation and daily movement remain provisional.",
+    "title": "Money",
+    "summary": "Track your balances and where your monthly budget goes. Cash covers 7.3 months of living costs; crypto prices are awaiting a refresh.",
     "attention": "low",
     "facts": {
       "measures": [
@@ -39,8 +71,21 @@
           "currency": "USD",
           "as_of": "2026-08-24T06:35:00Z"
         },
-        { "id": "savings-rate", "label": "Savings rate", "kind": "percent", "value": 31, "as_of": "2026-08-24T06:40:00Z" },
-        { "id": "runway", "label": "Cash runway", "kind": "duration", "value": 11, "unit": "months", "as_of": "2026-08-24T06:40:00Z" },
+        {
+          "id": "savings-rate",
+          "label": "Savings rate",
+          "kind": "percent",
+          "value": 38.5,
+          "as_of": "2026-08-24T06:40:00Z"
+        },
+        {
+          "id": "runway",
+          "label": "Cash runway",
+          "kind": "duration",
+          "value": 7.3,
+          "unit": "months",
+          "as_of": "2026-08-24T06:40:00Z"
+        },
         {
           "id": "contribution-rate",
           "label": "Monthly contribution",
@@ -51,8 +96,20 @@
         }
       ],
       "goals": [
-        { "id": "reserve", "label": "Emergency reserve", "current": 11, "target": 12, "unit": "months" },
-        { "id": "investing", "label": "Annual investing target", "current": 14400, "target": 21600, "unit": "USD" }
+        {
+          "id": "reserve",
+          "label": "Emergency reserve",
+          "current": 5.1,
+          "target": 6,
+          "unit": "months"
+        },
+        {
+          "id": "investing",
+          "label": "Annual investing target",
+          "current": 14400,
+          "target": 21600,
+          "unit": "USD"
+        }
       ],
       "accounts": [
         {
@@ -159,22 +216,79 @@
           "as_of": "2026-08-23T18:00:00Z"
         }
       ],
-      "projections": [
-        { "year": 2026, "scenario": "conservative", "value": 104800, "currency": "USD" },
-        { "year": 2026, "scenario": "baseline", "value": 104800, "currency": "USD" },
-        { "year": 2026, "scenario": "stretch", "value": 104800, "currency": "USD" },
-        { "year": 2027, "scenario": "conservative", "value": 124000, "currency": "USD" },
-        { "year": 2027, "scenario": "baseline", "value": 128000, "currency": "USD" },
-        { "year": 2027, "scenario": "stretch", "value": 132000, "currency": "USD" },
-        { "year": 2028, "scenario": "conservative", "value": 142000, "currency": "USD" },
-        { "year": 2028, "scenario": "baseline", "value": 150000, "currency": "USD" },
-        { "year": 2028, "scenario": "stretch", "value": 160000, "currency": "USD" },
-        { "year": 2029, "scenario": "conservative", "value": 158000, "currency": "USD" },
-        { "year": 2029, "scenario": "baseline", "value": 166000, "currency": "USD" },
-        { "year": 2029, "scenario": "stretch", "value": 181000, "currency": "USD" },
-        { "year": 2030, "scenario": "conservative", "value": 171000, "currency": "USD" },
-        { "year": 2030, "scenario": "baseline", "value": 178000, "currency": "USD" },
-        { "year": 2030, "scenario": "stretch", "value": 205000, "currency": "USD" }
+      "balance_history": [
+        {
+          "date": "2026-06-08",
+          "cash": 18700,
+          "invested": 75500,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-06-15",
+          "cash": 19200,
+          "invested": 76100,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-06-22",
+          "cash": 18900,
+          "invested": 75300,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-06-29",
+          "cash": 19600,
+          "invested": 76800,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-07-06",
+          "cash": 20200,
+          "invested": 77200,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-07-13",
+          "cash": 19800,
+          "invested": 77900,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-07-20",
+          "cash": 20400,
+          "invested": 77300,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-07-27",
+          "cash": 21100,
+          "invested": 78900,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-08-03",
+          "cash": 20900,
+          "invested": 79600,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-08-10",
+          "cash": 21600,
+          "invested": 79100,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-08-17",
+          "cash": 22100,
+          "invested": 80900,
+          "currency": "USD"
+        },
+        {
+          "date": "2026-08-24",
+          "cash": 22600,
+          "invested": 82200,
+          "currency": "USD"
+        }
       ]
     },
     "presentation": {
@@ -183,159 +297,443 @@
         {
           "id": "money-metrics",
           "kind": "metric-group",
-          "title": "Current setup",
-          "description": "Illustrative values from synthetic connected sources.",
-          "span": "full",
+          "title": "Balance overview",
+          "span": "one",
           "metrics": [
             {
               "label": "Tracked value",
               "value": 104800,
               "format": "currency",
-              "change": 2100,
-              "change_label": "this month",
-              "tone": "positive"
+              "tone": "positive",
+              "trend": {
+                "label": "Jun 8\u2013Aug 24 \u00b7 weekly",
+                "points": [
+                  {
+                    "label": "2026-06-08",
+                    "value": 94200
+                  },
+                  {
+                    "label": "2026-06-15",
+                    "value": 95300
+                  },
+                  {
+                    "label": "2026-06-22",
+                    "value": 94200
+                  },
+                  {
+                    "label": "2026-06-29",
+                    "value": 96400
+                  },
+                  {
+                    "label": "2026-07-06",
+                    "value": 97400
+                  },
+                  {
+                    "label": "2026-07-13",
+                    "value": 97700
+                  },
+                  {
+                    "label": "2026-07-20",
+                    "value": 97700
+                  },
+                  {
+                    "label": "2026-07-27",
+                    "value": 100000
+                  },
+                  {
+                    "label": "2026-08-03",
+                    "value": 100500
+                  },
+                  {
+                    "label": "2026-08-10",
+                    "value": 100700
+                  },
+                  {
+                    "label": "2026-08-17",
+                    "value": 103000
+                  },
+                  {
+                    "label": "2026-08-24",
+                    "value": 104800
+                  }
+                ]
+              },
+              "change": 10600,
+              "change_label": "since Jun 8"
             },
-            { "label": "Invested", "value": 82200, "format": "currency", "tone": "info" },
-            { "label": "Cash", "value": 22600, "format": "currency", "tone": "neutral" },
-            { "label": "Savings rate", "value": 31, "format": "percent", "tone": "positive" },
-            { "label": "Runway", "value": 11, "unit": "months", "tone": "positive" },
-            { "label": "Monthly contribution", "value": 1800, "format": "currency", "tone": "info" }
+            {
+              "label": "Invested",
+              "value": 82200,
+              "format": "currency",
+              "tone": "info",
+              "trend": {
+                "label": "Jun 8\u2013Aug 24 \u00b7 weekly",
+                "points": [
+                  {
+                    "label": "2026-06-08",
+                    "value": 75500
+                  },
+                  {
+                    "label": "2026-06-15",
+                    "value": 76100
+                  },
+                  {
+                    "label": "2026-06-22",
+                    "value": 75300
+                  },
+                  {
+                    "label": "2026-06-29",
+                    "value": 76800
+                  },
+                  {
+                    "label": "2026-07-06",
+                    "value": 77200
+                  },
+                  {
+                    "label": "2026-07-13",
+                    "value": 77900
+                  },
+                  {
+                    "label": "2026-07-20",
+                    "value": 77300
+                  },
+                  {
+                    "label": "2026-07-27",
+                    "value": 78900
+                  },
+                  {
+                    "label": "2026-08-03",
+                    "value": 79600
+                  },
+                  {
+                    "label": "2026-08-10",
+                    "value": 79100
+                  },
+                  {
+                    "label": "2026-08-17",
+                    "value": 80900
+                  },
+                  {
+                    "label": "2026-08-24",
+                    "value": 82200
+                  }
+                ]
+              },
+              "change": 6700,
+              "change_label": "since Jun 8"
+            },
+            {
+              "label": "Cash",
+              "value": 22600,
+              "format": "currency",
+              "tone": "neutral",
+              "trend": {
+                "label": "Jun 8\u2013Aug 24 \u00b7 weekly",
+                "points": [
+                  {
+                    "label": "2026-06-08",
+                    "value": 18700
+                  },
+                  {
+                    "label": "2026-06-15",
+                    "value": 19200
+                  },
+                  {
+                    "label": "2026-06-22",
+                    "value": 18900
+                  },
+                  {
+                    "label": "2026-06-29",
+                    "value": 19600
+                  },
+                  {
+                    "label": "2026-07-06",
+                    "value": 20200
+                  },
+                  {
+                    "label": "2026-07-13",
+                    "value": 19800
+                  },
+                  {
+                    "label": "2026-07-20",
+                    "value": 20400
+                  },
+                  {
+                    "label": "2026-07-27",
+                    "value": 21100
+                  },
+                  {
+                    "label": "2026-08-03",
+                    "value": 20900
+                  },
+                  {
+                    "label": "2026-08-10",
+                    "value": 21600
+                  },
+                  {
+                    "label": "2026-08-17",
+                    "value": 22100
+                  },
+                  {
+                    "label": "2026-08-24",
+                    "value": 22600
+                  }
+                ]
+              },
+              "change": 3900,
+              "change_label": "since Jun 8"
+            },
+            {
+              "label": "Cash runway",
+              "value": 7.3,
+              "unit": "months",
+              "tone": "positive"
+            }
           ]
         },
         {
-          "id": "five-year-projection",
+          "id": "balance-history",
           "kind": "line-chart",
-          "title": "Five-year projection",
-          "description": "Three illustrative scenarios based on a fixed monthly contribution; not a forecast or financial advice.",
+          "title": "Balance history",
+          "description": "12 weekly snapshots \u00b7 Jun 8\u2013Aug 24. Changes include contributions, withdrawals, and market movements; they are not investment returns.",
           "span": "two",
+          "x_label": "Weekly balance date",
           "y_format": "currency",
           "series": [
-            { "key": "conservative", "label": "Conservative" },
-            { "key": "baseline", "label": "Baseline" },
-            { "key": "stretch", "label": "Stretch" }
+            {
+              "key": "total",
+              "label": "Tracked balance"
+            }
           ],
           "points": [
-            { "x": "2026", "values": { "conservative": 104800, "baseline": 104800, "stretch": 104800 } },
-            { "x": "2027", "values": { "conservative": 124000, "baseline": 128000, "stretch": 132000 } },
-            { "x": "2028", "values": { "conservative": 142000, "baseline": 150000, "stretch": 160000 } },
-            { "x": "2029", "values": { "conservative": 158000, "baseline": 166000, "stretch": 181000 } },
-            { "x": "2030", "values": { "conservative": 171000, "baseline": 178000, "stretch": 205000 } }
-          ]
-        },
-        {
-          "id": "allocation",
-          "kind": "donut-chart",
-          "title": "Portfolio allocation",
-          "description": "Cash is included so the chart reconciles to the tracked total.",
-          "span": "one",
-          "value_format": "currency",
-          "center_label": "Tracked total",
-          "segments": [
-            { "label": "Global equity fund", "value": 49770 },
-            { "label": "Quality stocks", "value": 19400 },
-            { "label": "Bonds", "value": 7930 },
-            { "label": "Crypto", "value": 5100 },
-            { "label": "Cash", "value": 22600 }
-          ]
-        },
-        {
-          "id": "holdings",
-          "kind": "table",
-          "title": "Invested holdings",
-          "description": "Exact synthetic positions and the price time used for each value.",
-          "span": "full",
-          "columns": [
-            { "key": "asset", "label": "Asset" },
-            { "key": "type", "label": "Type" },
-            { "key": "units", "label": "Units", "format": "number" },
-            { "key": "price", "label": "Price", "format": "currency" },
-            { "key": "value", "label": "Value", "format": "currency" },
-            { "key": "weight", "label": "Weight", "format": "percent" },
-            { "key": "day", "label": "Day", "format": "percent" }
-          ],
-          "rows": [
             {
-              "asset": "WORLD · Global equity fund",
-              "type": "Fund",
-              "units": 420,
-              "price": 118.5,
-              "value": 49770,
-              "weight": 47.5,
-              "day": 0.6
+              "x": "Jun 8",
+              "values": {
+                "total": 94200
+              }
             },
             {
-              "asset": "QUAL · Quality companies",
-              "type": "Stock basket",
-              "units": 160,
-              "price": 121.25,
-              "value": 19400,
-              "weight": 18.5,
-              "day": -0.2
-            },
-            { "asset": "BOND · Short bond fund", "type": "Bond", "units": 155, "price": 51.16, "value": 7930, "weight": 7.6, "day": 0.1 },
-            { "asset": "BTC · Bitcoin", "type": "Crypto", "units": 0.062, "price": 65000, "value": 4030, "weight": 3.8, "day": 1.4 },
-            { "asset": "ETH · Ethereum", "type": "Crypto", "units": 0.42, "price": 2548, "value": 1070, "weight": 1, "day": -0.8 }
-          ]
-        },
-        {
-          "id": "account-connections",
-          "kind": "list",
-          "title": "Connections",
-          "description": "Only normalized totals are retained—never account numbers or statements.",
-          "span": "one",
-          "items": [
-            {
-              "id": "bank",
-              "title": "Banking summary",
-              "description": "Daily cash and emergency reserve refreshed at 06:40 UTC.",
-              "status": "Connected",
-              "tone": "positive"
+              "x": "Jun 15",
+              "values": {
+                "total": 95300
+              }
             },
             {
-              "id": "brokerage",
-              "title": "Brokerage summary",
-              "description": "Three long-term positions refreshed at 06:35 UTC.",
-              "status": "Connected",
-              "tone": "positive"
+              "x": "Jun 22",
+              "values": {
+                "total": 94200
+              }
             },
             {
-              "id": "crypto",
-              "title": "Crypto summary",
-              "description": "Two positions last priced yesterday at 18:00 UTC.",
-              "status": "Stale",
-              "tone": "warning"
+              "x": "Jun 29",
+              "values": {
+                "total": 96400
+              }
+            },
+            {
+              "x": "Jul 6",
+              "values": {
+                "total": 97400
+              }
+            },
+            {
+              "x": "Jul 13",
+              "values": {
+                "total": 97700
+              }
+            },
+            {
+              "x": "Jul 20",
+              "values": {
+                "total": 97700
+              }
+            },
+            {
+              "x": "Jul 27",
+              "values": {
+                "total": 100000
+              }
+            },
+            {
+              "x": "Aug 3",
+              "values": {
+                "total": 100500
+              }
+            },
+            {
+              "x": "Aug 10",
+              "values": {
+                "total": 100700
+              }
+            },
+            {
+              "x": "Aug 17",
+              "values": {
+                "total": 103000
+              }
+            },
+            {
+              "x": "Aug 24",
+              "values": {
+                "total": 104800
+              }
             }
           ]
         },
         {
           "id": "monthly-flow",
           "kind": "bar-chart",
-          "title": "Monthly plan",
-          "description": "Where the illustrative take-home amount is assigned this month.",
-          "span": "one",
+          "title": "Monthly budget",
+          "description": "6,500 total allocated: living, investing, reserve, and flexible spending.",
+          "span": "two",
           "value_format": "currency",
           "bars": [
-            { "label": "Living", "value": 3100, "tone": "neutral" },
-            { "label": "Investing", "value": 1800, "tone": "positive" },
-            { "label": "Reserve", "value": 700, "tone": "info" },
-            { "label": "Flexible", "value": 900, "tone": "neutral" }
+            {
+              "label": "Living",
+              "value": 3100,
+              "tone": "neutral"
+            },
+            {
+              "label": "Investing",
+              "value": 1800,
+              "tone": "positive"
+            },
+            {
+              "label": "Reserve",
+              "value": 700,
+              "tone": "info"
+            },
+            {
+              "label": "Flexible",
+              "value": 900,
+              "tone": "neutral"
+            }
           ]
+        },
+        {
+          "id": "allocation",
+          "kind": "donut-chart",
+          "title": "Where the money is",
+          "description": "Accounted balances, including cash. Crypto valuation is provisional.",
+          "span": "one",
+          "value_format": "currency",
+          "center_label": "Tracked total",
+          "segments": [
+            {
+              "label": "Global equity fund",
+              "value": 49770
+            },
+            {
+              "label": "Quality stocks",
+              "value": 19400
+            },
+            {
+              "label": "Bonds",
+              "value": 7930
+            },
+            {
+              "label": "Crypto",
+              "value": 5100
+            },
+            {
+              "label": "Cash",
+              "value": 22600
+            }
+          ]
+        },
+        {
+          "id": "holdings",
+          "kind": "table",
+          "title": "Invested holdings",
+          "description": "Rounded market values. Weights use the 104,800 tracked total, including cash.",
+          "span": "two",
+          "columns": [
+            {
+              "key": "asset",
+              "label": "Asset"
+            },
+            {
+              "key": "value",
+              "label": "Value",
+              "format": "currency"
+            },
+            {
+              "key": "weight",
+              "label": "Weight",
+              "format": "percent"
+            },
+            {
+              "key": "status",
+              "label": "Prices",
+              "filterable": true,
+              "tones": {
+                "Current": "neutral",
+                "Older": "warning"
+              }
+            }
+          ],
+          "rows": [
+            {
+              "asset": "WORLD \u00b7 Global equity fund",
+              "value": 49770,
+              "weight": 47.5,
+              "status": "Current"
+            },
+            {
+              "asset": "QUAL \u00b7 Quality companies",
+              "value": 19400,
+              "weight": 18.5,
+              "status": "Current"
+            },
+            {
+              "asset": "BOND \u00b7 Short bond fund",
+              "value": 7930,
+              "weight": 7.6,
+              "status": "Current"
+            },
+            {
+              "asset": "BTC \u00b7 Bitcoin",
+              "value": 4030,
+              "weight": 3.8,
+              "status": "Older"
+            },
+            {
+              "asset": "ETH \u00b7 Ethereum",
+              "value": 1070,
+              "weight": 1,
+              "status": "Older"
+            }
+          ],
+          "searchable": true
         },
         {
           "id": "money-goals",
           "kind": "progress",
-          "title": "Explicit goals",
+          "title": "Progress toward your goals",
           "span": "one",
           "items": [
-            { "label": "Emergency reserve", "value": 11, "max": 12, "value_label": "11 of 12 months", "tone": "positive" },
-            { "label": "Annual investing", "value": 14400, "max": 21600, "value_label": "$14.4k of $21.6k", "tone": "info" }
-          ]
+            {
+              "label": "Emergency reserve",
+              "value": 5.1,
+              "max": 6,
+              "value_label": "5.1 of 6 months",
+              "tone": "positive"
+            },
+            {
+              "label": "Annual investing",
+              "value": 14400,
+              "max": 21600,
+              "value_label": "$14.4k of $21.6k",
+              "tone": "info"
+            }
+          ],
+          "description": "The 15,800 emergency reserve covers 5.1 months of living costs; daily cash is excluded."
         },
         {
           "id": "money-warning",
           "kind": "notice",
-          "title": "Projection, not promise",
-          "body": "These scenarios assume a fixed monthly contribution and illustrative returns. Crypto prices are stale, taxes and fees are excluded, and the page is context—not financial advice or an automated decision.",
+          "title": "Refresh prices before comparing returns",
+          "body": "The crypto balance uses yesterday\u2019s prices. This view is suitable for an approximate balance overview, but not for a daily return comparison.",
           "tone": "warning",
           "span": "full"
         }

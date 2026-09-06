@@ -63,8 +63,8 @@
     "synthetic": true
   },
   "data": {
-    "title": "Make room for your best work.",
-    "summary": "Two focus windows. Four replies to batch. One buffer to keep. Start with the work that is ready, and let the rest wait its turn.",
+    "title": "Today",
+    "summary": "Your schedule and priorities in one place. Protect 3.5 hours for the website refresh, handle the two message deadlines, and leave the late-afternoon buffer open.",
     "attention": "medium",
     "facts": {
       "decisions": [
@@ -77,7 +77,7 @@
         {
           "id": "batch-replies",
           "title": "Use two bounded reply windows",
-          "reason": "The inbox has four actionable messages but only two carry hard timing constraints.",
+          "reason": "Three messages need a response; two have explicit deadlines today.",
           "source_ids": ["inbox:attention:2026-08-24", "agenda:primary:2026-08-24"]
         },
         {
@@ -96,8 +96,8 @@
         },
         {
           "id": "ship-slice",
-          "title": "Finish the complete renderer slice",
-          "reason": "It is startable, high priority, and supported by the protected morning block.",
+          "title": "Apply the homepage feedback",
+          "reason": "The current work snapshot marks this as in progress.",
           "source_ids": ["work:focus:2026-08-24", "agenda:primary:2026-08-24"]
         },
         {
@@ -114,132 +114,58 @@
         {
           "id": "day-at-glance",
           "kind": "metric-group",
-          "title": "Day at a glance",
+          "title": "Today at a glance",
           "span": "full",
           "metrics": [
             {
-              "label": "Focus time",
+              "label": "Focus scheduled",
               "value": 3.5,
-              "unit": "hours",
-              "tone": "positive"
+              "unit": "hours"
             },
             {
-              "label": "Needs a reply",
-              "value": 4,
-              "format": "number",
-              "tone": "warning"
+              "label": "Messages due today",
+              "value": 2
             },
             {
-              "label": "Open blockers",
-              "value": 1,
-              "format": "number",
-              "tone": "neutral"
-            }
-          ]
-        },
-        {
-          "id": "attention-shape",
-          "kind": "line-chart",
-          "title": "Less interruption. More focus.",
-          "description": "Completed blocks and interruptions, August 17\u201323. Counts, not hours.",
-          "span": "two",
-          "y_format": "number",
-          "series": [
-            {
-              "key": "focus",
-              "label": "Focus blocks"
-            },
-            {
-              "key": "interruptions",
-              "label": "Interruptions"
-            }
-          ],
-          "points": [
-            {
-              "x": "Mon",
-              "values": {
-                "focus": 2,
-                "interruptions": 5
-              }
-            },
-            {
-              "x": "Tue",
-              "values": {
-                "focus": 3,
-                "interruptions": 4
-              }
-            },
-            {
-              "x": "Wed",
-              "values": {
-                "focus": 3,
-                "interruptions": 3
-              }
-            },
-            {
-              "x": "Thu",
-              "values": {
-                "focus": 4,
-                "interruptions": 2
-              }
-            },
-            {
-              "x": "Fri",
-              "values": {
-                "focus": 3,
-                "interruptions": 3
-              }
-            },
-            {
-              "x": "Sat",
-              "values": {
-                "focus": 1,
-                "interruptions": 1
-              }
-            },
-            {
-              "x": "Sun",
-              "values": {
-                "focus": 2,
-                "interruptions": 1
-              }
+              "label": "Work in progress",
+              "value": 1
             }
           ]
         },
         {
           "id": "today",
           "kind": "calendar",
-          "title": "Today",
-          "description": "Two focus windows, one sync, and a protected buffer.",
-          "span": "one",
+          "title": "Coming up today",
+          "description": "The same schedule shown in Agenda, with time left after 15:30.",
+          "span": "two",
           "date": "2026-08-24",
           "events": [
             {
-              "id": "focus-1",
-              "title": "Build the first usable slice",
+              "id": "a1",
+              "title": "Finish the homepage",
               "start": "2026-08-24T08:30:00Z",
               "end": "2026-08-24T10:30:00Z",
               "tone": "positive"
             },
             {
-              "id": "sync",
-              "title": "Project sync",
+              "id": "a2",
+              "title": "Project check-in",
               "start": "2026-08-24T11:00:00Z",
               "end": "2026-08-24T11:30:00Z",
               "tone": "info"
             },
             {
-              "id": "focus-2",
-              "title": "Review and ship",
+              "id": "a3",
+              "title": "Review the homepage",
               "start": "2026-08-24T13:00:00Z",
               "end": "2026-08-24T14:30:00Z",
               "tone": "positive"
             },
             {
-              "id": "buffer",
-              "title": "Open buffer",
-              "start": "2026-08-24T15:30:00Z",
-              "end": "2026-08-24T16:00:00Z",
+              "id": "a4",
+              "title": "Walk and reset",
+              "start": "2026-08-24T15:00:00Z",
+              "end": "2026-08-24T15:30:00Z",
               "tone": "neutral"
             }
           ]
@@ -247,110 +173,33 @@
         {
           "id": "next-actions",
           "kind": "list",
-          "title": "Decide or do",
+          "title": "Needs attention",
           "description": "Only actions with a concrete next step appear here.",
-          "span": "two",
+          "span": "one",
           "items": [
             {
-              "id": "reply",
-              "title": "Reply to the scheduling question",
-              "description": "Confirm one of the two proposed windows.",
-              "meta": "Before the 08:30 focus window",
-              "status": "Needs reply",
+              "id": "renewal",
+              "title": "Confirm the renewal choice",
+              "description": "Send a yes-or-no answer to the operations contact.",
+              "meta": "Due today, 15:00 UTC",
+              "status": "Deadline",
               "tone": "warning"
             },
             {
-              "id": "review",
-              "title": "Review the small release",
-              "description": "Check the acceptance criteria and approve or request changes.",
-              "meta": "20 minutes",
-              "status": "Ready",
-              "tone": "positive"
-            },
-            {
-              "id": "plan",
-              "title": "Choose tomorrow's first task",
-              "description": "Write a single startable action before ending the day.",
-              "meta": "End of day",
-              "status": "Later",
+              "id": "planning",
+              "title": "Choose a planning window",
+              "description": "Pick one of the two proposed times for tomorrow.",
+              "meta": "Due today, 17:00 UTC",
+              "status": "Decision",
               "tone": "neutral"
-            }
-          ]
-        },
-        {
-          "id": "goal-progress",
-          "kind": "progress",
-          "title": "Last week, against your goals",
-          "span": "one",
-          "items": [
-            {
-              "label": "Weekly deep work",
-              "value": 7.5,
-              "max": 10,
-              "value_label": "7.5 of 10 hours",
-              "tone": "positive"
-            },
-            {
-              "label": "Movement",
-              "value": 4,
-              "max": 5,
-              "value_label": "4 of 5 sessions",
-              "tone": "info"
-            },
-            {
-              "label": "Admin cleared",
-              "value": 6,
-              "max": 10,
-              "value_label": "6 of 10 items",
-              "tone": "warning"
-            }
-          ]
-        },
-        {
-          "id": "protect-buffer",
-          "kind": "notice",
-          "title": "Protect the buffer",
-          "body": "The afternoon has enough space to absorb surprises. Filling it now would turn a calm plan into calendar Tetris.",
-          "tone": "info",
-          "span": "full"
-        },
-        {
-          "id": "decision-sequence",
-          "kind": "timeline",
-          "title": "Decision sequence",
-          "span": "one",
-          "items": [
-            {
-              "label": "Before 08:30",
-              "title": "Open the acceptance criteria",
-              "description": "Start the focus block with the finish line visible.",
-              "tone": "positive"
-            },
-            {
-              "label": "Before 08:30",
-              "title": "Resolve the scheduling choice",
-              "description": "Resolve this before the focus window rather than interrupting it.",
-              "tone": "warning"
-            },
-            {
-              "label": "13:00",
-              "title": "Review and ship",
-              "description": "Use the second focus block for evidence and release.",
-              "tone": "positive"
-            },
-            {
-              "label": "15:30",
-              "title": "Stop scheduling",
-              "description": "Keep the buffer available for reality.",
-              "tone": "info"
             }
           ]
         },
         {
           "id": "source-register",
           "kind": "table",
-          "title": "Source state",
-          "span": "two",
+          "title": "What the sources support",
+          "span": "full",
           "columns": [
             {
               "key": "source",
@@ -374,12 +223,12 @@
             {
               "source": "Inbox",
               "state": "Fresh",
-              "consequence": "Four actions retained"
+              "consequence": "Three responses needed; one conversation waiting"
             },
             {
               "source": "Work",
               "state": "Fresh",
-              "consequence": "One startable priority"
+              "consequence": "One item in progress; two ready"
             },
             {
               "source": "Money",

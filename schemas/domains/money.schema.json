@@ -3,7 +3,9 @@
   "$id": "https://zaati-os.dev/schemas/domains/money.schema.json",
   "title": "Zaati OS money facts",
   "allOf": [
-    { "$ref": "https://zaati-os.dev/schemas/domains/domain-base.schema.json" },
+    {
+      "$ref": "https://zaati-os.dev/schemas/domains/domain-base.schema.json"
+    },
     {
       "type": "object",
       "properties": {
@@ -20,13 +22,33 @@
                 "additionalProperties": false,
                 "required": ["id", "label", "kind", "value", "as_of"],
                 "properties": {
-                  "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-                  "label": { "type": "string", "minLength": 1, "maxLength": 80 },
-                  "kind": { "enum": ["money", "percent", "number", "duration"] },
-                  "value": { "type": "number" },
-                  "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
-                  "unit": { "type": "string", "maxLength": 24 },
-                  "as_of": { "type": "string", "format": "date-time" }
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+$"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "kind": {
+                    "enum": ["money", "percent", "number", "duration"]
+                  },
+                  "value": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  "unit": {
+                    "type": "string",
+                    "maxLength": 24
+                  },
+                  "as_of": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
                 }
               }
             },
@@ -38,11 +60,27 @@
                 "additionalProperties": false,
                 "required": ["id", "label", "current", "target"],
                 "properties": {
-                  "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-                  "label": { "type": "string", "minLength": 1, "maxLength": 80 },
-                  "current": { "type": "number", "minimum": 0 },
-                  "target": { "type": "number", "exclusiveMinimum": 0 },
-                  "unit": { "type": "string", "maxLength": 24 }
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+$"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "current": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "target": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "unit": {
+                    "type": "string",
+                    "maxLength": 24
+                  }
                 }
               }
             },
@@ -54,13 +92,32 @@
                 "additionalProperties": false,
                 "required": ["id", "label", "type", "status", "balance", "currency", "as_of"],
                 "properties": {
-                  "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-                  "label": { "type": "string", "minLength": 1, "maxLength": 80 },
-                  "type": { "enum": ["cash", "investment", "retirement", "credit", "other"] },
-                  "status": { "enum": ["connected", "manual", "stale", "unavailable"] },
-                  "balance": { "type": "number" },
-                  "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
-                  "as_of": { "type": "string", "format": "date-time" }
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+$"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "type": {
+                    "enum": ["cash", "investment", "retirement", "credit", "other"]
+                  },
+                  "status": {
+                    "enum": ["connected", "manual", "stale", "unavailable"]
+                  },
+                  "balance": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  "as_of": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
                 }
               }
             },
@@ -72,17 +129,50 @@
                 "additionalProperties": false,
                 "required": ["id", "label", "asset_type", "units", "unit_price", "market_value", "currency", "weight_percent", "as_of"],
                 "properties": {
-                  "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-                  "label": { "type": "string", "minLength": 1, "maxLength": 80 },
-                  "symbol": { "type": "string", "maxLength": 16 },
-                  "asset_type": { "enum": ["stock", "fund", "bond", "crypto", "cash", "other"] },
-                  "units": { "type": "number", "minimum": 0 },
-                  "unit_price": { "type": "number", "minimum": 0 },
-                  "market_value": { "type": "number", "minimum": 0 },
-                  "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
-                  "weight_percent": { "type": "number", "minimum": 0, "maximum": 100 },
-                  "day_change_percent": { "type": "number" },
-                  "as_of": { "type": "string", "format": "date-time" }
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]+$"
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "symbol": {
+                    "type": "string",
+                    "maxLength": 16
+                  },
+                  "asset_type": {
+                    "enum": ["stock", "fund", "bond", "crypto", "cash", "other"]
+                  },
+                  "units": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "unit_price": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "market_value": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  "weight_percent": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "day_change_percent": {
+                    "type": "number"
+                  },
+                  "as_of": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
                 }
               }
             },
@@ -94,10 +184,50 @@
                 "additionalProperties": false,
                 "required": ["year", "scenario", "value", "currency"],
                 "properties": {
-                  "year": { "type": "integer", "minimum": 2000, "maximum": 2200 },
-                  "scenario": { "enum": ["conservative", "baseline", "stretch"] },
-                  "value": { "type": "number", "minimum": 0 },
-                  "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+                  "year": {
+                    "type": "integer",
+                    "minimum": 2000,
+                    "maximum": 2200
+                  },
+                  "scenario": {
+                    "enum": ["conservative", "baseline", "stretch"]
+                  },
+                  "value": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  }
+                }
+              }
+            },
+            "balance_history": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 24,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["date", "cash", "invested", "currency"],
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "cash": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "invested": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  }
                 }
               }
             }

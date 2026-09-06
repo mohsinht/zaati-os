@@ -64,12 +64,12 @@ export default function Onboarding({
             <Rocket className="mr-1 size-3" />
             Start here
           </Badge>
-          <h1 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.035em] sm:text-5xl" id="welcome-title">
-            {demoMode ? "See how it works. Then make it private." : "Your private workspace is ready."}
+          <h1 className="mt-4 text-balance text-2xl font-medium tracking-tight sm:text-3xl" id="welcome-title">
+            {demoMode ? "Welcome to Zaati OS" : "Your private workspace is ready."}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
             {demoMode
-              ? "Take the guided tour, inspect the synthetic source pages, and compare JSON contracts with their rendered components. When you run setup, Zaati OS creates an ignored private workspace and removes every demo-only surface."
+              ? "Explore a sample day, see what needs a reply, and understand where your money stands. All demo data is fictional. When you are ready, use the setup steps below to connect your own sources."
               : "Synthetic example pages, Component Lab, copy-prompt guides, and the automatic demo tour are disabled. Connect your preferred workflow, validate one manual snapshot, then deploy behind Access. The dashboard remains read-only."}
           </p>
         </div>

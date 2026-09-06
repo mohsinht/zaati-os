@@ -200,10 +200,42 @@ try {
           returnByValue: true,
         })
         if (overflow.result?.value) throw new Error(`${width}px ${mode} ${view} overflows the document.`)
-        if ([390, 1440].includes(width) && ["overview:daily", "money:pulse", "work:focus"].includes(view))
+        if ([390, 1440].includes(width) && dashboard.sources.some((source) => source.definition.id === view))
           await capture(client, `${view.split(":")[0]}-${width}-${mode}.png`)
       }
     }
+  }
+
+  const tableSource = dashboard.sources.find(({ snapshot }) =>
+    snapshot?.data.presentation.blocks.some((b) => b.kind === "table" && b.searchable && b.columns.some((c) => c.filterable)),
+  )
+  if (tableSource) {
+    await client.send("Page.navigate", { url: viewUrl(tableSource.definition.id) })
+    await waitForApp(client)
+    await client.send("Runtime.evaluate", { expression: "document.querySelector('[role=search] input').focus()" })
+    await client.send("Input.insertText", { text: "no-matching-example-item-98765" })
+    const tableInteraction = await client.send("Runtime.evaluate", {
+      expression: `(async () => {
+        const wait = () => new Promise(r => setTimeout(r, 80)); await wait();
+        const search = document.querySelector('[role=search]');
+        const panel = search.closest('.zaati-block');
+        const empty = panel.textContent.includes('No matching items');
+        [...search.querySelectorAll('button')].find(b => b.textContent === 'Clear').click(); await wait();
+        const restored = panel.querySelectorAll('tbody tr').length > 1;
+        const select = search.querySelector('select'); select.value = select.options[1].value;
+        select.dispatchEvent(new Event('change', { bubbles: true })); await wait();
+        const filtered = [...panel.querySelectorAll('tbody tr')].every(row => row.textContent.includes(select.value));
+        [...search.querySelectorAll('button')].find(b => b.textContent === 'Clear').click(); await wait();
+        const header = panel.querySelector('th'); header.querySelector('button').click(); await wait();
+        const ascending = header.getAttribute('aria-sort') === 'ascending';
+        header.querySelector('button').click(); await wait();
+        return empty && restored && filtered && ascending && header.getAttribute('aria-sort') === 'descending';
+      })()`,
+      returnByValue: true,
+      awaitPromise: true,
+    })
+    if (!tableInteraction.result?.value) throw new Error("Table search, filters, clear, or sorting failed.")
+    console.log("Table search, empty results, filtering, clearing, and sorting passed.")
   }
 
   const chartSource = dashboard.sources.find(({ snapshot }) => {

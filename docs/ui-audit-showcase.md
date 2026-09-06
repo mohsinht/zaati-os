@@ -1,5 +1,7 @@
 # UI audit: template dashboard showcase
 
+Historical audit. See the newer [cohesion review](ui-audit-cohesion.md) for the current visual direction.
+
 Reviewed September 5–6, 2026. Scope: `zaati-os` only. No private dashboard, source snapshot store, scheduled task, or deployment configuration was changed.
 
 ## Intent

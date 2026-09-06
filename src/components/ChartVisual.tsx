@@ -1,11 +1,22 @@
-import { useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import type { BarChartBlock, DonutChartBlock, InstanceConfig, LineChartBlock, ValueFormat } from "@/types"
 
 const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]
 const dashPatterns = [undefined, "9 5", "2 5", "12 4 2 4", "5 4"]
-const width = 640
 const height = 260
 const plot = { left: 72, right: 18, top: 18, bottom: 48 }
+
+function useChartWidth() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(640)
+  useEffect(() => {
+    if (!ref.current) return
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(240, Math.round(entry.contentRect.width))))
+    observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+  return { ref, width }
+}
 
 function format(value: number, kind: ValueFormat, instance: InstanceConfig) {
   if (kind === "currency")
@@ -36,27 +47,18 @@ function axisFormat(value: number, kind: ValueFormat, instance: InstanceConfig) 
   return new Intl.NumberFormat(instance.locale, { maximumFractionDigits: 2 }).format(rounded)
 }
 
-function lineDomain(values: number[]) {
-  let min = Math.min(...values)
-  let max = Math.max(...values)
+function chartDomain(values: number[], includeZero = false) {
+  let min = Math.min(...values, ...(includeZero ? [0] : []))
+  let max = Math.max(...values, ...(includeZero ? [0] : []))
   if (min === max) {
     const fallback = Math.max(Math.abs(min) * 0.05, 1)
     min -= fallback
     max += fallback
   }
-  const padding = (max - min) * 0.08
-  return { min: min - padding, max: max + padding }
-}
-
-function barDomain(values: number[]) {
-  const min = Math.min(...values, 0)
-  const max = Math.max(...values, 0)
-  if (min === max) return { min: min - 1, max: max + 1 }
-  const padding = (max - min) * 0.08
-  return {
-    min: min >= 0 ? 0 : min - padding,
-    max: max <= 0 ? 0 : max + padding,
-  }
+  const rawStep = (max - min) / 4
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep))
+  const step = ([1, 2, 2.5, 5, 10].find((factor) => factor * magnitude >= rawStep) || 10) * magnitude
+  return { min: Math.floor(min / step) * step, max: Math.ceil(max / step) * step, step }
 }
 
 function yPosition(value: number, min: number, max: number) {
@@ -64,7 +66,7 @@ function yPosition(value: number, min: number, max: number) {
   return plot.top + ((max - value) / (max - min)) * available
 }
 
-function ChartTooltip({ x, y, title, value }: { x: number; y: number; title: string; value: string }) {
+function ChartTooltip({ x, y, title, value, width }: { x: number; y: number; title: string; value: string; width: number }) {
   const tooltipWidth = Math.min(220, Math.max(112, Math.max(title.length, value.length) * 7 + 24))
   const tooltipX = Math.max(4, Math.min(width - tooltipWidth - 4, x - tooltipWidth / 2))
   const tooltipY = y < 76 ? y + 18 : y - 58
@@ -179,20 +181,24 @@ function DonutVisual({ block, descriptionId, instance }: { block: DonutChartBloc
 }
 
 function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock; descriptionId: string; instance: InstanceConfig }) {
+  const { ref, width } = useChartWidth()
   const [activePoint, setActivePoint] = useState<{ pointIndex: number; seriesIndex: number } | null>(null)
   const valueFormat = block.y_format || "number"
   const values = block.points.flatMap((point) =>
     block.series.map((series) => point.values[series.key]).filter((value): value is number => Number.isFinite(value)),
   )
-  const range = lineDomain(values)
+  const range = chartDomain(values)
   const x = (index: number) => plot.left + (index / Math.max(1, block.points.length - 1)) * (width - plot.left - plot.right)
-  const ticks = Array.from({ length: 5 }, (_, index) => range.min + ((range.max - range.min) * index) / 4).reverse()
+  const ticks = Array.from(
+    { length: Math.round((range.max - range.min) / range.step) + 1 },
+    (_, index) => range.min + range.step * index,
+  ).reverse()
   return (
     <figure aria-labelledby={descriptionId} className="m-0 w-full">
       <figcaption className="sr-only" id={descriptionId}>
         {block.title} line chart. Exact values follow in an accessible table.
       </figcaption>
-      <div className="chart-scroll" role="region" aria-label={`${block.title} chart, scroll for detail`} tabIndex={0}>
+      <div ref={ref} className="chart-scroll" role="region" aria-label={`${block.title} chart`} tabIndex={0}>
         <svg
           aria-label={`${block.title} interactive line chart`}
           className="chart-cartesian"
@@ -217,18 +223,27 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
                 .map((point, index) => `${x(index)},${yPosition(point.values[series.key], range.min, range.max)}`)
                 .join(" ")
               return (
-                <polyline
-                  className="transition-opacity duration-200"
-                  fill="none"
-                  key={series.key}
-                  opacity={activePoint === null || activePoint.seriesIndex === seriesIndex ? 1 : 0.3}
-                  points={points}
-                  stroke={colors[seriesIndex % colors.length]}
-                  strokeDasharray={dashPatterns[seriesIndex % dashPatterns.length]}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                />
+                <g key={series.key}>
+                  {block.series.length === 1 ? (
+                    <polygon
+                      points={`${x(0)},${height - plot.bottom} ${points} ${x(block.points.length - 1)},${height - plot.bottom}`}
+                      fill={colors[0]}
+                      opacity="0.07"
+                    />
+                  ) : null}
+                  <polyline
+                    className="transition-opacity duration-200"
+                    fill="none"
+                    key={series.key}
+                    opacity={activePoint === null || activePoint.seriesIndex === seriesIndex ? 1 : 0.3}
+                    points={points}
+                    stroke={colors[seriesIndex % colors.length]}
+                    strokeDasharray={dashPatterns[seriesIndex % dashPatterns.length]}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                  />
+                </g>
               )
             })}
           </g>
@@ -274,6 +289,7 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
                   <>
                     <line className="chart-guide" x1={pointX} x2={pointX} y1={plot.top} y2={height - plot.bottom} />
                     <ChartTooltip
+                      width={width}
                       title={`${series.label} · ${point.x}`}
                       value={format(point.values[series.key], valueFormat, instance)}
                       x={pointX}
@@ -348,21 +364,28 @@ function LineVisual({ block, descriptionId, instance }: { block: LineChartBlock;
 }
 
 function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; descriptionId: string; instance: InstanceConfig }) {
+  const { ref, width } = useChartWidth()
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const valueFormat = block.value_format || "number"
-  const range = barDomain(block.bars.map((bar) => bar.value))
+  const range = chartDomain(
+    block.bars.map((bar) => bar.value),
+    true,
+  )
   const available = width - plot.left - plot.right
   const slot = available / block.bars.length
   const barWidth = Math.min(44, slot * 0.66)
   const baseline = yPosition(0, range.min, range.max)
-  const ticks = Array.from({ length: 5 }, (_, index) => range.min + ((range.max - range.min) * index) / 4).reverse()
+  const ticks = Array.from(
+    { length: Math.round((range.max - range.min) / range.step) + 1 },
+    (_, index) => range.min + range.step * index,
+  ).reverse()
   const labelEvery = Math.max(1, Math.ceil(block.bars.length / 8))
   return (
     <figure aria-labelledby={descriptionId} className="m-0 w-full">
       <figcaption className="sr-only" id={descriptionId}>
         {block.title} bar chart. Exact values follow in an accessible table.
       </figcaption>
-      <div className="chart-scroll" role="region" aria-label={`${block.title} chart, scroll for detail`} tabIndex={0}>
+      <div ref={ref} className="chart-scroll" role="region" aria-label={`${block.title} chart`} tabIndex={0}>
         <svg
           aria-label={`${block.title} interactive bar chart`}
           className="chart-cartesian"
@@ -422,7 +445,9 @@ function BarVisual({ block, descriptionId, instance }: { block: BarChartBlock; d
                 const bar = block.bars[activeIndex]
                 const valueY = yPosition(bar.value, range.min, range.max)
                 const pointX = plot.left + activeIndex * slot + slot / 2
-                return <ChartTooltip title={bar.label} value={format(bar.value, valueFormat, instance)} x={pointX} y={valueY} />
+                return (
+                  <ChartTooltip width={width} title={bar.label} value={format(bar.value, valueFormat, instance)} x={pointX} y={valueY} />
+                )
               })()
             : null}
         </svg>

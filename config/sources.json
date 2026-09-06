@@ -14,7 +14,9 @@
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "calendar", "list", "timeline", "notice"] },
+      "presentation": {
+        "preferred_blocks": ["metric-group", "calendar", "list", "timeline", "notice"]
+      },
       "depends_on": [],
       "target_path": "data/snapshots/agenda/primary/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -28,7 +30,7 @@
       "id": "inbox:attention",
       "domain": "inbox",
       "source": "attention",
-      "label": "Inbox attention",
+      "label": "Inbox",
       "description": "Only messages that need a response, decision, deadline, or follow-up.",
       "worker_id": "inbox-attention-daily",
       "prompt": "prompts/inbox-attention.md",
@@ -36,7 +38,9 @@
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "list", "timeline", "table", "notice"] },
+      "presentation": {
+        "preferred_blocks": ["metric-group", "list", "timeline", "table", "notice"]
+      },
       "depends_on": [],
       "target_path": "data/snapshots/inbox/attention/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -50,7 +54,7 @@
       "id": "work:focus",
       "domain": "work",
       "source": "focus",
-      "label": "Work focus",
+      "label": "Work",
       "description": "Owned work, blockers, decisions, and the smallest useful next actions.",
       "worker_id": "work-focus-daily",
       "prompt": "prompts/work-focus.md",
@@ -58,7 +62,9 @@
       "cadence": "weekdays",
       "freshness_sla_hours": 36,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "table", "list", "progress", "timeline", "notice"] },
+      "presentation": {
+        "preferred_blocks": ["metric-group", "table", "list", "progress", "timeline", "notice"]
+      },
       "depends_on": [],
       "target_path": "data/snapshots/work/focus/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -72,7 +78,7 @@
       "id": "money:pulse",
       "domain": "money",
       "source": "pulse",
-      "label": "Money pulse",
+      "label": "Money",
       "description": "User-approved totals, changes, goals, and evidence without raw statements.",
       "worker_id": "money-pulse-daily",
       "prompt": "prompts/money-pulse.md",
@@ -80,7 +86,9 @@
       "cadence": "daily",
       "freshness_sla_hours": 36,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "bar-chart", "donut-chart", "table", "progress", "notice"] },
+      "presentation": {
+        "preferred_blocks": ["metric-group", "line-chart", "bar-chart", "donut-chart", "table", "progress", "notice"]
+      },
       "depends_on": [],
       "target_path": "data/snapshots/money/pulse/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -94,7 +102,7 @@
       "id": "news:briefing",
       "domain": "news",
       "source": "briefing",
-      "label": "News briefing",
+      "label": "Briefing",
       "description": "A small evidence-linked briefing based on configured interests.",
       "worker_id": "news-briefing-daily",
       "prompt": "prompts/news-briefing.md",
@@ -102,7 +110,9 @@
       "cadence": "daily",
       "freshness_sla_hours": 24,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["list", "timeline", "bar-chart", "table", "text", "notice"] },
+      "presentation": {
+        "preferred_blocks": ["list", "timeline", "bar-chart", "table", "text", "notice"]
+      },
       "depends_on": [],
       "target_path": "data/snapshots/news/briefing/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -124,7 +134,9 @@
       "cadence": "daily",
       "freshness_sla_hours": 30,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "calendar", "list", "progress", "timeline", "table", "notice"] },
+      "presentation": {
+        "preferred_blocks": ["metric-group", "line-chart", "calendar", "list", "progress", "timeline", "table", "notice"]
+      },
       "depends_on": ["agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing"],
       "target_path": "data/snapshots/overview/daily/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
@@ -146,7 +158,9 @@
       "cadence": "weekly",
       "freshness_sla_hours": 192,
       "dashboard_role": "primary",
-      "presentation": { "preferred_blocks": ["metric-group", "line-chart", "list", "progress", "timeline", "table", "notice"] },
+      "presentation": {
+        "preferred_blocks": ["metric-group", "line-chart", "list", "progress", "timeline", "table", "notice"]
+      },
       "depends_on": ["overview:daily", "agenda:primary", "inbox:attention", "work:focus", "money:pulse", "news:briefing"],
       "target_path": "data/snapshots/review/weekly/{YYYY}/{MM}/{YYYY-MM-DD}.json",
       "privacy": {
