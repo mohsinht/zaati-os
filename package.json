@@ -7,7 +7,6 @@
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "dev": "npm run data:build && vite",
-    "examples": "node scripts/run-examples.mjs",
     "build": "npm run contracts:check && npm run build:app",
     "build:app": "npm run data:build && npm run typecheck && vite build",
     "preview": "vite preview",
@@ -46,7 +45,7 @@
     "@radix-ui/react-tabs": "1.1.21",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "lucide-react": "1.31.0",
+    "lucide-react": "1.33.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "tailwind-merge": "3.6.0"
