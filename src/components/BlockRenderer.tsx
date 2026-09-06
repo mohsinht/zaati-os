@@ -150,6 +150,7 @@ function Panel({
 }) {
   return (
     <Card
+      data-kind={block.kind}
       className={cn(
         "zaati-block min-w-0 overflow-hidden",
         layoutSpan(block, layout, emphasized),
@@ -182,22 +183,19 @@ export function BlockRenderer({
       <Panel block={block} className="bg-card/80" emphasized={emphasized} layout={layout}>
         <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 11rem), 1fr))" }}>
           {block.metrics.map((metric) => (
-            <div
-              className="group min-w-0 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/45"
-              key={metric.label}
-            >
+            <div className="metric-tile min-w-0 rounded-lg px-4 py-4" data-tone={metric.tone || "neutral"} key={metric.label}>
               <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <span aria-hidden="true" className={cn("size-1.5 rounded-full", toneDot[metric.tone || "neutral"])} />
                 {metric.label}
               </div>
               <div className="flex min-w-0 items-end gap-2">
-                <span className="min-w-0 break-words text-[clamp(1rem,1.5vw,1.25rem)] font-semibold leading-tight tracking-tight tabular-nums">
+                <span className="min-w-0 break-words text-[clamp(1.5rem,2.4vw,2rem)] font-semibold leading-tight tracking-tight tabular-nums">
                   {formatValue(metric.value, metric.format, instance)}
                   {metric.unit ? <span className="ml-1 text-sm font-medium text-muted-foreground">{metric.unit}</span> : null}
                 </span>
               </div>
               {metric.change !== undefined ? (
-                <p className={cn("mt-1 text-xs", metric.change >= 0 ? "text-positive-foreground" : "text-destructive")}>
+                <p className="mt-1 text-xs text-foreground">
                   <span>
                     {metric.change > 0 ? "+" : ""}
                     {formatValue(metric.change, metric.format === "percent" ? "percent" : "number", instance)}

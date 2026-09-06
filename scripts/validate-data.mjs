@@ -134,7 +134,7 @@ for (const sourceId of instance.enabled_sources || [])
 const privateRoot = process.env.ZAATI_DATA_DIR || "data/snapshots"
 const tutorialMode = process.env.ZAATI_TUTORIAL_MODE === "true"
 const privateFiles = await discoverSnapshots(privateRoot)
-const exampleFiles = await discoverSnapshots("data/examples")
+const exampleFiles = [...(await discoverSnapshots("data/examples")), ...(await discoverSnapshots("examples/snapshots"))]
 const snapshotFiles = [...exampleFiles, ...privateFiles]
 const encryptedFiles = privateFiles.filter((file) => file.endsWith(".enc"))
 if (!tutorialMode && instance.storage?.snapshot_encryption && privateFiles.some((file) => !file.endsWith(".enc")))
@@ -171,7 +171,7 @@ for (const file of snapshotFiles) {
   const expectedDate = path.basename(file, file.endsWith(".enc") ? ".json.enc" : ".json")
   if (snapshot.snapshot_id !== `${snapshot.source_id}:${expectedDate}`) errors.push(`${file}: snapshot_id must end with the file date`)
   if (
-    file.startsWith("data/examples/") &&
+    exampleFiles.includes(file) &&
     (!snapshot.privacy?.synthetic || snapshot.privacy?.contains_personal_data || snapshot.privacy?.classification !== "public")
   ) {
     errors.push(`${file}: examples must be public, synthetic, and contain no personal data`)
@@ -186,7 +186,7 @@ for (const file of snapshotFiles) {
   }
   errors.push(
     ...validateSnapshotPolicy(snapshot, registration, {
-      allowSynthetic: file.startsWith("data/examples/") || tutorialMode,
+      allowSynthetic: exampleFiles.includes(file) || tutorialMode,
       expectedDate,
     }).map((error) => `${file}${error}`),
   )
