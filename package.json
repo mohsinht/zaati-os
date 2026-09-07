@@ -60,7 +60,7 @@
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
     "axe-core": "4.13.0",
-    "eslint": "10.9.0",
+    "eslint": "10.9.1",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.4",
     "prettier": "3.9.6",
